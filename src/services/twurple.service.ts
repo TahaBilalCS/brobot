@@ -4,114 +4,90 @@ import mongoose from 'mongoose';
 import { TwurpleInterface } from '../models/Twurple.js';
 import { Instance } from 'express-ws';
 
-import { RefreshingAuthProvider } from '@twurple/auth';
+import { AuthProvider, RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient, PrivateMessage } from '@twurple/chat';
-
+import { socketConnect } from './twurple/BrobotSocket.js';
+import { TwitchInstance } from './twurple/TwitchChatHandler.js';
 // Now, as long as top-level await has not landed in popular runtimes, you need to work around that by placing
 // your main routine inside an async function and running it.
-export async function init(wsInstance: Instance): Promise<any> {
+export const init = async (wsInstance: Instance): Promise<any> => {
     const Twurple = mongoose.model<TwurpleInterface>('twurple');
+
+    const twurpleOptions = await getOrCreateTwurpleOptions(Twurple);
+    if (twurpleOptions) {
+        console.log('Twurple Options Obtained', twurpleOptions.obtainmentTimestamp);
+        // Create refreshing auto provider in order to stay connected to twurple chat client
+        const twurpleRefreshingAuthProvider = await setupTwurpleRefreshingAuthProvider(Twurple, twurpleOptions);
+        // Handle twitch chat messages
+        const TwitchInstance = await setupTwurpleChatClient(twurpleRefreshingAuthProvider, wsInstance);
+        // Handle client websocket messages
+        socketConnect(TwitchInstance, wsInstance);
+    } else {
+        console.log('Error Obtaining Twurple Options');
+    }
+};
+
+const setupTwurpleChatClient = async (
+    twurpleRefreshingAuthProvider: RefreshingAuthProvider,
+    wsInstance: Instance
+): Promise<TwitchInstance> => {
+    const authProvider: AuthProvider = twurpleRefreshingAuthProvider;
+    const chatClient = new ChatClient({
+        authProvider,
+        isAlwaysMod: true, // https://twurple.js.org/reference/chat/interfaces/ChatClientOptions.html#isAlwaysMod
+        channels: [process.env.TWITCH_CHANNEL_LISTEN || '']
+    });
+
+    // 100 per 30 seconds
+    console.log('Connecting To Twurple Chat Client...');
+    await chatClient.connect();
+
+    return new TwitchInstance(chatClient, wsInstance);
+};
+
+const setupTwurpleRefreshingAuthProvider = async (
+    Twurple: mongoose.Model<TwurpleInterface>,
+    twurpleOptions: TwurpleInterface
+): Promise<RefreshingAuthProvider> => {
     const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '';
     const TWITCH_SECRET = process.env.TWITCH_SECRET || '';
 
-    console.log('Connect websocket');
-    wsInstance.app.ws('/ashketchum', (ws, req) => {
-        ws.on('message', msg => {
-            ws.send('Sup loser');
-            console.log('Sent:', 'Sup loser');
-        });
-
-        ws.on('close', () => {
-            console.log('WebSocket was closed');
-        });
-    });
-
-    // wsInstance.getWss().clients.forEach(client => {
-    //     // if(client.name / ip === trama){
-    //     //     client.send("Sup loser");
-    //     // }
-    // });
-
-    let twurpleOptions: TwurpleInterface | null = await Twurple.findOne({}); // TODO query twurple data better
-    // If no options found
-    if (!twurpleOptions) {
-        console.log('Twurple Config Could Not Be Retreived From Database');
-        const newTwurpleConfig = {
-            accessToken: process.env.BROBOT_ACCESS_TOKEN,
-            refreshToken: process.env.BROBOT_REFRESH_TOKEN,
-            scope: ['chat:edit', 'chat:read', 'user_read'],
-            expiresIn: 0,
-            obtainmentTimestamp: 0
-        };
-        twurpleOptions = await new Twurple(newTwurpleConfig).save();
-        console.log('Created New Twurple Config', twurpleOptions.obtainmentTimestamp);
-    }
-
-    try {
-        const tokenData: TwurpleInterface = {
-            accessToken: twurpleOptions.accessToken,
-            refreshToken: twurpleOptions.refreshToken,
-            scope: twurpleOptions.scope,
-            expiresIn: twurpleOptions.expiresIn,
-            obtainmentTimestamp: twurpleOptions.obtainmentTimestamp
-        };
-        const authProvider = new RefreshingAuthProvider(
-            {
-                clientId: TWITCH_CLIENT_ID,
-                clientSecret: TWITCH_SECRET,
-                onRefresh: async newTokenData => {
-                    console.log('UPDATE DB', newTokenData.obtainmentTimestamp);
-                    // TODO, when updating MongooseError: Query was already executed: twurple.findOneAndUpdate({}
-                    await Twurple.findOneAndUpdate({}, newTokenData, {}, (err, doc) => {
-                        if (err) console.log('Error Update Twurple Options DB:\n', err);
-                        console.log('Success Update Twurple Options\n', newTokenData);
-                    });
-                }
-            },
-            tokenData
-        );
-
-        const chatClient = new ChatClient({
-            authProvider,
-            isAlwaysMod: true, // https://twurple.js.org/reference/chat/interfaces/ChatClientOptions.html#isAlwaysMod
-            channels: ['tramadc']
-        });
-
-        // 100 per 30 seconds
-        console.log('Connecting to twurple client...');
-        await chatClient.connect();
-        console.log('Connecting succeeded');
-
-        //https://stackoverflow.com/questions/30514584/delay-each-loop-iteration-in-node-js-async
-        async function sleep(millis: number) {
-            return new Promise(resolve => setTimeout(resolve, millis));
-        }
-
-        // this is a toughy
-        let startDate: number;
-        chatClient.onMessage(async (channel, user, message, msg: PrivateMessage) => {
-            console.log(`Message: ${user}`, message);
-            if (message === '!ping') {
-                // startDate = new Date().getTime();
-                // let x = [1, 2, 3, 4, 5];
-                // for (const num of x) {
-                //     await sleep(500);
-                //     // MWMWMWMWMWMWMWMWMWMWMWMW
-                //     console.log('LOG', new Date().getTime() - startDate);
-                //     await chatClient.say(channel, `HO: ${new Date().getTime() - startDate}`); // check if differnt in 1080p)
-                // }
-                await chatClient.say(channel, 'pong!');
-            } else if (message === '!dice') {
-                const diceRoll = Math.floor(Math.random() * 6) + 1;
-                await chatClient.say(channel, `@${user} rolled a ${diceRoll}`);
+    const tokenData: TwurpleInterface = {
+        accessToken: twurpleOptions.accessToken,
+        refreshToken: twurpleOptions.refreshToken,
+        scope: twurpleOptions.scope,
+        expiresIn: twurpleOptions.expiresIn,
+        obtainmentTimestamp: twurpleOptions.obtainmentTimestamp
+    };
+    return new RefreshingAuthProvider(
+        {
+            clientId: TWITCH_CLIENT_ID,
+            clientSecret: TWITCH_SECRET,
+            onRefresh: async newTokenData => {
+                // TODO, when updating MongooseError: Query was already executed: twurple.findOneAndUpdate({}
+                await Twurple.findOneAndUpdate({}, newTokenData, {}, (err, doc) => {
+                    if (err) console.log('Error Update Twurple Options DB:\n', err);
+                    console.log('Success Update Twurple Options');
+                });
             }
-        });
-    } catch (err) {
-        console.log('Error initializing Twurple');
-    }
-}
+        },
+        tokenData
+    );
+};
+const getOrCreateTwurpleOptions = async (
+    Twurple: mongoose.Model<TwurpleInterface>
+): Promise<TwurpleInterface | null> => {
+    const twurpleOptions: TwurpleInterface | null = await Twurple.findOne({}); // TODO query twurple data better
+    if (twurpleOptions) return twurpleOptions;
 
-// https://id.twitch.tv/oauth2/authorize?client_id=
-// &redirect_uri=
-// &response_type=code
-// &scope=chat:read+chat:edit
+    // If no options found
+    console.log('Twurple Options Could Not Be Retreived From DB, Making New One');
+    const newTwurpleConfig = {
+        accessToken: process.env.BROBOT_ACCESS_TOKEN,
+        refreshToken: process.env.BROBOT_REFRESH_TOKEN,
+        scope: ['chat:edit', 'chat:read', 'user_read'],
+        expiresIn: 0, // 0 will fetch a new token
+        obtainmentTimestamp: 0
+    };
+    return await new Twurple(newTwurpleConfig).save();
+};

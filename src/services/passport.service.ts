@@ -68,9 +68,6 @@ export const init = (app: Application) => {
             },
             async (accessToken: any, refreshToken: any, profile: any, done: any) => {
                 // TODO do something with access/refresh token - Used in twurple
-                // console.log('ACCESS', accessToken);
-                // console.log('REFRESH', refreshToken);
-                // console.log('PROFILE', profile);
 
                 // Profile information stored in this response
                 const userProfile = profile.data[0];
@@ -99,4 +96,6 @@ export const init = (app: Application) => {
             }
         )
     );
+
+    console.log('Passport Initialized');
 };

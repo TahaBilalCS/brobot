@@ -24,7 +24,7 @@ await (async function mongooseConnect() {
     if (MONGO_URI) {
         try {
             await mongoose.connect(MONGO_URI); // void or empty .then()
-            console.log('Mongoose Connected!');
+            console.log('Mongoose Connected');
         } catch (err) {
             console.log('Mongoose Failed?!', err);
         }
@@ -33,7 +33,7 @@ await (async function mongooseConnect() {
 
 const appBase: Express = express(); // Start express before middlewares
 const wsInstance = enableWs(appBase);
-let { app } = wsInstance;
+const { app } = wsInstance;
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
 /**
@@ -75,13 +75,3 @@ app.use(loginRouter);
 app.use(userRouter);
 
 app.listen(PORT, () => console.log(`Running on ${PORT} ⚡`));
-
-/*
- Local public html, paste/package in dist folder
- import path, { dirname } from 'path';
- import { fileURLToPath } from 'url';
- const __filename = fileURLToPath(import.meta.url);
- const __dirname = dirname(__filename);
- const publicDirectoryPath = path.join(__dirname, '../dist/public');
- app.use(express.static(publicDirectoryPath));
- */
