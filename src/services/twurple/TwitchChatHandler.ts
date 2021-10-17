@@ -14,7 +14,7 @@ export class ChatBan {
     constructor() {
         this.isListening = true;
         this.currentVoteCount = 0;
-        this.activateCommandThreshold = 2;
+        this.activateCommandThreshold = 1;
         // Add bot so it doesn't respond to itself. This is already handled by Twurple.
         this.uniqueVotedUsers = new Set(this.twitchBotUsername);
     }
@@ -68,10 +68,13 @@ export class TwitchInstance {
         console.log('Twitch Chat Handler Initialized');
         // TODO something wrong here, probably shouldnt use this like this heh
         this.twurpleChatClient.onMessage(async (channel, user, message, msg: PrivateMessage) => {
-            const userMsg = message.trim().toLowerCase();
+            // Trim whitespace on ends of strings
+            const userMsg = message.trim();
             const username = user.trim();
-            console.log(`${username}: ${userMsg}`);
-            await this.handleMessage(channel, username, userMsg);
+            // Stop if not running a command,
+            if (!userMsg.startsWith('!')) return; // remove todo will want a way to listen to other non command messages
+            // Handle commands
+            await this.handleCommand(channel, username, userMsg);
         });
         this.ChatBan = new ChatBan();
 
@@ -89,8 +92,6 @@ export class TwitchInstance {
                     .then();
             }
         }, 1000 * 60 * 30);
-
-        // todo handle chatban alert interval function
     }
 
     getListeningClientsOnSocket(): number {
@@ -105,16 +106,23 @@ export class TwitchInstance {
         return this.twurpleChatClient;
     }
 
-    async handleMessage(channel: string, username: string, message: string): Promise<void> {
-        switch (message) {
-            case '!ping':
+    async handleCommand(channel: string, username: string, message: string): Promise<void> {
+        const args = message.slice(1).split(' '); // Remove ! and parse arguments after command
+        const command = args.shift()?.toLowerCase(); // Only get command
+
+        console.log('COMMAND', command);
+        console.log('ARGS', args);
+        console.log(`${username}: ${message}`);
+
+        switch (command) {
+            case 'ping':
                 await this.twurpleChatClient.say(channel, 'pong!');
                 break;
-            case '!dice':
+            case 'dice':
                 const diceRoll = Math.floor(Math.random() * 6) + 1;
                 await this.twurpleChatClient.say(channel, `@${username} rolled a ${diceRoll}`);
                 break;
-            case '!chatban':
+            case 'chatban':
                 // Always have to reset ongoing events like this when client closes connection (brobotsocket)
                 // Only do something if client is listening
                 if (this.getListeningClientsOnSocket() > 0) {
