@@ -2,27 +2,29 @@
 import { Instance } from 'express-ws';
 import { ChatClient, PrivateMessage } from '@twurple/chat';
 import { OutgoingEvents } from './types/EventsInterface.js';
+import process from 'process';
 
 export class ChatBan {
     currentVoteCount: number;
     activateCommandThreshold: number;
     uniqueVotedUsers: Set<string>;
     isListening: boolean; // Is ChatBan listening for more messages?
-    readonly twitchBotUsermame = 'b_robot';
+    readonly twitchBotUsername = 'b_robot';
 
     constructor() {
         this.isListening = true;
         this.currentVoteCount = 0;
         this.activateCommandThreshold = 2;
         // Add bot so it doesn't respond to itself. This is already handled by Twurple.
-        this.uniqueVotedUsers = new Set(this.twitchBotUsermame);
+        this.uniqueVotedUsers = new Set(this.twitchBotUsername);
     }
 
     resetUniqueVotedUsers(): void {
         this.isListening = true;
         this.resetCurrentVoteCount();
         this.uniqueVotedUsers.clear();
-        this.uniqueVotedUsers.add(this.twitchBotUsermame);
+        this.uniqueVotedUsers.add(this.twitchBotUsername);
+        // todo reset intervalo nah
     }
 
     getIsListening(): boolean {
@@ -60,15 +62,35 @@ export class ChatBan {
 
 export class TwitchInstance {
     ChatBan: ChatBan;
+    notifyChatInterval: NodeJS.Timer;
+
     constructor(public twurpleChatClient: ChatClient, public wsInstance: Instance) {
         console.log('Twitch Chat Handler Initialized');
-        this.ChatBan = new ChatBan();
+        // TODO something wrong here, probably shouldnt use this like this heh
         this.twurpleChatClient.onMessage(async (channel, user, message, msg: PrivateMessage) => {
             const userMsg = message.trim().toLowerCase();
             const username = user.trim();
             console.log(`${username}: ${userMsg}`);
             await this.handleMessage(channel, username, userMsg);
         });
+        this.ChatBan = new ChatBan();
+
+        // TODO would be nice to separate this and make it not say anything when client not connected
+        // Alert chat every half an hour
+        const TWITCH_CHANNEL_LISTEN = process.env.TWITCH_CHANNEL_LISTEN || '';
+        this.notifyChatInterval = setInterval(() => {
+            // Only  notify chat if client connected
+            if (this.getListeningClientsOnSocket() > 0) {
+                this.twurpleChatClient
+                    .say(
+                        TWITCH_CHANNEL_LISTEN,
+                        `\`Remember to use the command: "!chatban", when ${TWITCH_CHANNEL_LISTEN} gets too emotional\``
+                    )
+                    .then();
+            }
+        }, 1000 * 60 * 30);
+
+        // todo handle chatban alert interval function
     }
 
     getListeningClientsOnSocket(): number {
@@ -93,7 +115,7 @@ export class TwitchInstance {
                 await this.twurpleChatClient.say(channel, `@${username} rolled a ${diceRoll}`);
                 break;
             case '!chatban':
-                // TODO chatban can break if we dont get a message from client to reset it
+                // Always have to reset ongoing events like this when client closes connection (brobotsocket)
                 // Only do something if client is listening
                 if (this.getListeningClientsOnSocket() > 0) {
                     // If still listening for chatban messages
