@@ -14,7 +14,7 @@ export class ChatBan {
     constructor() {
         this.isListening = true;
         this.currentVoteCount = 0;
-        this.activateCommandThreshold = 1;
+        this.activateCommandThreshold = 5;
         // Add bot so it doesn't respond to itself. This is already handled by Twurple.
         this.uniqueVotedUsers = new Set(this.twitchBotUsername);
     }
