@@ -1,7 +1,6 @@
 /* eslint-disable */
 import { Instance } from 'express-ws';
-import { ChatClient } from '@twurple/chat';
-import { IncomingEvents, OutgoingEvents, OutgoingErrors } from './types/EventsInterface.js';
+import { IncomingEvents } from './types/EventsInterface.js';
 import process from 'process';
 import { TwitchInstance } from './TwitchChatHandler.js';
 
