@@ -143,8 +143,8 @@ export class LichessBot {
     async createNewLichessGame(username: string): Promise<LichessOpenEndedGame | undefined> {
         this.lichessBodyReq = {
             rated: false,
-            'clock.limit': 3600, // todo ask ali // save this var
-            'clock.increment': 0, // how many seconds gained after making a move
+            // 'clock.limit': 3600, // todo ask ali // save this var
+            // 'clock.increment': 0, // how many seconds gained after making a move
             variant: 'standard',
             name: `The Illustrious ${username} vs Super Duper Random Pooper!` // Game name
         };
@@ -177,7 +177,7 @@ export class LichessBot {
 
     async createNormalGame(username: string) {
         let normalGame = await this.createNewLichessGame(username);
-        console.log('Normal Game', normalGame);
+        // console.log('Normal Game', normalGame);
 
         if (normalGame) {
             await this.twurpleChatClient.say(
