@@ -36,7 +36,12 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 /** Set route to start OAuth link, this is where you define scopes to request -  'chat:read', 'chat:edit' for brobot */
-router.get('/auth/twitch', passport.authenticate('twitch', { scope: ['user_read'] }));
+router.get(
+    '/auth/twitch',
+    passport.authenticate('twitch', {
+        scope: ['user_read' /**, 'chat:read', 'chat:edit', 'channel:moderate', 'channel:read:redemptions'*/]
+    })
+);
 
 /** Set route for OAuth redirect */
 router.get(

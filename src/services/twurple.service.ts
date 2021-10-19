@@ -85,7 +85,7 @@ const getOrCreateTwurpleOptions = async (
     const newTwurpleConfig = {
         accessToken: process.env.BROBOT_ACCESS_TOKEN,
         refreshToken: process.env.BROBOT_REFRESH_TOKEN,
-        scope: ['chat:edit', 'chat:read', 'user_read'],
+        scope: ['chat:edit', 'chat:read', 'user_read', 'channel:moderate', 'channel:read:redemptions'],
         expiresIn: 0, // 0 will fetch a new token
         obtainmentTimestamp: 0
     };
