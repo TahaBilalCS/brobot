@@ -26,6 +26,10 @@ export const socketConnect = (TwitchInstance: TwitchInstance, wsInstance: Instan
                 case IncomingEvents.TRAMA_CONNECTED:
                     console.log('Client Connection Received');
                     break;
+                case 'broke':
+                    TwitchInstance.getTwurpleChatClient().say(TWITCH_CHANNEL_LISTEN, `Chat ban broke :(`).then();
+                    console.log('Chat ban broke', new Date().toLocaleString());
+                    break;
                 default:
                     console.log('BrobotSocket Received Unknown Message From Client');
             }
@@ -36,6 +40,7 @@ export const socketConnect = (TwitchInstance: TwitchInstance, wsInstance: Instan
             // TODO reset all commands on twitch instance
             TwitchInstance.getChatBan().resetUniqueVotedUsers();
             console.log('Cancelling All Ongoing Events, Client WebSocket Closed');
+            console.log(new Date().toLocaleString());
         });
 
         ws.on('error', (err: Error) => {
