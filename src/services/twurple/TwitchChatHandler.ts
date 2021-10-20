@@ -321,7 +321,7 @@ export class TwitchInstance {
     }
 
     setPrizeRickRollInterval(): NodeJS.Timer {
-        return setInterval(() => {
+        return setTimeout(() => {
             // todo test if reconnecting will make interval work still: Only  notify chat if client connected
             // todo put production fix database with tokens
             if (this.getListeningClientsOnSocket() > 0) {
@@ -339,7 +339,7 @@ export class TwitchInstance {
                             .then();
                     });
             }
-        }, 1000 * 60 * 60 * 5);
+        }, 1000 * 60 * 40);
     }
     setChatNotifyInterval(): NodeJS.Timer {
         return setInterval(() => {
