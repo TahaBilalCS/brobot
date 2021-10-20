@@ -283,6 +283,7 @@ export class TwitchInstance {
             // Trim whitespace on ends of strings
             const userMsg = message.trim();
             const username = user.trim();
+            console.log(`${this.getListeningClientsOnSocket()}`);
             // Handle commands
             await this.handleCommand(channel, username, userMsg);
             // Handle messages
