@@ -63,7 +63,7 @@ export class ChatBan {
         this.uniqueVotedUsers = new Set(this.twitchBotUsername);
         this.isListening = true;
         this.currentVoteCount = 0;
-        this.activateCommandThreshold = 5;
+        this.activateCommandThreshold = 1;
     }
 
     resetUniqueVotedUsers(): void {
