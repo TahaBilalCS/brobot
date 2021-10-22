@@ -67,7 +67,7 @@ const setupTwurpleRefreshingAuthProvider = async (
                 // TODO, when updating MongooseError: Query was already executed: twurple.findOneAndUpdate({}
                 await Twurple.findOneAndUpdate({}, newTokenData, {}, (err, doc) => {
                     if (err) console.log('Error Update Twurple Options DB:\n', err);
-                    console.log('Success Update Twurple Options');
+                    console.log('Success Update Twurple Options', new Date().toLocaleString());
                 });
             }
         },

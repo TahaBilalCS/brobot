@@ -22,10 +22,10 @@ export const socketConnect = (TwitchInstance: TwitchInstance, wsInstance: Instan
                             `${process.env.TWITCH_CHANNEL_LISTEN} is now free. All votes have been reset.`
                         )
                         .then();
-                    console.log('Reset chat ban');
+                    console.log('Reset chat ban', new Date().toLocaleString());
                     break;
                 case IncomingEvents.TRAMA_CONNECTED:
-                    console.log('Client Connection Received');
+                    console.log('Client Connection Received', new Date().toLocaleString());
                     break;
                 case IncomingEvents.PING:
                     console.log('Trama PING!', new Date().toLocaleString());

@@ -352,7 +352,7 @@ export class TwitchInstance {
                     )
                     .then();
             }
-            console.log(`Clients On Socket: ${this.getListeningClientsOnSocket()}`);
+            console.log(`Clients On Socket: ${this.getListeningClientsOnSocket()}: ${new Date().toLocaleString()}`);
         }, 1000 * 60 * 40);
     }
 
