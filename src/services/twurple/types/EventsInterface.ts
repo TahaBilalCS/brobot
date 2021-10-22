@@ -1,12 +1,13 @@
 /* eslint-disable */
 export enum IncomingEvents {
+    TRAMA_CONNECTED = 'TRAMA_CONNECTED',
     CHATBAN_COMPLETE = 'CHATBAN_COMPLETE',
-    TRAMA_CONNECTED = 'TRAMA_CONNECTED'
+    PING = 'TRAMA_PING'
 }
 
 export enum OutgoingEvents {
-    // TRAMA_CONNECTED="CHATBAN",
-    CHATBAN = 'CHATBAN'
+    CHATBAN = 'CHATBAN',
+    PONG = 'TRAMA_PONG'
 }
 
 export enum OutgoingErrors {}

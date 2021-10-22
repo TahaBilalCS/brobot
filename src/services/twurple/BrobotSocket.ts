@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { Instance } from 'express-ws';
-import { IncomingEvents } from './types/EventsInterface.js';
+import { IncomingEvents, OutgoingEvents } from './types/EventsInterface.js';
 import process from 'process';
 import { TwitchInstance } from './TwitchChatHandler.js';
 
@@ -12,7 +12,7 @@ export const socketConnect = (TwitchInstance: TwitchInstance, wsInstance: Instan
         // On message from client
         ws.on('message', msg => {
             const clientMessage = String(msg);
-            console.log('Raw Message From Client:', clientMessage);
+            // console.log('Raw Message From Client:', clientMessage);
             switch (clientMessage) {
                 case IncomingEvents.CHATBAN_COMPLETE:
                     TwitchInstance.getChatBan().resetUniqueVotedUsers();
@@ -22,16 +22,24 @@ export const socketConnect = (TwitchInstance: TwitchInstance, wsInstance: Instan
                             `${process.env.TWITCH_CHANNEL_LISTEN} is now free. All votes have been reset.`
                         )
                         .then();
+                    console.log('Reset chat ban');
                     break;
                 case IncomingEvents.TRAMA_CONNECTED:
                     console.log('Client Connection Received');
+                    break;
+                case IncomingEvents.PING:
+                    console.log('Trama PING!', new Date().toLocaleString());
+                    wsInstance.getWss().clients.forEach(localClient => {
+                        console.log('Sending PONG!', new Date().toLocaleString());
+                        localClient.send(OutgoingEvents.PONG);
+                    });
                     break;
                 case 'broke':
                     TwitchInstance.getTwurpleChatClient().say(TWITCH_CHANNEL_LISTEN, `Chat ban broke :(`).then();
                     console.log('Chat ban broke', new Date().toLocaleString());
                     break;
                 default:
-                    console.log('BrobotSocket Received Unknown Message From Client');
+                    console.log('BrobotSocket Received Unknown Message From Client', clientMessage);
             }
         });
 
@@ -40,7 +48,7 @@ export const socketConnect = (TwitchInstance: TwitchInstance, wsInstance: Instan
             // TODO reset all commands on twitch instance
             TwitchInstance.getChatBan().resetUniqueVotedUsers();
             console.log('Cancelling All Ongoing Events, Client WebSocket Closed');
-            console.log(new Date().toLocaleString());
+            console.log('Trama Closed Connection', new Date().toLocaleString());
         });
 
         ws.on('error', (err: Error) => {

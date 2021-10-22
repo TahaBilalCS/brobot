@@ -283,7 +283,6 @@ export class TwitchInstance {
             // Trim whitespace on ends of strings
             const userMsg = message.trim();
             const username = user.trim();
-            console.log(`${this.getListeningClientsOnSocket()}`);
             // Handle commands
             await this.handleCommand(channel, username, userMsg);
             // Handle messages
@@ -322,7 +321,7 @@ export class TwitchInstance {
     }
 
     setPrizeRickRollInterval(): NodeJS.Timer {
-        return setTimeout(() => {
+        return setInterval(() => {
             // todo test if reconnecting will make interval work still: Only  notify chat if client connected
             // todo put production fix database with tokens
             if (this.getListeningClientsOnSocket() > 0) {
@@ -340,7 +339,7 @@ export class TwitchInstance {
                             .then();
                     });
             }
-        }, 1000 * 60 * 40);
+        }, 1000 * 60 * 60 * 24 * 2);
     }
     setChatNotifyInterval(): NodeJS.Timer {
         return setInterval(() => {
@@ -353,7 +352,8 @@ export class TwitchInstance {
                     )
                     .then();
             }
-        }, 1000 * 60 * 30);
+            console.log(`Clients On Socket: ${this.getListeningClientsOnSocket()}`);
+        }, 1000 * 60 * 40);
     }
 
     getListeningClientsOnSocket(): number {
