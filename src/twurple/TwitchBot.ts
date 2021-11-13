@@ -58,7 +58,7 @@ export class TwitchBot {
                 this.angeeCount++;
             } else if (this.angeeCount === 2) {
                 await this.twurpleChatClient.say(this._channel, `/me Look what you've done, ${username}`);
-                await this.twurpleChatClient.timeout(this._channel, username, 60, 'Lulu'); // todo 1 minute
+                await this.twurpleChatClient.timeout(this._channel, username, 30, 'Lulu');
                 this.angeeCount = 0;
             } else {
                 // how did we get here
