@@ -2,10 +2,10 @@
 import { Instance } from 'express-ws';
 import { IncomingEvents, OutgoingEvents } from './types/EventsInterface.js';
 import process from 'process';
-import { TwitchInstance } from './TwitchChatHandler.js';
+import { TwitchBot } from './TwitchBot.js';
 
 // TODO Should make a class to match pluralization, Should setup reconnect logic
-export const socketConnect = (TwitchInstance: TwitchInstance, wsInstance: Instance): void => {
+export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance): void => {
     console.log('Setup Server Websocket');
     wsInstance.app.ws('/ashketchum', (ws, req) => {
         const TWITCH_CHANNEL_LISTEN = process.env.TWITCH_CHANNEL_LISTEN || '';
@@ -14,15 +14,25 @@ export const socketConnect = (TwitchInstance: TwitchInstance, wsInstance: Instan
             const clientMessage = String(msg);
             // console.log('Raw Message From Client:', clientMessage);
             switch (clientMessage) {
+                case IncomingEvents.VOICEBAN_COMPLETE:
+                    TwitchBot.getVoiceBan()._resetUniqueVotedUsers();
+                    TwitchBot.getTwurpleChatClient()
+                        .say(
+                            TWITCH_CHANNEL_LISTEN,
+                            `${process.env.TWITCH_CHANNEL_LISTEN} is now unmuted. All votes have been reset.`
+                        )
+                        .then();
+                    console.log('Reset Voice Ban', new Date().toLocaleString());
+                    break;
                 case IncomingEvents.CHATBAN_COMPLETE:
-                    TwitchInstance.getChatBan().resetUniqueVotedUsers();
-                    TwitchInstance.getTwurpleChatClient()
+                    TwitchBot.getChatBan()._resetUniqueVotedUsers();
+                    TwitchBot.getTwurpleChatClient()
                         .say(
                             TWITCH_CHANNEL_LISTEN,
                             `${process.env.TWITCH_CHANNEL_LISTEN} is now free. All votes have been reset.`
                         )
                         .then();
-                    console.log('Reset chat ban', new Date().toLocaleString());
+                    console.log('Reset Chat Ban', new Date().toLocaleString());
                     break;
                 case IncomingEvents.TRAMA_CONNECTED:
                     console.log('Client Connection Received', new Date().toLocaleString());
@@ -35,8 +45,8 @@ export const socketConnect = (TwitchInstance: TwitchInstance, wsInstance: Instan
                     });
                     break;
                 case 'broke':
-                    TwitchInstance.getTwurpleChatClient().say(TWITCH_CHANNEL_LISTEN, `Chat ban broke :(`).then();
-                    console.log('Chat ban broke', new Date().toLocaleString());
+                    TwitchBot.getTwurpleChatClient().say(TWITCH_CHANNEL_LISTEN, `Uhoh something broke :(`).then();
+                    console.log('Chat/Voice Ban Broke', new Date().toLocaleString());
                     break;
                 default:
                     console.log('BrobotSocket Received Unknown Message From Client', clientMessage);
@@ -46,7 +56,7 @@ export const socketConnect = (TwitchInstance: TwitchInstance, wsInstance: Instan
         // When client closes connection
         ws.on('close', () => {
             // TODO reset all commands on twitch instance
-            TwitchInstance.getChatBan().resetUniqueVotedUsers();
+            TwitchBot.getChatBan()._resetUniqueVotedUsers();
             console.log('Cancelling All Ongoing Events, Client WebSocket Closed');
             console.log('Trama Closed Connection', new Date().toLocaleString());
         });

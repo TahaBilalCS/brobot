@@ -17,7 +17,7 @@ import { router as userRouter } from './routes/user.router.js';
 
 // Services after Models
 import * as passportService from './services/passport.service.js';
-import * as twurpleService from './services/twurple.service.js';
+import { TwitchInstance } from './twurple/TwurpleInstance.js';
 
 const MONGO_URI = process.env.MONGO_URI;
 await (async function mongooseConnect() {
@@ -65,12 +65,17 @@ app.use(helmet());
 
 /** Service Init */
 passportService.init(app);
+
+const TwurpleInstance = new TwitchInstance(wsInstance);
 // TODO Probably shouldn't block app starting?
-await (async function twurpleInit() {
-    await twurpleService.init(wsInstance);
+await (async function () {
+    await TwurpleInstance.init();
 })();
 
-/** Routes Init */
+/**
+ * Routes Init
+ * controller used in router, service used in controller
+ */
 app.use(loginRouter);
 app.use(userRouter);
 
