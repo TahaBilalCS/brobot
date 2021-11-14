@@ -89,7 +89,7 @@ export class TwitchBot {
             if (this.getListeningClientsOnSocket() > 0) {
                 void this.twurpleChatClient.say(
                     this._channel,
-                    `Remember to use the command: "!chatban", when Trama gets too emotional` // TODO OVERRIDDEN BY TRAMA
+                    `Remember to use the commands: "!chatban" or "!voiceban", when Trama gets too emotional` // TODO OVERRIDDEN BY TRAMA
                 );
             }
             console.log(`Clients On Socket: ${this.getListeningClientsOnSocket()}: ${new Date().toLocaleString()}`);

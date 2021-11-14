@@ -39,7 +39,14 @@ router.get('/', (req: Request, res: Response) => {
 router.get(
     '/auth/twitch',
     passport.authenticate('twitch', {
-        scope: ['user_read' /**, 'chat:read', 'chat:edit', 'channel:moderate', 'channel:read:redemptions'*/]
+        scope: [
+            'user_read'
+            // 'chat:read',
+            // 'chat:edit',
+            // 'channel:moderate',
+            // 'channel:read:redemptions',
+            // 'channel:read:subscriptions'
+        ]
     })
 );
 
