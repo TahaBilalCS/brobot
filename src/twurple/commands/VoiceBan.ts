@@ -24,7 +24,7 @@ export class VoiceBan implements VoiceBanInterface {
         this._uniqueVotedUsers = new Set(this._twitchBotUsername);
         this._isListening = true;
         this._currentVoteCount = 0;
-        this._activateVoteThreshold = 2;
+        this._activateVoteThreshold = 6;
         this._channel = process.env.TWITCH_CHANNEL_LISTEN || '';
     }
 
