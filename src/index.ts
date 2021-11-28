@@ -125,7 +125,7 @@ let devListener: EventSubListener;
             await middleware.subscribeToChannelFollowEvents(562338142, event => {
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
             });
-            await middleware.subscribeToChannelBanEvents(562338142, event => {
+            await middleware.subscribeToChannelUnbanEvents(562338142, event => {
                 console.log(`${event.userDisplayName} just banned ${event.broadcasterDisplayName}!`);
             });
         });
