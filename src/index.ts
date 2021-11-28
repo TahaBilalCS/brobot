@@ -121,7 +121,8 @@ let devListener: EventSubListener;
             console.log(`Running on ${PORT} ⚡`);
             await middleware.markAsReady();
             console.log('Before subscribe');
-            await apiClient.eventSub.deleteAllSubscriptions();
+            // todo clean up subscriptions
+            // await apiClient.eventSub.deleteAllSubscriptions();
             await middleware.subscribeToChannelFollowEvents(562338142, event => {
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
             });
