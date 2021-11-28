@@ -18,9 +18,10 @@ import { router as userRouter } from './routes/user.router.js';
 // Services after Models
 import * as passportService from './services/passport.service.js';
 import { TwitchInstance } from './twurple/TwurpleInstance.js';
-import { EventSubMiddleware } from '@twurple/eventsub';
+import { EventSubListener, EventSubMiddleware } from '@twurple/eventsub';
 import { ClientCredentialsAuthProvider } from '@twurple/auth';
 import { ApiClient } from '@twurple/api';
+import { NgrokAdapter } from '@twurple/eventsub-ngrok';
 
 const MONGO_URI = process.env.MONGO_URI;
 await (async function mongooseConnect() {
@@ -69,24 +70,10 @@ app.use(helmet());
 /** Service Init */
 passportService.init(app);
 
-//
-// const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '';
-// const TWITCH_SECRET = process.env.TWITCH_SECRET || '';
-// const authProvider = new ClientCredentialsAuthProvider(TWITCH_CLIENT_ID, TWITCH_SECRET);
-// const apiClient = new ApiClient({ authProvider });
-//
-// // Twurple
-// const middleware = new EventSubMiddleware({
-//     apiClient,
-//     hostName: 'brobot.xyz', //todo test on actual server
-//     pathPrefix: '/twitch',
-//     secret: 'secretHere'
-// });
+// Twurple Setup
 const TwurpleInstance = new TwitchInstance(wsInstance);
 // TODO Probably shouldn't block app starting?
 await (async function () {
-    // @ts-ignore
-    // await middleware.apply(app);
     await TwurpleInstance.init();
 })();
 
@@ -97,17 +84,50 @@ await (async function () {
 app.use(loginRouter);
 app.use(userRouter);
 
-app.listen(PORT, async () => {
-    console.log(`Running on ${PORT} ⚡`);
-    // let user = await apiClient.users.getUserById('562338142');
-    // let user1 = await apiClient.users.getUserById('733372508');
-    //
-    // console.log(user.id);
-    // console.log(user1.id);
-    // await middleware.markAsReady();
-    // await middleware.subscribeToChannelFollowEvents(562338142, event => {
-    //     console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
-    // });
-});
+const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '';
+const TWITCH_SECRET = process.env.TWITCH_SECRET || '';
+const authProvider = new ClientCredentialsAuthProvider(TWITCH_CLIENT_ID, TWITCH_SECRET);
+const apiClient = new ApiClient({ authProvider });
 
-// app.listen(PORT, () => console.log(`Running on ${PORT} ⚡`));
+let devListener: EventSubListener;
+(async function () {
+    console.log('NODE ENV', process.env.NODE_ENV);
+    if (process.env.NODE_ENV === 'development') {
+        devListener = new EventSubListener({
+            apiClient,
+            adapter: new NgrokAdapter(),
+            secret: 'somesecret'
+        });
+        // Delete all previous subscriptions for dev, as re-subscribing can cause rate limiting errors
+        await apiClient.eventSub.deleteAllSubscriptions();
+        await devListener.listen();
+        app.listen(PORT, async () => {
+            console.log(`Running on ${PORT} ⚡`);
+            const online = await devListener.subscribeToChannelUnbanEvents(562338142, e => {
+                console.log('unban event happened');
+            });
+        });
+    } else if (process.env.NODE_ENV === 'production') {
+        const middleware = new EventSubMiddleware({
+            apiClient,
+            hostName: 'brobot.xyz', //todo test on actual server
+            pathPrefix: '/twitch',
+            secret: 'somesecret'
+        });
+        // @ts-ignore
+        await middleware.apply(app);
+        app.listen(PORT, async () => {
+            console.log(`Running on ${PORT} ⚡`);
+
+            await middleware.markAsReady();
+            await middleware.subscribeToChannelFollowEvents(562338142, event => {
+                console.log('Event', event);
+                console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
+            });
+            await middleware.subscribeToChannelBanEvents(562338142, event => {
+                console.log('Event', event);
+                console.log(`${event.userDisplayName} just banned ${event.broadcasterDisplayName}!`);
+            });
+        });
+    }
+})();

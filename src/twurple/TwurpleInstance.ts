@@ -45,7 +45,7 @@ export class TwitchInstance {
         if (twurpleOptions) return twurpleOptions;
 
         // If no options found
-        console.log('Twurple Options Could Not Be Retreived From DB, Making New One');
+        console.log('Twurple Options Could Not Be Retrieved From DB, Making New One');
         const newTwurpleConfig = {
             accessToken: process.env.BROBOT_ACCESS_TOKEN,
             refreshToken: process.env.BROBOT_REFRESH_TOKEN,
