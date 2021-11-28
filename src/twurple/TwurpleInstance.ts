@@ -58,7 +58,8 @@ export class TwitchInstance {
                 'chat:edit',
                 'chat:read',
                 'channel:read:subscriptions',
-                'moderation:read'
+                'moderation:read',
+                'channel_subscriptions'
             ],
             expiresIn: 0, // 0 will fetch a new token
             obtainmentTimestamp: 0
