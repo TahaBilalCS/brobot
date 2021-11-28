@@ -124,10 +124,10 @@ let devListener: EventSubListener;
                 console.log('Event', event);
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
             });
-            // await middleware.subscribeToChannelBanEvents(562338142, event => {
-            //     console.log('Event', event);
-            //     console.log(`${event.userDisplayName} just banned ${event.broadcasterDisplayName}!`);
-            // });
+            await middleware.subscribeToChannelBanEvents(562338142, event => {
+                console.log('Event', event);
+                console.log(`${event.userDisplayName} just banned ${event.broadcasterDisplayName}!`);
+            });
         });
     }
 })();
