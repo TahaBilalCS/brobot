@@ -122,11 +122,11 @@ let devListener: EventSubListener;
             let user = await apiClient.users.getUserById('562338142');
             await middleware.markAsReady();
             console.log('Before subscribe');
-            // await middleware.subscribeToChannelFollowEvents(562338142, event => {
-            //     console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
-            // });
+            await middleware.subscribeToChannelFollowEvents(562338142, event => {
+                console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
+            });
             await middleware.subscribeToChannelUnbanEvents(562338142, event => {
-                console.log(`${event.userDisplayName} just banned ${event.broadcasterDisplayName}!`);
+                console.log(`${event.userDisplayName} just unbanned ${event.broadcasterDisplayName}!`);
             });
         });
     }

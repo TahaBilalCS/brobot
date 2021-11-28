@@ -41,7 +41,7 @@ export class TwitchInstance {
 
     async _getOrCreateTwurpleOptions(): Promise<TwurpleInterface | null> {
         const twurpleOptions: TwurpleInterface | null = await this._twurpleConfig.findOne({}); // TODO query twurple data better
-        // if (twurpleOptions) return twurpleOptions;
+        if (twurpleOptions) return twurpleOptions;
 
         // If no options found
         console.log('Twurple Options Could Not Be Retrieved From DB, Making New One');
