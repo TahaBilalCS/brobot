@@ -104,8 +104,8 @@ let devListener: EventSubListener;
         await devListener.listen();
         app.listen(PORT, async () => {
             console.log(`Running on ${PORT} ⚡`);
-            const online = await devListener.subscribeToChannelUnbanEvents(562338142, e => {
-                console.log('unban event happened');
+            const online = await devListener.subscribeToChannelUnbanEvents(562338142, event => {
+                console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
             });
         });
     } else {
@@ -125,9 +125,9 @@ let devListener: EventSubListener;
             await middleware.subscribeToChannelFollowEvents(562338142, event => {
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
             });
-            await middleware.subscribeToChannelUnbanEvents(562338142, event => {
-                console.log(`${event.userDisplayName} just unbanned ${event.broadcasterDisplayName}!`);
-            });
+            // await middleware.subscribeToChannelUnbanEvents(562338142, event => {
+            //     console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
+            // });
         });
     }
 })();
