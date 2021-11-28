@@ -44,6 +44,8 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
  * Order matters
  * Use .urlencoded, .json, session, etc, before app.use(router) -> Our routes setup
  * Calling urlencoded & json to handle the Request Object from POST requests
+ * todo express.json messes with subscriptions for twurple down below.
+ * Need to not do it globally, and use it only in routes that need it
  */
 // app.use(express.urlencoded({ extended: true }));
 // app.use(express.json());
@@ -117,15 +119,13 @@ let devListener: EventSubListener;
         await middleware.apply(app);
         app.listen(PORT, async () => {
             console.log(`Running on ${PORT} ⚡`);
-
+            let user = await apiClient.users.getUserById('562338142');
             await middleware.markAsReady();
             console.log('Before subscribe');
             await middleware.subscribeToChannelFollowEvents(562338142, event => {
-                console.log('Event', event);
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
             });
             await middleware.subscribeToChannelBanEvents(562338142, event => {
-                console.log('Event', event);
                 console.log(`${event.userDisplayName} just banned ${event.broadcasterDisplayName}!`);
             });
         });

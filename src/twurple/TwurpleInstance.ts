@@ -49,7 +49,15 @@ export class TwitchInstance {
         const newTwurpleConfig = {
             accessToken: process.env.BROBOT_ACCESS_TOKEN,
             refreshToken: process.env.BROBOT_REFRESH_TOKEN,
-            scope: ['chat:edit', 'chat:read', 'user_read', 'channel:moderate', 'channel:read:redemptions'],
+            scope: [
+                'user_read',
+                // For twitch channel only
+                'channel:moderate',
+                'channel:read:redemptions',
+                'chat:edit',
+                'chat:read',
+                'channel:read:subscriptions'
+            ],
             expiresIn: 0, // 0 will fetch a new token
             obtainmentTimestamp: 0
         };
