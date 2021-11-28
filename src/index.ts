@@ -119,6 +119,7 @@ let devListener: EventSubListener;
             console.log(`Running on ${PORT} ⚡`);
 
             await middleware.markAsReady();
+            console.log('Before subscribe');
             await middleware.subscribeToChannelFollowEvents(562338142, event => {
                 console.log('Event', event);
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
