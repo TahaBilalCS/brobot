@@ -113,7 +113,7 @@ let devListener: EventSubListener;
             apiClient,
             hostName: 'brobot.xyz', //todo test on actual server
             pathPrefix: '/twitch',
-            secret: 'somesecret'
+            secret: 'somesecret2'
         });
         // @ts-ignore
         await middleware.apply(app);
