@@ -23,21 +23,20 @@ export class TwitchInstance {
     async init(): Promise<void> {
         // Use config in db or update refresh&auth tokens from environment
         const twurpleOptions = await this._getOrCreateTwurpleOptions();
-
         // If options were created/retrieved from DB
-        // if (twurpleOptions) {
-        //     const timeNA_EST = moment.tz(twurpleOptions.obtainmentTimestamp, 'America/New_York').format('ha z');
-        //     console.log(`Twurple Options Obtained: ${timeNA_EST}`);
-        //
-        //     // Create refreshing auto provider in order to stay connected to twurple chat client
-        //     const twurpleRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(twurpleOptions);
-        //     // Handle twitch chat messages
-        //     const TwitchChatBot = await this._setupTwurpleChatBot(twurpleRefreshingAuthProvider);
-        //     // Handle client websocket messages
-        //     socketConnect(TwitchChatBot, this._wsInstance);
-        // } else {
-        //     console.log('Error Obtaining Twurple Options');
-        // }
+        if (twurpleOptions) {
+            const timeNA_EST = moment.tz(twurpleOptions.obtainmentTimestamp, 'America/New_York').format('ha z');
+            console.log(`Twurple Options Obtained: ${timeNA_EST}`);
+
+            // Create refreshing auto provider in order to stay connected to twurple chat client
+            const twurpleRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(twurpleOptions);
+            // Handle twitch chat messages
+            const TwitchChatBot = await this._setupTwurpleChatBot(twurpleRefreshingAuthProvider);
+            // Handle client websocket messages
+            socketConnect(TwitchChatBot, this._wsInstance);
+        } else {
+            console.log('Error Obtaining Twurple Options');
+        }
     }
 
     async _getOrCreateTwurpleOptions(): Promise<TwurpleInterface | null> {
@@ -49,18 +48,7 @@ export class TwitchInstance {
         const newTwurpleConfig = {
             accessToken: process.env.BROBOT_ACCESS_TOKEN,
             refreshToken: process.env.BROBOT_REFRESH_TOKEN,
-            scope: [
-                'user_read',
-                // For twitch channel only
-                // todo remove these for normal users. Just for testing
-                'channel:moderate',
-                'channel:read:redemptions',
-                'chat:edit',
-                'chat:read',
-                'channel:read:subscriptions',
-                'moderation:read',
-                'channel_subscriptions'
-            ],
+            scope: ['user_read'],
             expiresIn: 0, // 0 will fetch a new token
             obtainmentTimestamp: 0
         };
@@ -80,10 +68,15 @@ export class TwitchInstance {
                 clientSecret: TWITCH_SECRET,
                 onRefresh: async newTokenData => {
                     // todo when updating MongooseError: Query was already executed: twurple.findOneAndUpdate({}
-                    await this._twurpleConfig.findOneAndUpdate({}, newTokenData, {}, (err, doc) => {
-                        if (err) console.log('Error Update Twurple Options DB:\n', err);
-                        console.log('Success Update Twurple Options', new Date().toLocaleString());
-                    });
+                    await this._twurpleConfig
+                        .findOneAndUpdate({}, newTokenData, {}, (err, doc) => {
+                            if (err) console.log('Error Update Twurple Options DB:\n', err);
+                            console.log('Success Update Twurple Options', new Date().toLocaleString());
+                        })
+                        // todo why two catches?
+                        .catch(err => {
+                            console.log('Error updating twurple config', err);
+                        });
                 }
             },
             twurpleOptions
