@@ -91,8 +91,7 @@ const apiClient = new ApiClient({ authProvider });
 
 let devListener: EventSubListener;
 (async function () {
-    console.log('NODE ENV', process.env.NODE_ENV);
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development1') {
         devListener = new EventSubListener({
             apiClient,
             adapter: new NgrokAdapter(),
@@ -107,7 +106,7 @@ let devListener: EventSubListener;
                 console.log('unban event happened');
             });
         });
-    } else if (process.env.NODE_ENV === 'production') {
+    } else {
         const middleware = new EventSubMiddleware({
             apiClient,
             hostName: 'brobot.xyz', //todo test on actual server
@@ -124,10 +123,10 @@ let devListener: EventSubListener;
                 console.log('Event', event);
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
             });
-            await middleware.subscribeToChannelBanEvents(562338142, event => {
-                console.log('Event', event);
-                console.log(`${event.userDisplayName} just banned ${event.broadcasterDisplayName}!`);
-            });
+            // await middleware.subscribeToChannelBanEvents(562338142, event => {
+            //     console.log('Event', event);
+            //     console.log(`${event.userDisplayName} just banned ${event.broadcasterDisplayName}!`);
+            // });
         });
     }
 })();
