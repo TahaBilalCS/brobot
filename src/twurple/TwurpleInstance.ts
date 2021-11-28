@@ -52,6 +52,7 @@ export class TwitchInstance {
             scope: [
                 'user_read',
                 // For twitch channel only
+                // todo remove these for normal users. Just for testing
                 'channel:moderate',
                 'channel:read:redemptions',
                 'chat:edit',
