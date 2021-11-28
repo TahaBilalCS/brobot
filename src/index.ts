@@ -99,7 +99,7 @@ let devListener: EventSubListener;
             adapter: new NgrokAdapter(),
             secret: 'somesecret'
         });
-        // Delete all previous subscriptions for dev, as re-subscribing can cause rate limiting errors
+        // Delete all previous subscriptions for dev (only use with ngrok), as re-subscribing can cause rate limiting errors
         await apiClient.eventSub.deleteAllSubscriptions();
         await devListener.listen();
         app.listen(PORT, async () => {
