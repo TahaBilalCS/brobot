@@ -93,7 +93,7 @@ const apiClient = new ApiClient({ authProvider });
 
 let devListener: EventSubListener;
 (async function () {
-    if (process.env.NODE_ENV === 'development1') {
+    if (process.env.NODE_ENV === 'development') {
         devListener = new EventSubListener({
             apiClient,
             adapter: new NgrokAdapter(),
