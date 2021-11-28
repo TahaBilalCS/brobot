@@ -25,24 +25,24 @@ export class TwitchInstance {
         const twurpleOptions = await this._getOrCreateTwurpleOptions();
 
         // If options were created/retrieved from DB
-        if (twurpleOptions) {
-            const timeNA_EST = moment.tz(twurpleOptions.obtainmentTimestamp, 'America/New_York').format('ha z');
-            console.log(`Twurple Options Obtained: ${timeNA_EST}`);
-
-            // Create refreshing auto provider in order to stay connected to twurple chat client
-            const twurpleRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(twurpleOptions);
-            // Handle twitch chat messages
-            const TwitchChatBot = await this._setupTwurpleChatBot(twurpleRefreshingAuthProvider);
-            // Handle client websocket messages
-            socketConnect(TwitchChatBot, this._wsInstance);
-        } else {
-            console.log('Error Obtaining Twurple Options');
-        }
+        // if (twurpleOptions) {
+        //     const timeNA_EST = moment.tz(twurpleOptions.obtainmentTimestamp, 'America/New_York').format('ha z');
+        //     console.log(`Twurple Options Obtained: ${timeNA_EST}`);
+        //
+        //     // Create refreshing auto provider in order to stay connected to twurple chat client
+        //     const twurpleRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(twurpleOptions);
+        //     // Handle twitch chat messages
+        //     const TwitchChatBot = await this._setupTwurpleChatBot(twurpleRefreshingAuthProvider);
+        //     // Handle client websocket messages
+        //     socketConnect(TwitchChatBot, this._wsInstance);
+        // } else {
+        //     console.log('Error Obtaining Twurple Options');
+        // }
     }
 
     async _getOrCreateTwurpleOptions(): Promise<TwurpleInterface | null> {
         const twurpleOptions: TwurpleInterface | null = await this._twurpleConfig.findOne({}); // TODO query twurple data better
-        if (twurpleOptions) return twurpleOptions;
+        // if (twurpleOptions) return twurpleOptions;
 
         // If no options found
         console.log('Twurple Options Could Not Be Retrieved From DB, Making New One');
