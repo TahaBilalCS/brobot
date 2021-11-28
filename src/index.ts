@@ -45,8 +45,8 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
  * Use .urlencoded, .json, session, etc, before app.use(router) -> Our routes setup
  * Calling urlencoded & json to handle the Request Object from POST requests
  */
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
 
 /**
  * Key difference between cookie-session and express-session is how the keys are stored
