@@ -157,7 +157,9 @@ export class Pokemon {
             this._wsInstance.getWss().clients.forEach(localClient => {
                 // TODO if client === trama
                 console.log('Send Roar Websocket');
-                localClient.send({ event: OutgoingEvents.POKEMON_ROAR, pokemonName: userPokeDoc.pokemonName });
+                localClient.send(
+                    JSON.stringify({ event: OutgoingEvents.POKEMON_ROAR, pokemonName: userPokeDoc.pokemonName })
+                );
             });
             await this._twurpleChatClient.say(
                 this._channel,
