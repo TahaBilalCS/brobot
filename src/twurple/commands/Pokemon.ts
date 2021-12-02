@@ -91,37 +91,33 @@ export class Pokemon {
     }
 
     async handleMessage(username: string, args: string[]): Promise<void> {
-        // todo remove if
-        if (username === 'lebrotherbill' || username === 'tramadc' || username === 'theswagvt') {
-            switch (args[0]) {
-                case 'create': // todo refund and remove
-                    await this.createOrChangePokemon(username);
-                    break;
-                case 'battle':
-                    // todo cooldown on battles?
-                    if (!this._battle.userStarted) await this.createBattle(username);
-                    // If no user started, create battle
-                    else if (this._battle.userStarted === username)
-                        await this._twurpleChatClient.say(this._channel, `You can't battle yourself, ${username}`);
-                    else if (!this._battle.userAccepted) await this.acceptBattle(username);
-                    // If we somehow entered this state
-                    else
-                        await this._twurpleChatClient.say(
-                            this._channel,
-                            `How unlucky, ${username}. Things might have gotten spammy. Try again later`
-                        );
-                    break;
-                // todo tests and cooldowns
-                case 'level': // todo refund and remove
-                    await this.levelUpUserPokemon(username);
-                    break;
-                case 'roar': // todo refund and remove
-                    await this.roarUserPokemon(username);
-                    break;
-                default:
-                    console.log('Pokemon commands todo some imgur link', args[0]);
-                    break;
-            }
+        switch (args[0]) {
+            // case 'create': // todo refund and remove
+            //     await this.createOrChangePokemon(username);
+            //     break;
+            case 'battle':
+                // todo cooldown on battles?
+                if (!this._battle.userStarted) await this.createBattle(username);
+                // If no user started, create battle
+                else if (this._battle.userStarted === username)
+                    await this._twurpleChatClient.say(this._channel, `You can't battle yourself, ${username}`);
+                else if (!this._battle.userAccepted) await this.acceptBattle(username);
+                // If we somehow entered this state
+                else
+                    await this._twurpleChatClient.say(
+                        this._channel,
+                        `How unlucky, ${username}. Things might have gotten spammy. Try again later`
+                    );
+                break;
+            // case 'level': // todo refund and remove
+            //     await this.levelUpUserPokemon(username);
+            //     break;
+            // case 'roar': // todo refund and remove
+            //     await this.roarUserPokemon(username);
+            //     break;
+            default:
+                await this._twurpleChatClient.say(this._channel, `Pokemon Info: https://imgur.com/a/2u62OUh`);
+                break;
         }
     }
 
