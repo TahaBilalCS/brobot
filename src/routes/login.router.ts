@@ -40,15 +40,15 @@ router.get(
     '/auth/twitch',
     passport.authenticate('twitch', {
         scope: [
-            'user_read'
+            'user_read',
             // todo only for manual admin testing (For twitch channel we listen on only)
-            // 'chat:read',
-            // 'chat:edit',
-            // 'channel:moderate',
-            // 'channel:read:redemptions',
-            // 'channel:read:subscriptions',
-            // 'moderation:read',
-            // 'channel_subscriptions'
+            'chat:read',
+            'chat:edit',
+            'channel:moderate',
+            'channel:read:redemptions',
+            'channel:read:subscriptions',
+            'moderation:read',
+            'channel_subscriptions'
         ]
     })
 );

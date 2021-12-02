@@ -10,6 +10,7 @@ import enableWs from 'express-ws';
 // Models before usage in Services and Routers
 import './models/User.js';
 import './models/Twurple.js';
+import './models/Pokemon.js';
 
 // Routers after Models
 import { router as loginRouter } from './routes/login.router.js'; // TODO need to figure out why we need .js
@@ -105,6 +106,9 @@ let devListener: EventSubListener;
         app.listen(PORT, async () => {
             console.log(`Running on ${PORT} ⚡`);
             const online = await devListener.subscribeToChannelUnbanEvents(562338142, event => {
+                // remember to lowercase
+                const username = event.userDisplayName.trim().toLowerCase();
+                TwurpleInstance.twitchBot?.Pokemon.roarUserPokemon(username);
                 console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
             });
         });
@@ -123,11 +127,12 @@ let devListener: EventSubListener;
             console.log('Before subscribe');
             // todo clean up subscriptions
             // await apiClient.eventSub.deleteAllSubscriptions();
-            await middleware.subscribeToChannelFollowEvents(562338142, event => {
+            await middleware.subscribeToChannelRedemptionAddEvents(562338142, event => {
+                console.log(event.rewardCost);
+                console.log(event.rewardId);
+                console.log(event.rewardPrompt);
+                console.log(event.rewardTitle);
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
-            });
-            await middleware.subscribeToChannelUnbanEvents(562338142, event => {
-                console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
             });
         });
     }

@@ -5,12 +5,14 @@ import { ChatClient, PrivateMessage } from '@twurple/chat';
 import { ChatBan } from './commands/ChatBan.js';
 import { Chess } from './commands/Chess.js';
 import { VoiceBan } from './commands/VoiceBan.js';
+import { Pokemon } from './commands/Pokemon.js';
 
 export class TwitchBot {
     angeeCount: number;
     ChatBan: ChatBan;
     Chess: Chess;
     VoiceBan: VoiceBan;
+    Pokemon: Pokemon;
 
     notifyChatInterval?: NodeJS.Timer;
     prizeRickRollInterval?: NodeJS.Timer;
@@ -23,13 +25,15 @@ export class TwitchBot {
         this.twurpleChatClient.onMessage(async (channel, user, message, msg: PrivateMessage) => {
             // Trim whitespace on ends of strings
             const userMsg = message.trim();
-            const username = user.trim();
+            const username = user.trim().toLowerCase();
             // Handle commands
             await this.handleCommand(channel, username, userMsg);
             // Handle messages
             await this.handleLulu(username, userMsg);
         });
 
+        //Pokemon
+        this.Pokemon = new Pokemon(this.twurpleChatClient, this.wsInstance);
         // Chatban
         this.ChatBan = new ChatBan(this.twurpleChatClient, this.wsInstance);
         // Lichess
@@ -40,8 +44,16 @@ export class TwitchBot {
         this.notifyChatInterval = this.setChatNotifyInterval();
         // Rick roll
         this.prizeRickRollInterval = this.setPrizeRickRollInterval();
+    }
 
-        console.log('Twitch Bot Initialized');
+    async init() {
+        // Initialize all asynchronous tasks for twitchbot
+        this.twurpleChatClient.onRegister(async () => {
+            // TODO async on event register is eh.
+            console.log('Twitch Bot Initializing');
+            // TODO Init async bot operations
+            // Example: await this.Pokemon.init();
+        });
     }
 
     async handleLulu(username: string, message: string): Promise<void> {
@@ -123,6 +135,9 @@ export class TwitchBot {
         console.log(`${username}: ${message}`);
 
         switch (command) {
+            case 'pokemon':
+                await this.Pokemon.handleMessage(username, args);
+                break;
             case 'chess':
                 await this.Chess.handleMessage(username);
                 break;

@@ -26,6 +26,8 @@
   },
   "homepage": "https://github.com/TahaBilalCS/brobot#readme",
   "dependencies": {
+    "@pkmn/randoms": "^0.4.24",
+    "@pkmn/sim": "^0.4.24",
     "@twurple/api": "^5.0.9",
     "@twurple/auth": "^5.0.9",
     "@twurple/chat": "^5.0.9",

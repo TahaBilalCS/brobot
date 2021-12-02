@@ -1,6 +1,6 @@
 /* eslint-disable */
 import process from 'process';
-import mongoose from 'mongoose';
+import mongoose, { QueryOptions } from 'mongoose';
 import moment from 'moment-timezone';
 
 import { TwurpleInterface } from '../models/Twurple.js';
@@ -13,7 +13,7 @@ import { TwitchBot } from './TwitchBot.js';
 //todo interface for this class?
 export class TwitchInstance {
     private _twurpleConfig: mongoose.Model<TwurpleInterface>;
-
+    public twitchBot: TwitchBot | undefined;
     constructor(private _wsInstance: Instance) {
         this._twurpleConfig = mongoose.model<TwurpleInterface>('twurple');
     }
@@ -25,13 +25,17 @@ export class TwitchInstance {
         const twurpleOptions = await this._getOrCreateTwurpleOptions();
         // If options were created/retrieved from DB
         if (twurpleOptions) {
+            // TODO warning, cant use twurple chat client to say anything when init, has to be in setTimeout.
             const timeNA_EST = moment.tz(twurpleOptions.obtainmentTimestamp, 'America/New_York').format('ha z');
             console.log(`Twurple Options Obtained: ${timeNA_EST}`);
-
             // Create refreshing auto provider in order to stay connected to twurple chat client
             const twurpleRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(twurpleOptions);
             // Handle twitch chat messages
             const TwitchChatBot = await this._setupTwurpleChatBot(twurpleRefreshingAuthProvider);
+            // Wait for chat bot to be registered
+            await TwitchChatBot.init();
+            // Set to twitch instance
+            this.twitchBot = TwitchChatBot;
             // Handle client websocket messages
             socketConnect(TwitchChatBot, this._wsInstance);
         } else {
@@ -67,15 +71,17 @@ export class TwitchInstance {
                 clientId: TWITCH_CLIENT_ID,
                 clientSecret: TWITCH_SECRET,
                 onRefresh: async newTokenData => {
+                    // upsert will create a doc if not found, new will ensure newPokeDoc contains the newest db obj
+                    const options: QueryOptions = { upsert: true, new: true };
+
                     // todo when updating MongooseError: Query was already executed: twurple.findOneAndUpdate({}
                     await this._twurpleConfig
-                        .findOneAndUpdate({}, newTokenData, {}, (err, doc) => {
-                            if (err) console.log('Error Update Twurple Options DB:\n', err);
+                        .findOneAndUpdate({}, newTokenData, options)
+                        .then(() => {
                             console.log('Success Update Twurple Options', new Date().toLocaleString());
                         })
-                        // todo why two catches?
                         .catch(err => {
-                            console.log('Error updating twurple config', err);
+                            console.log('Error Update Twurple Options DB:\n', err);
                         });
                 }
             },
