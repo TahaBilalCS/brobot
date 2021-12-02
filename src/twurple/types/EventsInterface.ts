@@ -9,7 +9,8 @@ export enum IncomingEvents {
 export enum OutgoingEvents {
     CHATBAN = 'CHATBAN',
     VOICEBAN = 'VOICEBAN',
-    PONG = 'TRAMA_PONG'
+    PONG = 'TRAMA_PONG',
+    POKEMON_ROAR = 'POKEMON_ROAR'
 }
 
 export enum OutgoingErrors {}

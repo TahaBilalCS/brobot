@@ -98,15 +98,14 @@ let devListener: EventSubListener;
         devListener = new EventSubListener({
             apiClient,
             adapter: new NgrokAdapter(),
-            secret: 'somesecret'
+            secret: 'somesecret' // todo add different secret env
         });
         // Delete all previous subscriptions for dev (only use with ngrok), as re-subscribing can cause rate limiting errors
         await apiClient.eventSub.deleteAllSubscriptions();
         await devListener.listen();
         app.listen(PORT, async () => {
             console.log(`Running on ${PORT} ⚡`);
-            const online = await devListener.subscribeToChannelUnbanEvents(562338142, event => {
-                // remember to lowercase
+            await devListener.subscribeToChannelUnbanEvents(562338142, event => {
                 const username = event.userDisplayName.trim().toLowerCase();
                 TwurpleInstance.twitchBot?.Pokemon.roarUserPokemon(username);
                 console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
@@ -115,9 +114,9 @@ let devListener: EventSubListener;
     } else {
         const middleware = new EventSubMiddleware({
             apiClient,
-            hostName: 'brobot.xyz', //todo test on actual server
+            hostName: 'brobot.xyz',
             pathPrefix: '/twitch',
-            secret: 'somesecret2'
+            secret: 'somesecret2' // todo add different secret env
         });
         // @ts-ignore
         await middleware.apply(app);
@@ -128,15 +127,16 @@ let devListener: EventSubListener;
             // await apiClient.eventSub.deleteAllSubscriptions();
             // rama oauth id 699735970
             await middleware.subscribeToChannelRedemptionAddEvents(699735970, event => {
-                console.log(event.rewardCost);
-                console.log(event.rewardId);
-                console.log(event.rewardPrompt);
-                console.log(event.rewardTitle);
                 const username = event.userDisplayName.trim().toLowerCase();
-                if (username === 'tramadc') {
+                console.log(`${username} just redeemed ${event.rewardTitle}!`);
+
+                if (event.rewardTitle === 'Pokemon Roar') {
                     TwurpleInstance.twitchBot?.Pokemon.roarUserPokemon(username);
+                } else if (event.rewardTitle === 'Pokemon Level Up') {
+                    TwurpleInstance.twitchBot?.Pokemon.levelUpUserPokemon(username);
+                } else if (event.rewardTitle === 'Pokemon Create') {
+                    TwurpleInstance.twitchBot?.Pokemon.createOrChangePokemon(username);
                 }
-                console.log(`${event.userDisplayName} just redeemed!`);
             });
             await middleware.subscribeToChannelFollowEvents(562338142, event => {
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);

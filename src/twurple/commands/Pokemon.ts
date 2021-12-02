@@ -5,8 +5,8 @@ import { BattleStreams, Dex, RandomPlayerAI, Teams } from '@pkmn/sim';
 import { TeamGenerators } from '@pkmn/randoms';
 import mongoose, { QueryOptions } from 'mongoose';
 import { PokemonInterface } from '../../models/Pokemon.js';
-
 import { pokedexArr, pokeRoarActions } from './pokemon/pokeInfo.js';
+import { OutgoingEvents } from '../types/EventsInterface.js';
 
 enum BattleStatus {
     STOPPED = 'STOPPED',
@@ -91,34 +91,37 @@ export class Pokemon {
     }
 
     async handleMessage(username: string, args: string[]): Promise<void> {
-        switch (args[0]) {
-            case 'create': // todo refund
-                await this.createOrChangePokemon(username);
-                break;
-            case 'battle':
-                // todo cooldown on battles?
-                if (!this._battle.userStarted) await this.createBattle(username);
-                // If no user started, create battle
-                else if (this._battle.userStarted === username)
-                    await this._twurpleChatClient.say(this._channel, `You can't battle yourself, ${username}`);
-                else if (!this._battle.userAccepted) await this.acceptBattle(username);
-                // If we somehow entered this state
-                else
-                    await this._twurpleChatClient.say(
-                        this._channel,
-                        `How unlucky, ${username}. Things might have gotten spammy. Try again later`
-                    );
-                break;
-            // todo tests and cooldowns
-            case 'level': // todo refund
-                await this.levelUpUserPokemon(username);
-                break;
-            case 'roar':
-                await this.roarUserPokemon(username);
-                break;
-            default:
-                console.log('Pokemon commands todo some imgur link', args[0]);
-                break;
+        // todo remove if
+        if (username === 'lebrotherbill' || username === 'tramadc' || username === 'theswagvt') {
+            switch (args[0]) {
+                case 'create': // todo refund and remove
+                    await this.createOrChangePokemon(username);
+                    break;
+                case 'battle':
+                    // todo cooldown on battles?
+                    if (!this._battle.userStarted) await this.createBattle(username);
+                    // If no user started, create battle
+                    else if (this._battle.userStarted === username)
+                        await this._twurpleChatClient.say(this._channel, `You can't battle yourself, ${username}`);
+                    else if (!this._battle.userAccepted) await this.acceptBattle(username);
+                    // If we somehow entered this state
+                    else
+                        await this._twurpleChatClient.say(
+                            this._channel,
+                            `How unlucky, ${username}. Things might have gotten spammy. Try again later`
+                        );
+                    break;
+                // todo tests and cooldowns
+                case 'level': // todo refund and remove
+                    await this.levelUpUserPokemon(username);
+                    break;
+                case 'roar': // todo refund and remove
+                    await this.roarUserPokemon(username);
+                    break;
+                default:
+                    console.log('Pokemon commands todo some imgur link', args[0]);
+                    break;
+            }
         }
     }
 
@@ -151,6 +154,11 @@ export class Pokemon {
         });
         if (userPokeDoc) {
             const randomRoar = this.pickRandomRoar();
+            this._wsInstance.getWss().clients.forEach(localClient => {
+                // TODO if client === trama
+                console.log('Send Roar Websocket');
+                localClient.send({ event: OutgoingEvents.POKEMON_ROAR, pokemonName: userPokeDoc.pokemonName });
+            });
             await this._twurpleChatClient.say(
                 this._channel,
                 `/me ${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} roared ${randomRoar}`
@@ -237,13 +245,21 @@ export class Pokemon {
                 let noMoveString = '';
                 let winningMoveString = '';
 
-                const randomMoveList = ['completely obliterated', 'brutalized'];
-                const randomMoveIndex = Math.floor(Math.random() * (randomMoveList.length - 1));
-                const randomMoveString = randomMoveList[randomMoveIndex];
-
                 let loserName = '';
                 let loserPokeLevel = 0;
                 let loserPokeName = '';
+
+                const randomMoveList = [
+                    'completely obliterated',
+                    'absolutely brutalized',
+                    'thoroughly whooped',
+                    'downright annihilated',
+                    'unreservedly decimated',
+                    'utterly devastated',
+                    'totally eradicated',
+                    'perfectly liquidated',
+                    'unconditionally demolished'
+                ];
 
                 // Initialize teams and pokemon battle stream
                 Teams.setGeneratorFactory(TeamGenerators);
@@ -330,6 +346,10 @@ export class Pokemon {
                             loserName = userAcceptedPokeDoc.twitchName;
                             loserPokeLevel = userAcceptedPokeDoc.pokemonLevel;
                             loserPokeName = userAcceptedPokeDoc.pokemonName;
+
+                            const randomMoveIndex = Math.floor(Math.random() * (randomMoveList.length - 1));
+                            const randomMoveString = randomMoveList[randomMoveIndex];
+
                             const moveString = noMoveString + winningMoveString; // One or the other is empty
                             await this._twurpleChatClient.say(
                                 this._channel,
@@ -373,6 +393,10 @@ export class Pokemon {
                             loserName = userStartedPokeDoc.twitchName;
                             loserPokeLevel = userStartedPokeDoc.pokemonLevel;
                             loserPokeName = userStartedPokeDoc.pokemonName;
+
+                            const randomMoveIndex = Math.floor(Math.random() * (randomMoveList.length - 1));
+                            const randomMoveString = randomMoveList[randomMoveIndex];
+
                             const moveString = noMoveString + winningMoveString; // One or the other is empty
                             await this._twurpleChatClient.say(
                                 this._channel,
@@ -409,6 +433,8 @@ export class Pokemon {
                                 }
                             }
                         } else {
+                            console.log('winner', winner);
+                            console.log('battle', this._battle);
                             await this._twurpleChatClient.say(
                                 this._channel,
                                 `Oof, could not determine winner. Try again next time or report to the indie police`

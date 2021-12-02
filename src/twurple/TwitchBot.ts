@@ -50,6 +50,7 @@ export class TwitchBot {
         // Initialize all asynchronous tasks for twitchbot
         this.twurpleChatClient.onRegister(async () => {
             // TODO async on event register is eh.
+            // TODO need to make this stop the bot from going past Twurple.init in index.ts
             console.log('Twitch Bot Initializing');
             // TODO Init async bot operations
             // Example: await this.Pokemon.init();
