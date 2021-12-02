@@ -126,12 +126,17 @@ let devListener: EventSubListener;
             await middleware.markAsReady();
             // todo clean up subscriptions
             // await apiClient.eventSub.deleteAllSubscriptions();
-            await middleware.subscribeToChannelRedemptionAddEvents(562338142, event => {
+            // rama oauth id 699735970
+            await middleware.subscribeToChannelRedemptionAddEvents(699735970, event => {
                 console.log(event.rewardCost);
                 console.log(event.rewardId);
                 console.log(event.rewardPrompt);
                 console.log(event.rewardTitle);
-                console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
+                const username = event.userDisplayName.trim().toLowerCase();
+                if (username === 'tramadc') {
+                    TwurpleInstance.twitchBot?.Pokemon.roarUserPokemon(username);
+                }
+                console.log(`${event.userDisplayName} just redeemed!`);
             });
             await middleware.subscribeToChannelFollowEvents(562338142, event => {
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
