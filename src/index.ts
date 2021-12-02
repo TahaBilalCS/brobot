@@ -124,7 +124,6 @@ let devListener: EventSubListener;
         app.listen(PORT, async () => {
             console.log(`Running on ${PORT} ⚡`);
             await middleware.markAsReady();
-            console.log('Before subscribe');
             // todo clean up subscriptions
             // await apiClient.eventSub.deleteAllSubscriptions();
             await middleware.subscribeToChannelRedemptionAddEvents(562338142, event => {
@@ -132,6 +131,9 @@ let devListener: EventSubListener;
                 console.log(event.rewardId);
                 console.log(event.rewardPrompt);
                 console.log(event.rewardTitle);
+                console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
+            });
+            await middleware.subscribeToChannelFollowEvents(562338142, event => {
                 console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
             });
         });
