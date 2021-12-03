@@ -74,7 +74,7 @@ export class Pokemon {
             if (!pokemon.randomBattleMoves) {
                 await this._twurpleChatClient.say(
                     this._channel,
-                    `${username}, half the pokemon available have no moves. Your pokemon is one of them. Congrats! Your pokemon can only use 'Hyperbeam' & 'Splash'!`
+                    `${username}, your pokemon can only use 'Hyperbeam' & 'Splash'... Details: https://imgur.com/a/2u62OUh`
                 );
             }
         } else {
