@@ -29,7 +29,11 @@ export class Pokemon {
     private _battle: PokemonBattle = {};
     private _pokeRoarActionList = pokeRoarActions;
 
-    constructor(private _twurpleChatClient: ChatClient, private _wsInstance: Instance) {}
+    constructor(private _twurpleChatClient: ChatClient, private _wsInstance: Instance) {
+        // test pokemon
+        // const pokemon = Dex.forGen(3).species.get('Salamence');
+        // console.log(pokemon.randomBattleMoves);
+    }
     // todo pokemon lvl up, pokemon battle, pokemon roar (only once an hour)
     async createOrChangePokemon(username: string) {
         // Random int from 0 - 385

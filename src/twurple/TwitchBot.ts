@@ -162,6 +162,10 @@ export class TwitchBot {
             case 'rps':
                 await this.RPS.handleMessage(username);
                 break;
+            case 'rpsturbo':
+                const randomNum = Math.floor(Math.random() * 100000);
+                await this.twurpleChatClient.say(channel, `https://www.rpsgame.org/room?id=turbosux${randomNum}`);
+                break;
         }
     }
 }
