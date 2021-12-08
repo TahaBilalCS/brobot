@@ -6,6 +6,7 @@ import { ChatBan } from './commands/ChatBan.js';
 import { Chess } from './commands/Chess.js';
 import { VoiceBan } from './commands/VoiceBan.js';
 import { Pokemon } from './commands/Pokemon.js';
+import { RockPaperScissor } from './commands/RockPaperScissor.js';
 
 export class TwitchBot {
     angeeCount: number;
@@ -13,6 +14,7 @@ export class TwitchBot {
     Chess: Chess;
     VoiceBan: VoiceBan;
     Pokemon: Pokemon;
+    RPS: RockPaperScissor;
 
     notifyChatInterval?: NodeJS.Timer;
     prizeRickRollInterval?: NodeJS.Timer;
@@ -32,6 +34,8 @@ export class TwitchBot {
             await this.handleLulu(username, userMsg);
         });
 
+        // Rock, Paper, Scissors
+        this.RPS = new RockPaperScissor(this.twurpleChatClient);
         //Pokemon
         this.Pokemon = new Pokemon(this.twurpleChatClient, this.wsInstance);
         // Chatban
@@ -102,7 +106,7 @@ export class TwitchBot {
             if (this.getListeningClientsOnSocket() > 0) {
                 void this.twurpleChatClient.say(
                     this._channel,
-                    `Remember to use the commands: "!chatban" or "!voiceban", when Trama gets too emotional. Also pokemon: https://imgur.com/a/2u62OUh` // TODO OVERRIDDEN BY TRAMA
+                    `Remember to use the commands: "!chatban" or "!voiceban", when Trama gets too emotional. Also rock, paper, scissor: !rps. Also pokemon: https://imgur.com/a/2u62OUh` // TODO OVERRIDDEN BY TRAMA
                 );
             }
             console.log(`Clients On Socket: ${this.getListeningClientsOnSocket()}: ${new Date().toLocaleString()}`);
@@ -154,6 +158,9 @@ export class TwitchBot {
                 break;
             case 'voiceban':
                 await this.VoiceBan.handleMessage(username);
+                break;
+            case 'rps':
+                await this.RPS.handleMessage(username);
                 break;
         }
     }
