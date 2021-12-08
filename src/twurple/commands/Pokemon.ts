@@ -96,9 +96,12 @@ export class Pokemon {
 
     async handleMessage(username: string, args: string[]): Promise<void> {
         switch (args[0]) {
-            // case 'create': // todo refund and remove
-            //     await this.createOrChangePokemon(username);
-            //     break;
+            case 'create': // todo refund and remove
+                // Used to fix people's pokemon
+                if (username.toLowerCase() === 'lebrotherbill') {
+                    await this.createOrChangePokemon(args[1].trim().toLowerCase());
+                }
+                break;
             case 'battle':
                 // todo cooldown on battles?
                 if (!this._battle.userStarted) await this.createBattle(username);
