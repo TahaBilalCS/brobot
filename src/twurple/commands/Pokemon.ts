@@ -31,7 +31,7 @@ export class Pokemon {
 
     constructor(private _twurpleChatClient: ChatClient, private _wsInstance: Instance) {
         // test pokemon
-        // const pokemon = Dex.forGen(3).species.get('Salamence');
+        // const pokemon = Dex.forGen(3).species.get('Blastoise');
         // console.log(pokemon.randomBattleMoves);
     }
     // todo pokemon lvl up, pokemon battle, pokemon roar (only once an hour)
@@ -119,9 +119,12 @@ export class Pokemon {
             // case 'level': // todo refund and remove
             //     await this.levelUpUserPokemon(username);
             //     break;
-            // case 'roar': // todo refund and remove
-            //     await this.roarUserPokemon(username);
-            //     break;
+            case 'roar': // todo refund and remove
+                // Used to fix people's pokemon
+                if (username.toLowerCase() === 'lebrotherbill') {
+                    await this.roarUserPokemon(args[1].trim().toLowerCase());
+                }
+                break;
             default:
                 await this._twurpleChatClient.say(this._channel, `Pokemon Info: https://imgur.com/a/2u62OUh`);
                 break;
@@ -343,6 +346,7 @@ export class Pokemon {
                         const winString = turnChunk.substr(indexOfWin);
                         const winner = winString.split('|win|')[1];
                         // Make winner
+                        // todo sometimes winner has new line like davisdior \n |upkeep, do a string includes comparison maybe
                         if (winner === this._battle.userStarted) {
                             winnerName = userStartedPokeDoc.twitchName;
                             winnerPokeLevel = userStartedPokeDoc.pokemonLevel;
