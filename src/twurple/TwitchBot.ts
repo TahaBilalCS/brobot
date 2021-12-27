@@ -6,7 +6,6 @@ import { ChatBan } from './commands/ChatBan.js';
 import { Chess } from './commands/Chess.js';
 import { VoiceBan } from './commands/VoiceBan.js';
 import { Pokemon } from './commands/Pokemon.js';
-import { RockPaperScissor } from './commands/RockPaperScissor.js';
 
 export class TwitchBot {
     angeeCount: number;
@@ -14,7 +13,6 @@ export class TwitchBot {
     Chess: Chess;
     VoiceBan: VoiceBan;
     Pokemon: Pokemon;
-    RPS: RockPaperScissor;
 
     notifyChatInterval?: NodeJS.Timer;
     prizeRickRollInterval?: NodeJS.Timer;
@@ -29,13 +27,11 @@ export class TwitchBot {
             const userMsg = message.trim();
             const username = user.trim().toLowerCase();
             // Handle commands
-            await this.handleCommand(channel, username, userMsg);
+            await this.handleCommand(username, userMsg);
             // Handle messages
             await this.handleLulu(username, userMsg);
         });
 
-        // Rock, Paper, Scissors
-        this.RPS = new RockPaperScissor(this.twurpleChatClient);
         //Pokemon
         this.Pokemon = new Pokemon(this.twurpleChatClient, this.wsInstance);
         // Chatban
@@ -129,7 +125,15 @@ export class TwitchBot {
         return this.twurpleChatClient;
     }
 
-    async handleCommand(channel: string, username: string, message: string): Promise<void> {
+    private async _startRPS(username: string) {
+        const randomNum = Math.floor(Math.random() * 100000);
+        await this.twurpleChatClient.say(
+            this._channel,
+            `${username} wants to play Rock Paper Scissors. https://www.rpsgame.org/room?id=turbosux${randomNum}`
+        );
+    }
+
+    async handleCommand(username: string, message: string): Promise<void> {
         if (!message.startsWith('!')) return;
         const args = message.slice(1).split(' '); // Remove ! and parse arguments after command
         const command = args.shift()?.toLowerCase(); // Only get command
@@ -147,11 +151,11 @@ export class TwitchBot {
                 await this.Chess.handleMessage(username);
                 break;
             case 'ping':
-                await this.twurpleChatClient.say(channel, 'pong!');
+                await this.twurpleChatClient.say(this._channel, 'pong!');
                 break;
             case 'dice':
                 const diceRoll = Math.floor(Math.random() * 6) + 1;
-                await this.twurpleChatClient.say(channel, `@${username} rolled a ${diceRoll}`);
+                await this.twurpleChatClient.say(this._channel, `@${username} rolled a ${diceRoll}`);
                 break;
             case 'chatban':
                 await this.ChatBan.handleMessage(username);
@@ -160,12 +164,15 @@ export class TwitchBot {
                 await this.VoiceBan.handleMessage(username);
                 break;
             case 'rps':
-                await this.RPS.handleMessage(username);
+                await this._startRPS(username);
                 break;
             case 'rpsturbo':
-                const randomNum = Math.floor(Math.random() * 100000);
-                await this.twurpleChatClient.say(channel, `https://www.rpsgame.org/room?id=turbosux${randomNum}`);
+                await this._startRPS(username);
                 break;
+            case 'reckoning':
+                if (username.toLowerCase() === 'lebrotherbill') {
+                    await this.twurpleChatClient.runCommercial(this._channel, 60);
+                }
         }
     }
 }

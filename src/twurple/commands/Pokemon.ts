@@ -31,7 +31,7 @@ export class Pokemon {
 
     constructor(private _twurpleChatClient: ChatClient, private _wsInstance: Instance) {
         // test pokemon
-        // const pokemon = Dex.forGen(3).species.get('Blastoise');
+        // const pokemon = Dex.forGen(3).species.get('Shedinja');
         // console.log(pokemon.randomBattleMoves);
     }
     // todo pokemon lvl up, pokemon battle, pokemon roar (only once an hour)

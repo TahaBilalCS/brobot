@@ -4,33 +4,32 @@ import { Router, Request, Response } from 'express';
 import passport from 'passport';
 
 /**
-// Because of body parser's lack of type, Interface now has all the same properties as Request. Overrides Request.body
-interface RequestWithBody extends Request {
-    // Body object with some unknown keys that are strings, and their values will either be a string | undefined
-    body: { [key: string]: string | undefined };
-}
+ Because of body parser's lack of type, Interface now has all the same properties as Request. Overrides Request.body
+ interface RequestWithBody extends Request {
+        Body object with some unknown keys that are strings, and their values will either be a string | undefined
+        body: { [key: string]: string | undefined };
+    }
  */
 
 const router = Router();
 
 router.get('/', (req: Request, res: Response) => {
     if (req.session?.passport && req.session.passport.user) {
+        // ${process.env.TWITCH_CLIENT_ID}, NODE:${process.env.TWITCH_CALLBACK_URL}, MONGO:${process.env.MONGO_URI}
         // User authenticated
         res.send(`
             <h1>SIGNED IN</h1>
-            NODE:${process.env.NODE_ENV}, ${process.env.TWITCH_CLIENT_ID}, NODE:${process.env.TWITCH_CALLBACK_URL},
-            MONGO:${process.env.MONGO_URI}
+            NODE:${process.env.NODE_ENV}
             <a href='/api/logout'>Logout</a>
             <a href='/api/current_user'>Current User</a>
             <a href='/api/secret'>Secret</a>
         `);
     } else {
         res.send(`
-        NODE:${process.env.NODE_ENV}, ${process.env.TWITCH_CLIENT_ID}, NODE:${process.env.TWITCH_CALLBACK_URL},
-        MONGO:${process.env.MONGO_URI}
-        <a href='/auth/twitch'>Login</a>
-        <a href='/api/current_user'>Current User</a>
-        <a href='/api/secret'>Secret</a>
+            NODE:${process.env.NODE_ENV}
+            <a href='/auth/twitch'>Login</a>
+            <a href='/api/current_user'>Current User</a>
+            <a href='/api/secret'>Secret</a>
         `);
     }
 });
