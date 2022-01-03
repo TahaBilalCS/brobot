@@ -45,14 +45,23 @@ export class TwitchInstance {
 
     async _getOrCreateTwurpleOptions(): Promise<TwurpleInterface | null> {
         const twurpleOptions: TwurpleInterface | null = await this._twurpleConfig.findOne({}); // TODO query twurple data better
-        if (twurpleOptions) return twurpleOptions;
+        // if (twurpleOptions) return twurpleOptions;
 
         // If no options found
         console.log('Twurple Options Could Not Be Retrieved From DB, Making New One');
         const newTwurpleConfig = {
             accessToken: process.env.BROBOT_ACCESS_TOKEN,
             refreshToken: process.env.BROBOT_REFRESH_TOKEN,
-            scope: ['user_read'],
+            scope: [
+                'user_read',
+                'chat:read',
+                'chat:edit',
+                'channel:moderate',
+                'channel:read:redemptions',
+                'channel:read:subscriptions',
+                'moderation:read',
+                'channel_subscriptions'
+            ],
             expiresIn: 0, // 0 will fetch a new token
             obtainmentTimestamp: 0
         };
