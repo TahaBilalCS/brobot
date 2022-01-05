@@ -171,7 +171,8 @@ export class TwitchBot {
                 break;
             case 'reckoning':
                 if (username.toLowerCase() === 'lebrotherbill') {
-                    await this.twurpleChatClient.runCommercial(this._channel, 60);
+                    console.log('This is running', this._channel);
+                    await this.twurpleChatClient.runCommercial(this._channel, 30);
                 }
         }
     }
