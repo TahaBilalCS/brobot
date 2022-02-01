@@ -47,13 +47,14 @@ export class TwitchInstance {
     }
 
     async _getOrCreateTwurpleOptions(): Promise<TwurpleInterface | null> {
-        // const twurpleOptions: TwurpleInterface | null = await this._twurpleConfig.findOne({}); // TODO query twurple data better
-        // if (twurpleOptions) {
-        //     console.log('Found Twurple with Scope', twurpleOptions.scope);
-        //     return twurpleOptions;
-        // }
+        const twurpleOptions: TwurpleInterface | null = await this._twurpleConfig.findOne({}); // TODO query twurple data better
+        if (twurpleOptions) {
+            console.log('Found Twurple with Scope', twurpleOptions.scope);
+            return twurpleOptions;
+        }
 
         // If no options found
+        // todo make sure scopes are fine
         console.log('Twurple Options Could Not Be Retrieved From DB, Making New One');
         const newTwurpleConfig = {
             accessToken: process.env.BROBOT_ACCESS_TOKEN,
@@ -65,11 +66,11 @@ export class TwitchInstance {
                 'channel:moderate',
                 'channel:read:redemptions',
                 'channel:manage:predictions',
-                'channel:manage:redemptions'
+                'channel:manage:redemptions',
+                'channel:edit:commercial'
                 // 'channel:read:subscriptions',
                 // 'moderation:read',
                 // 'channel_subscriptions',
-                // 'channel:edit:commercial',
                 // 'analytics:read:extensions',
                 // 'analytics:read:games',
                 // 'bits:read',

@@ -45,11 +45,11 @@ router.get(
             'channel:moderate',
             'channel:read:redemptions',
             'channel:manage:predictions',
-            'channel:manage:redemptions'
+            'channel:manage:redemptions',
+            'channel:edit:commercial'
             // 'channel:read:subscriptions',
             // 'moderation:read',
             // 'channel_subscriptions',
-            // 'channel:edit:commercial',
             // 'analytics:read:extensions',
             // 'analytics:read:games',
             // 'bits:read',
