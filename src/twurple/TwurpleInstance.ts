@@ -102,7 +102,7 @@ export class TwitchInstance {
                 // 'user:read:follows',
                 // 'user:read:subscriptions'
             ],
-            expiresIn: 0, // 0 will fetch a new token
+            expiresIn: 10, // 0 will fetch a new token
             obtainmentTimestamp: 0
         };
 
