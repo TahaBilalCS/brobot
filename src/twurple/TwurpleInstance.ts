@@ -102,8 +102,8 @@ export class TwitchInstance {
                 // 'user:read:follows',
                 // 'user:read:subscriptions'
             ],
-            expiresIn: 10, // 0 will fetch a new token
-            obtainmentTimestamp: 0
+            expiresIn: 15, // 0 will fetch a new token
+            obtainmentTimestamp: new Date().getTime()
         };
 
         // TODO need to handle what happens when can't save to DB
