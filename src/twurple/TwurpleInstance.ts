@@ -9,6 +9,7 @@ import { AuthProvider, RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient } from '@twurple/chat';
 import { socketConnect } from './BrobotSocket.js';
 import { TwitchBot } from './TwitchBot.js';
+import { ApiClient } from '@twurple/api';
 
 //todo interface for this class?
 export class TwitchInstance {
@@ -32,12 +33,14 @@ export class TwitchInstance {
             const twurpleRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(twurpleOptions);
             // Handle twitch chat messages
             const TwitchChatBot = await this._setupTwurpleChatBot(twurpleRefreshingAuthProvider);
+            // API Client for predictions/etc todo move somewhere
+            const _apiClient = new ApiClient({ authProvider: twurpleRefreshingAuthProvider });
             // Wait for chat bot to be registered
             await TwitchChatBot.init();
             // Set to twitch instance
             this.twitchBot = TwitchChatBot;
             // Handle client websocket messages
-            socketConnect(TwitchChatBot, this._wsInstance);
+            socketConnect(TwitchChatBot, this._wsInstance, _apiClient);
         } else {
             console.log('Error Obtaining Twurple Options');
         }

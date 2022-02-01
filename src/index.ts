@@ -112,6 +112,7 @@ let devListener: EventSubListener;
             });
         });
     } else {
+        // Prod
         const middleware = new EventSubMiddleware({
             apiClient,
             hostName: 'brobot.xyz',
