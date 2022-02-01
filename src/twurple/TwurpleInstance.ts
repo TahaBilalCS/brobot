@@ -55,7 +55,6 @@ export class TwitchInstance {
         // todo
 
         // If no options found
-        // todo make sure scopes are fine
         console.log('Twurple Options Could Not Be Retrieved From DB, Making New One');
         const newTwurpleConfig = {
             accessToken: process.env.BROBOT_ACCESS_TOKEN,
@@ -68,42 +67,42 @@ export class TwitchInstance {
                 'channel:read:redemptions',
                 'channel:manage:predictions',
                 'channel:manage:redemptions',
-                'channel:edit:commercial'
-                // 'channel:read:subscriptions',
-                // 'moderation:read',
-                // 'channel_subscriptions',
-                // 'analytics:read:extensions',
-                // 'analytics:read:games',
-                // 'bits:read',
-                // 'channel:manage:broadcast',
-                // 'channel:manage:extensions',
-                // 'channel:manage:polls',
-                // 'channel:manage:schedule',
-                // 'channel:manage:videos',
-                // 'channel:read:editors',
-                // 'channel:read:goals',
-                // 'channel:read:hype_train',
-                // 'channel:read:polls',
-                // 'channel:read:predictions',
-                // 'channel:read:redemptions',
-                // 'channel:read:subscriptions',
-                // 'clips:edit',
-                // 'moderator:manage:banned_users',
-                // 'moderator:read:blocked_terms',
-                // 'moderator:manage:blocked_terms',
-                // 'moderator:manage:automod',
-                // 'moderator:read:automod_settings',
-                // 'moderator:manage:automod_settings',
-                // 'moderator:read:chat_settings',
-                // 'moderator:manage:chat_settings',
-                // 'user:manage:blocked_users',
-                // 'user:read:blocked_users',
-                // 'user:read:broadcast',
-                // 'user:read:follows',
-                // 'user:read:subscriptions'
+                'channel:edit:commercial',
+                'channel:read:subscriptions',
+                'moderation:read',
+                'channel_subscriptions',
+                'analytics:read:extensions',
+                'analytics:read:games',
+                'bits:read',
+                'channel:manage:broadcast',
+                'channel:manage:extensions',
+                'channel:manage:polls',
+                'channel:manage:schedule',
+                'channel:manage:videos',
+                'channel:read:editors',
+                'channel:read:goals',
+                'channel:read:hype_train',
+                'channel:read:polls',
+                'channel:read:predictions',
+                'channel:read:redemptions',
+                'channel:read:subscriptions',
+                'clips:edit',
+                'moderator:manage:banned_users',
+                'moderator:read:blocked_terms',
+                'moderator:manage:blocked_terms',
+                'moderator:manage:automod',
+                'moderator:read:automod_settings',
+                'moderator:manage:automod_settings',
+                'moderator:read:chat_settings',
+                'moderator:manage:chat_settings',
+                'user:manage:blocked_users',
+                'user:read:blocked_users',
+                'user:read:broadcast',
+                'user:read:follows',
+                'user:read:subscriptions'
             ],
-            expiresIn: 15, // 0 will fetch a new token
-            obtainmentTimestamp: new Date().getTime()
+            expiresIn: 0, // 0 will fetch a new token
+            obtainmentTimestamp: 0
         };
 
         // TODO need to handle what happens when can't save to DB
@@ -115,14 +114,6 @@ export class TwitchInstance {
         const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '';
         const TWITCH_SECRET = process.env.TWITCH_SECRET || '';
 
-        console.log('Twurple Options For Refresh', twurpleOptions);
-        const testOptions = {
-            accessToken: twurpleOptions.accessToken,
-            refreshToken: twurpleOptions.refreshToken,
-            scope: twurpleOptions.scope,
-            expiresIn: 0,
-            obtainmentTimestamp: 0
-        };
         return new RefreshingAuthProvider(
             {
                 clientId: TWITCH_CLIENT_ID,
@@ -131,7 +122,7 @@ export class TwitchInstance {
                     // upsert will create a doc if not found, new will ensure newPokeDoc contains the newest db obj
                     const options: QueryOptions = { upsert: true, new: true };
 
-                    console.log('New Token', newTokenData);
+                    console.log('New Token:', newTokenData);
                     // todo when updating MongooseError: Query was already executed: twurple.findOneAndUpdate({}
                     await this._twurpleConfig
                         .findOneAndUpdate({}, newTokenData, options)
@@ -143,7 +134,7 @@ export class TwitchInstance {
                         });
                 }
             },
-            testOptions
+            twurpleOptions
         );
     }
 

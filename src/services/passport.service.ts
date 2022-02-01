@@ -67,9 +67,9 @@ export const init = (app: Application) => {
                 state: true
             },
             async (accessToken: any, refreshToken: any, profile: any, done: any) => {
-                // TODO Tokens used FOR twurple bot - do something with them
-                console.log('ACCESS', accessToken);
-                console.log('REFRESH', refreshToken);
+                console.log('Access Token:', accessToken);
+                console.log('Refresh Token:', refreshToken);
+
                 // todo lower case names
                 // Profile information stored in this response
                 const userProfile = profile.data[0];
