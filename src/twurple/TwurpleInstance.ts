@@ -31,10 +31,10 @@ export class TwitchInstance {
             console.log(`Twurple Options Obtained: ${timeNA_EST}`);
             // Create refreshing auto provider in order to stay connected to twurple chat client
             const twurpleRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(twurpleOptions);
-            // Handle twitch chat messages
-            const TwitchChatBot = await this._setupTwurpleChatBot(twurpleRefreshingAuthProvider);
             // API Client for predictions/etc todo move somewhere
             const _apiClient = new ApiClient({ authProvider: twurpleRefreshingAuthProvider });
+            // Handle twitch chat messages
+            const TwitchChatBot = await this._setupTwurpleChatBot(twurpleRefreshingAuthProvider, _apiClient);
             // Wait for chat bot to be registered
             await TwitchChatBot.init();
             // Set to twitch instance
@@ -133,7 +133,10 @@ export class TwitchInstance {
         );
     }
 
-    async _setupTwurpleChatBot(twurpleRefreshingAuthProvider: RefreshingAuthProvider): Promise<TwitchBot> {
+    async _setupTwurpleChatBot(
+        twurpleRefreshingAuthProvider: RefreshingAuthProvider,
+        _apiClient: ApiClient
+    ): Promise<TwitchBot> {
         const authProvider: AuthProvider = twurpleRefreshingAuthProvider;
 
         const chatClient = new ChatClient({
@@ -146,6 +149,6 @@ export class TwitchInstance {
         console.log('Connecting To Twurple Chat Client...');
         await chatClient.connect();
 
-        return new TwitchBot(chatClient, this._wsInstance);
+        return new TwitchBot(chatClient, this._wsInstance, _apiClient);
     }
 }

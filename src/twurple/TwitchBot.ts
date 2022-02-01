@@ -6,6 +6,7 @@ import { ChatBan } from './commands/ChatBan.js';
 import { Chess } from './commands/Chess.js';
 import { VoiceBan } from './commands/VoiceBan.js';
 import { Pokemon } from './commands/Pokemon.js';
+import { ApiClient, HelixCreatePredictionData } from '@twurple/api';
 
 export class TwitchBot {
     angeeCount: number;
@@ -18,7 +19,7 @@ export class TwitchBot {
     prizeRickRollInterval?: NodeJS.Timer;
     private readonly _channel: string;
 
-    constructor(public twurpleChatClient: ChatClient, public wsInstance: Instance) {
+    constructor(public twurpleChatClient: ChatClient, public wsInstance: Instance, public apiClient: ApiClient) {
         this.angeeCount = 0;
         this._channel = process.env.TWITCH_CHANNEL_LISTEN || '';
         // TODO something wrong here, probably shouldnt use this like this heh
@@ -174,6 +175,23 @@ export class TwitchBot {
                     console.log('This is running', this._channel);
                     await this.twurpleChatClient.runCommercial(this._channel, 30);
                 }
+                break;
+            case 'test':
+                if (username.toLowerCase() === 'lebrotherbill') {
+                    console.log('Prediction Test', this._channel);
+                    const helixPrediction: HelixCreatePredictionData = {
+                        autoLockAfter: 90,
+                        outcomes: ['Yes', 'No'],
+                        title: 'Will Trama Win This Game?'
+                    };
+                    try {
+                        // todo add scope to dev
+                        this.apiClient.predictions.createPrediction(699735970, helixPrediction).then();
+                    } catch (err) {
+                        console.log('err');
+                    }
+                }
+                break;
         }
     }
 }
