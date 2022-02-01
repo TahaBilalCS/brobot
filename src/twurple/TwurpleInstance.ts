@@ -48,10 +48,10 @@ export class TwitchInstance {
 
     async _getOrCreateTwurpleOptions(): Promise<TwurpleInterface | null> {
         const twurpleOptions: TwurpleInterface | null = await this._twurpleConfig.findOne({}); // TODO query twurple data better
-        // if (twurpleOptions) {
-        //     console.log('Found Twurple with Scope', twurpleOptions.scope);
-        //     return twurpleOptions;
-        // }
+        if (twurpleOptions) {
+            console.log('Found Twurple with Scope', twurpleOptions.scope);
+            return twurpleOptions;
+        }
 
         // If no options found
         // todo make sure scopes are fine
