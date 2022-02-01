@@ -116,6 +116,13 @@ export class TwitchInstance {
         const TWITCH_SECRET = process.env.TWITCH_SECRET || '';
 
         console.log('Twurple Options For Refresh', twurpleOptions);
+        const testOptions = {
+            accessToken: twurpleOptions.accessToken,
+            refreshToken: twurpleOptions.refreshToken,
+            scope: twurpleOptions.scope,
+            expiresIn: 0,
+            obtainmentTimestamp: 0
+        };
         return new RefreshingAuthProvider(
             {
                 clientId: TWITCH_CLIENT_ID,
@@ -136,7 +143,7 @@ export class TwitchInstance {
                         });
                 }
             },
-            twurpleOptions
+            testOptions
         );
     }
 
