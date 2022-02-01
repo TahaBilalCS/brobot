@@ -122,6 +122,7 @@ export class TwitchInstance {
                     // upsert will create a doc if not found, new will ensure newPokeDoc contains the newest db obj
                     const options: QueryOptions = { upsert: true, new: true };
 
+                    console.log('New Token', newTokenData);
                     // todo when updating MongooseError: Query was already executed: twurple.findOneAndUpdate({}
                     await this._twurpleConfig
                         .findOneAndUpdate({}, newTokenData, options)
