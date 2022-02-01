@@ -114,6 +114,7 @@ export class TwitchInstance {
         const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '';
         const TWITCH_SECRET = process.env.TWITCH_SECRET || '';
 
+        console.log('Twurple Options For Refresh', twurpleOptions);
         return new RefreshingAuthProvider(
             {
                 clientId: TWITCH_CLIENT_ID,
