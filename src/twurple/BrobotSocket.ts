@@ -6,7 +6,7 @@ import { TwitchBot } from './TwitchBot.js';
 import { ApiClient, HelixCreatePredictionData } from '@twurple/api';
 
 // TODO Should make a class to match pluralization, Should setup reconnect logic
-export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance, apiClient: ApiClient): void => {
+export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance): void => {
     console.log('Setup Server Websocket');
     wsInstance.app.ws('/ashketchum', (ws, req) => {
         const TWITCH_CHANNEL_LISTEN = process.env.TWITCH_CHANNEL_LISTEN || '';
@@ -27,6 +27,13 @@ export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance, apiCli
                         //     console.log('user', res.displayName);
                         // });
                         // apiClient.predictions.createPrediction(562338142, helixPrediction).then();
+                        // const helixPrediction: HelixCreatePredictionData = {
+                        //     autoLockAfter: 90,
+                        //     outcomes: ['Yes', 'No'],
+                        //     title: 'Will Trama Win This Game?'
+                        // };
+                        // // todo add scope to dev
+                        // TwitchBot.getTwurpleApiClient().predictions.createPrediction(562338142, helixPrediction).then();
                     } else {
                         // rama 699735970 todo add to env
                         const helixPrediction: HelixCreatePredictionData = {
@@ -35,7 +42,7 @@ export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance, apiCli
                             title: 'Will Trama Win This Game?'
                         };
                         // todo add scope to dev
-                        apiClient.predictions.createPrediction(699735970, helixPrediction).then();
+                        TwitchBot.getTwurpleApiClient().predictions.createPrediction(699735970, helixPrediction).then();
                     }
                     break;
                 case IncomingEvents.PLAY_AD:

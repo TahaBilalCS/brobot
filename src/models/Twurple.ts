@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 export interface TwurpleInterface {
+    user: string;
     accessToken: string;
     refreshToken: string | null;
     scope: string[];
@@ -11,6 +12,7 @@ export interface TwurpleInterface {
 
 // Mongo size limit is 4mb per record
 export const twurpleSchema = new Schema<TwurpleInterface>({
+    user: String,
     accessToken: String,
     refreshToken: String,
     scope: [String],

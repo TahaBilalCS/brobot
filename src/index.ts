@@ -139,9 +139,9 @@ let devListener: EventSubListener;
                     TwurpleInstance.twitchBot?.Pokemon.createOrChangePokemon(username);
                 }
             });
-            await middleware.subscribeToChannelFollowEvents(562338142, event => {
-                console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
-            });
+            // await middleware.subscribeToChannelFollowEvents(562338142, event => {
+            //     console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
+            // });
         });
     }
 })();

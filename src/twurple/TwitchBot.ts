@@ -19,7 +19,7 @@ export class TwitchBot {
     prizeRickRollInterval?: NodeJS.Timer;
     private readonly _channel: string;
 
-    constructor(public twurpleChatClient: ChatClient, public wsInstance: Instance, public apiClient: ApiClient) {
+    constructor(public twurpleChatClient: ChatClient, public wsInstance: Instance, public twurpleApiClient: ApiClient) {
         this.angeeCount = 0;
         this._channel = process.env.TWITCH_CHANNEL_LISTEN || '';
         // TODO something wrong here, probably shouldnt use this like this heh
@@ -126,6 +126,10 @@ export class TwitchBot {
         return this.twurpleChatClient;
     }
 
+    getTwurpleApiClient(): ApiClient {
+        return this.twurpleApiClient;
+    }
+
     private async _startRPS(username: string) {
         const randomNum = Math.floor(Math.random() * 100000);
         await this.twurpleChatClient.say(
@@ -186,7 +190,7 @@ export class TwitchBot {
                     };
                     try {
                         // todo add scope to dev
-                        this.apiClient.predictions.createPrediction(699735970, helixPrediction).then();
+                        this.twurpleApiClient.predictions.createPrediction(699735970, helixPrediction).then();
                     } catch (err) {
                         console.log('err');
                     }
