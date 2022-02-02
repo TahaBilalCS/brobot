@@ -31,10 +31,14 @@ export class TwitchInstance {
             const timeNA_EST = moment.tz(twurpleOptionsBot.obtainmentTimestamp, 'America/New_York').format('ha z');
             console.log(`Twurple Options Obtained: ${timeNA_EST}`);
             // Create refreshing auto provider in order to stay connected to twurple chat client
-            const twurpleBotRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(twurpleOptionsBot);
+            const twurpleBotRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(
+                twurpleOptionsBot,
+                'bot'
+            );
             // Create refreshing auto provider in order to stay connected to twurple api client
             const twurpleStreamerRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(
-                twurpleOptionsStreamer
+                twurpleOptionsStreamer,
+                'streamer'
             );
 
             // Handle twitch chat messages and api client
@@ -130,7 +134,10 @@ export class TwitchInstance {
     }
 
     // todo not sure if async callback onRefresh is why we need to make this function async
-    async _createTwurpleRefreshingAuthProvider(twurpleOptions: TwurpleInterface): Promise<RefreshingAuthProvider> {
+    async _createTwurpleRefreshingAuthProvider(
+        twurpleOptions: TwurpleInterface,
+        user: string
+    ): Promise<RefreshingAuthProvider> {
         const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '';
         const TWITCH_SECRET = process.env.TWITCH_SECRET || '';
 
@@ -144,7 +151,7 @@ export class TwitchInstance {
 
                     // todo when updating MongooseError: Query was already executed: twurple.findOneAndUpdate({}
                     await this._twurpleConfig
-                        .findOneAndUpdate({}, newTokenData, options)
+                        .findOneAndUpdate({ user: user }, newTokenData, options)
                         .then(() => {
                             console.log('Success Update Twurple Options', new Date().toLocaleString());
                         })
