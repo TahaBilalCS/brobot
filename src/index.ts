@@ -90,7 +90,7 @@ app.use(userRouter);
 const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '';
 const TWITCH_SECRET = process.env.TWITCH_SECRET || '';
 const authProvider = new ClientCredentialsAuthProvider(TWITCH_CLIENT_ID, TWITCH_SECRET);
-const apiClient = new ApiClient({ authProvider });
+const apiClient = new ApiClient({ authProvider }); // todo can we make this api client the same as the one used in the twitchbot
 const authId = process.env.STREAMER_AUTH_ID || '';
 const streamerAuthId = parseInt(authId);
 
