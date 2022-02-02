@@ -147,7 +147,6 @@ export class TwitchInstance {
                         .findOneAndUpdate({}, newTokenData, options)
                         .then(() => {
                             console.log('Success Update Twurple Options', new Date().toLocaleString());
-                            console.log('Updated Token Data', newTokenData.refreshToken);
                         })
                         .catch(err => {
                             console.log('Error Update Twurple Options DB:\n', err);
