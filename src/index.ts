@@ -91,6 +91,8 @@ const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '';
 const TWITCH_SECRET = process.env.TWITCH_SECRET || '';
 const authProvider = new ClientCredentialsAuthProvider(TWITCH_CLIENT_ID, TWITCH_SECRET);
 const apiClient = new ApiClient({ authProvider });
+const authId = process.env.STREAMER_AUTH_ID || '';
+const streamerAuthId = parseInt(authId);
 
 let devListener: EventSubListener;
 (async function () {
@@ -105,7 +107,7 @@ let devListener: EventSubListener;
         await devListener.listen();
         app.listen(PORT, async () => {
             console.log(`Running on ${PORT} ⚡`);
-            await devListener.subscribeToChannelUnbanEvents(562338142, event => {
+            await devListener.subscribeToChannelUnbanEvents(streamerAuthId, event => {
                 const username = event.userDisplayName.trim().toLowerCase();
                 TwurpleInstance.twitchBot?.Pokemon.roarUserPokemon(username);
                 console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
@@ -126,8 +128,7 @@ let devListener: EventSubListener;
             await middleware.markAsReady();
             // todo clean up subscriptions
             // await apiClient.eventSub.deleteAllSubscriptions();
-            // rama oauth id 699735970
-            await middleware.subscribeToChannelRedemptionAddEvents(699735970, event => {
+            await middleware.subscribeToChannelRedemptionAddEvents(streamerAuthId, event => {
                 const username = event.userDisplayName.trim().toLowerCase();
                 console.log(`${username} just redeemed ${event.rewardTitle}!`);
 
@@ -139,7 +140,7 @@ let devListener: EventSubListener;
                     TwurpleInstance.twitchBot?.Pokemon.createOrChangePokemon(username);
                 }
             });
-            // await middleware.subscribeToChannelFollowEvents(562338142, event => {
+            // await middleware.subscribeToChannelFollowEvents(streamerAuthId, event => {
             //     console.log(`${event.userDisplayName} just followed ${event.broadcasterDisplayName}!`);
             // });
         });

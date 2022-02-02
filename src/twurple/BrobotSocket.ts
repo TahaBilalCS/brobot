@@ -21,33 +21,26 @@ export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance): void 
                     break;
                 case IncomingEvents.CREATE_PREDICTION:
                     console.log('Create Prediction');
-                    if (process.env.NODE_ENV === 'development') {
-                        console.log('Cant use this in dev');
-                        // apiClient.users.getUserById(562338142).then(res => {
-                        //     console.log('user', res.displayName);
-                        // });
-                        // apiClient.predictions.createPrediction(562338142, helixPrediction).then();
-                        // const helixPrediction: HelixCreatePredictionData = {
-                        //     autoLockAfter: 90,
-                        //     outcomes: ['Yes', 'No'],
-                        //     title: 'Will Trama Win This Game?'
-                        // };
-                        // // todo add scope to dev
-                        // TwitchBot.getTwurpleApiClient().predictions.createPrediction(562338142, helixPrediction).then();
-                    } else {
-                        // rama 699735970 todo add to env
-                        const helixPrediction: HelixCreatePredictionData = {
-                            autoLockAfter: 90,
-                            outcomes: ['Yes', 'No'],
-                            title: 'Will Trama Win This Game?'
-                        };
-                        // todo add scope to dev
-                        TwitchBot.getTwurpleApiClient().predictions.createPrediction(699735970, helixPrediction).then();
-                    }
+                    const helixPrediction: HelixCreatePredictionData = {
+                        autoLockAfter: 90,
+                        outcomes: ['Yes', 'No'],
+                        title: 'Will Trama Win This Game?'
+                    };
+                    const authId = process.env.STREAMER_AUTH_ID || '';
+                    const streamerAuthId = parseInt(authId);
+                    TwitchBot.getTwurpleApiClient()
+                        .predictions.createPrediction(streamerAuthId, helixPrediction)
+                        .catch(err => {
+                            console.log('Error Making Prediction', err);
+                        });
                     break;
                 case IncomingEvents.PLAY_AD:
                     console.log('Play Ad');
-                    TwitchBot.getTwurpleChatClient().runCommercial(TWITCH_CHANNEL_LISTEN, 30).then();
+                    TwitchBot.getTwurpleChatClient()
+                        .runCommercial(TWITCH_CHANNEL_LISTEN, 30)
+                        .catch(err => {
+                            console.log('Error Playing Ad', err);
+                        });
                     break;
                 case IncomingEvents.VOICEBAN_COMPLETE:
                     TwitchBot.getVoiceBan()._resetUniqueVotedUsers();
@@ -89,8 +82,7 @@ export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance): void 
         ws.on('close', () => {
             // TODO reset all commands on twitch instance
             TwitchBot.getChatBan()._resetUniqueVotedUsers();
-            console.log('Cancelling All Ongoing Events, Client WebSocket Closed');
-            console.log('Trama Closed Connection', new Date().toLocaleString());
+            console.log('Cancelling All Ongoing Events, Client WebSocket Closed', new Date().toLocaleString());
         });
 
         ws.on('error', (err: Error) => {

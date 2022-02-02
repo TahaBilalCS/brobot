@@ -174,25 +174,28 @@ export class TwitchBot {
             case 'rpsturbo':
                 await this._startRPS(username);
                 break;
-            case 'reckoning':
+            case 'reck':
                 if (username.toLowerCase() === 'lebrotherbill') {
-                    console.log('This is running', this._channel);
-                    await this.twurpleChatClient.runCommercial(this._channel, 30);
+                    try {
+                        await this.twurpleChatClient.runCommercial(this._channel, 30);
+                    } catch (err) {
+                        console.log('Error Creating Ad', err);
+                    }
                 }
                 break;
-            case 'test':
+            case 'pred':
                 if (username.toLowerCase() === 'lebrotherbill') {
-                    console.log('Prediction Test', this._channel);
                     const helixPrediction: HelixCreatePredictionData = {
                         autoLockAfter: 90,
                         outcomes: ['Yes', 'No'],
                         title: 'Will Trama Win This Game?'
                     };
                     try {
-                        // todo add scope to dev
-                        this.twurpleApiClient.predictions.createPrediction(699735970, helixPrediction).then();
+                        const authId = process.env.STREAMER_AUTH_ID || '';
+                        const streamerAuthId = parseInt(authId);
+                        await this.twurpleApiClient.predictions.createPrediction(streamerAuthId, helixPrediction);
                     } catch (err) {
-                        console.log('err');
+                        console.log('Error Making Prediction', err);
                     }
                 }
                 break;
