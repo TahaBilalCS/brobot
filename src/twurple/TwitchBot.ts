@@ -177,7 +177,8 @@ export class TwitchBot {
             case 'reck':
                 if (username.toLowerCase() === 'lebrotherbill') {
                     try {
-                        await this.twurpleChatClient.runCommercial(this._channel, 30);
+                        await this.twurpleChatClient.say(this._channel, '/commercial 30');
+                        // this.twurpleChatClient.runCommercial(this._channel, 30);
                     } catch (err) {
                         console.log('Error Creating Ad', err);
                     }

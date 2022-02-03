@@ -36,11 +36,12 @@ export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance): void 
                     break;
                 case IncomingEvents.PLAY_AD:
                     console.log('Play Ad');
-                    TwitchBot.getTwurpleChatClient()
-                        .runCommercial(TWITCH_CHANNEL_LISTEN, 30)
-                        .catch(err => {
-                            console.log('Error Playing Ad', err);
-                        });
+                    TwitchBot.getTwurpleChatClient().say(TWITCH_CHANNEL_LISTEN, '/commercial 30').then();
+                    // TwitchBot.getTwurpleChatClient()
+                    //     .runCommercial(TWITCH_CHANNEL_LISTEN, 30)
+                    //     .catch(err => {
+                    //         console.log('Error Playing Ad', err);
+                    //     });
                     break;
                 case IncomingEvents.VOICEBAN_COMPLETE:
                     TwitchBot.getVoiceBan()._resetUniqueVotedUsers();
