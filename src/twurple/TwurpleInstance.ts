@@ -62,6 +62,7 @@ export class TwitchInstance {
         if (twurpleOptions) return twurpleOptions;
 
         let accessToken, refreshToken;
+        // Todo Note: Running ads requires the streamer tokens for the chat client
         if (user === 'bot') {
             accessToken = process.env.BROBOT_ACCESS_TOKEN;
             refreshToken = process.env.BROBOT_REFRESH_TOKEN;
