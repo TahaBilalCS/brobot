@@ -77,6 +77,7 @@ router.get(
             'user:manage:blocked_users',
             'user:read:blocked_users',
             'user:read:broadcast',
+            'user:edit:broadcast',
             'user:read:follows',
             'user:read:subscriptions'
         ]

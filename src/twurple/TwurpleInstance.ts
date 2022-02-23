@@ -58,8 +58,8 @@ export class TwitchInstance {
     }
 
     async _getOrCreateTwurpleOptions(user: string): Promise<TwurpleInterface | null> {
-        const twurpleOptions: TwurpleInterface | null = await this._twurpleConfig.findOne({ user: user });
-        if (twurpleOptions) return twurpleOptions;
+        // const twurpleOptions: TwurpleInterface | null = await this._twurpleConfig.findOne({ user: user });
+        // if (twurpleOptions) return twurpleOptions;
 
         let accessToken, refreshToken;
         // Todo Note: Running ads requires the streamer tokens for the chat client
@@ -116,6 +116,7 @@ export class TwitchInstance {
                 'user:manage:blocked_users',
                 'user:read:blocked_users',
                 'user:read:broadcast',
+                'user:edit:broadcast',
                 'user:read:follows',
                 'user:read:subscriptions'
             ],
