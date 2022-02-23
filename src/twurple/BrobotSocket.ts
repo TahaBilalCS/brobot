@@ -17,7 +17,8 @@ export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance): void 
             switch (clientMessage) {
                 case IncomingEvents.CREATE_MARKER:
                     console.log('Create Marker');
-                    TwitchBot.getTwurpleChatClient().say(TWITCH_CHANNEL_LISTEN, '/marker').then();
+                    TwitchBot.getTwurpleApiClient().streams.createStreamMarker(TWITCH_CHANNEL_LISTEN, '').then();
+                    // TwitchBot.getTwurpleChatClient().say(TWITCH_CHANNEL_LISTEN, '/marker').then();
                     break;
                 case IncomingEvents.CREATE_PREDICTION:
                     console.log('Create Prediction');
