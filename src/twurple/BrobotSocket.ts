@@ -17,8 +17,10 @@ export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance): void 
             switch (clientMessage) {
                 case IncomingEvents.CREATE_MARKER:
                     console.log('Create Marker');
+                    let authId = process.env.STREAMER_AUTH_ID || '';
+                    let streamerAuthId = parseInt(authId);
                     TwitchBot.getTwurpleApiClient()
-                        .streams.createStreamMarker(TWITCH_CHANNEL_LISTEN, '')
+                        .streams.createStreamMarker(streamerAuthId, '')
                         .catch(err => {
                             console.log('Error Creating Marker', err);
                         });
@@ -31,10 +33,10 @@ export const socketConnect = (TwitchBot: TwitchBot, wsInstance: Instance): void 
                         outcomes: ['Yes', 'No'],
                         title: 'Will Trama Win This Game?'
                     };
-                    const authId = process.env.STREAMER_AUTH_ID || '';
-                    const streamerAuthId = parseInt(authId);
+                    let authId1 = process.env.STREAMER_AUTH_ID || '';
+                    let streamerAuthId1 = parseInt(authId1);
                     TwitchBot.getTwurpleApiClient()
-                        .predictions.createPrediction(streamerAuthId, helixPrediction)
+                        .predictions.createPrediction(streamerAuthId1, helixPrediction)
                         .catch(err => {
                             console.log('Error Creating Prediction', err);
                         });
