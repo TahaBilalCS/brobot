@@ -120,18 +120,20 @@ await (async function () {
         });
     } else {
         // Prod
+        await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // clean up subscriptions
+
         const middleware = new EventSubMiddleware({
             apiClient: twurpleInstance.botApiClient,
             hostName: 'brobot.xyz',
             pathPrefix: '/twitch',
-            secret: 'somesecret2'
+            secret: appenv.TEST_SECRET
         });
         // @ts-ignore
         await middleware.apply(app);
         app.listen(PORT, async () => {
             console.log(`Running on ${PORT} ⚡`);
             await middleware.markAsReady();
-            // await apiClient.eventSub.deleteAllSubscriptions(); // clean up subscriptions
+            // await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // clean up subscriptions
             await middleware.subscribeToChannelRedemptionAddEvents(
                 streamerAuthId,
                 (event: EventSubChannelRedemptionAddEvent) => {
