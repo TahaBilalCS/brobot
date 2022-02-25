@@ -8,9 +8,9 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 
 // Models before usage in Services and Routers
-import './models/User.js';
-import './models/Twurple.js';
-import './models/Pokemon.js';
+import './api/models/User.js';
+import './api/models/Twurple.js';
+import './api/models/Pokemon.js';
 
 // Initialize Twurple module
 import { twurpleInstance } from './twurple/TwurpleInstance.js';
