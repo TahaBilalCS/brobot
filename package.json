@@ -13,7 +13,7 @@
     "stage": "echo \"No script just yet\"",
     "prepare": "husky install",
     "preserve": "npm run build",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write 'src/**/*'.ts"
   },
   "repository": {
     "type": "git",

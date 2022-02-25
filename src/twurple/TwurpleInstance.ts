@@ -1,74 +1,104 @@
-/* eslint-disable */
-import process from 'process';
+import { TwurpleInterface } from '../api/models/Twurple.js';
 import mongoose, { QueryOptions } from 'mongoose';
-import moment from 'moment-timezone';
-
-import { TwurpleInterface } from '../models/Twurple.js';
-import { Instance } from 'express-ws';
-import { AuthProvider, RefreshingAuthProvider } from '@twurple/auth';
-import { ChatClient } from '@twurple/chat';
-import { socketConnect } from './BrobotSocket.js';
 import { TwitchBot } from './TwitchBot.js';
+import moment from 'moment-timezone';
+import { appenv } from '../config/appenv.js';
+import { ClientCredentialsAuthProvider, RefreshingAuthProvider } from '@twurple/auth';
+import { ChatClient } from '@twurple/chat';
 import { ApiClient } from '@twurple/api';
 
-//todo interface for this class?
-export class TwitchInstance {
-    private _twurpleConfig: mongoose.Model<TwurpleInterface>;
-    public twitchBot: TwitchBot | undefined;
-    constructor(private _wsInstance: Instance) {
-        this._twurpleConfig = mongoose.model<TwurpleInterface>('twurple');
+class TwurpleInstance {
+    private _twurpleConfig = mongoose.model<TwurpleInterface>('twurple');
+
+    /**
+     * Bot that incoming commands commands
+     * @private
+     */
+    private _twitchBot!: TwitchBot;
+
+    /**
+     * Chat client configured under bot's credentials
+     * @private
+     */
+    private _botChatClient!: ChatClient;
+
+    /**
+     * Api client configured under streamer's credentials
+     * @private
+     */
+    private _streamerApiClient!: ApiClient;
+
+    /**
+     * Api client configured under bot's credentials
+     * @private
+     */
+    private _botApiClient!: ApiClient;
+
+    get twitchBot(): TwitchBot {
+        return this._twitchBot;
     }
 
-    // Now, as long as top-level await has not landed in popular runtimes, you need to work around that by placing
-    // your main routine inside an async function and running it.
-    async init(): Promise<void> {
+    get botChatClient(): ChatClient {
+        return this._botChatClient;
+    }
+
+    get streamerApiClient(): ApiClient {
+        return this._streamerApiClient;
+    }
+
+    get botApiClient(): ApiClient {
+        return this._botApiClient;
+    }
+
+    public async initTwurple(): Promise<void> {
         // Use config in db or update refresh & auth tokens from environment
         const twurpleOptionsBot = await this._getOrCreateTwurpleOptions('bot');
         const twurpleOptionsStreamer = await this._getOrCreateTwurpleOptions('streamer');
         // If options were created/retrieved from DB
         if (twurpleOptionsBot && twurpleOptionsStreamer) {
-            // TODO warning, cant use twurple chat client to say anything when init, has to be in setTimeout.
             const timeNA_EST = moment.tz(twurpleOptionsBot.obtainmentTimestamp, 'America/New_York').format('ha z');
             console.log(`Twurple Options Obtained: ${timeNA_EST}`);
-            // Create refreshing auto provider in order to stay connected to twurple chat client
-            const twurpleBotRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(
-                twurpleOptionsBot,
-                'bot'
-            );
-            // Create refreshing auto provider in order to stay connected to twurple api client
-            const twurpleStreamerRefreshingAuthProvider = await this._createTwurpleRefreshingAuthProvider(
+
+            /** Create Auth Credentials */
+            // Create app token for bot API
+            const botApiAuth = new ClientCredentialsAuthProvider(appenv.TWITCH_CLIENT_ID, appenv.TWITCH_SECRET);
+            // Create refreshing auth provider in order to stay connected to twurple chat client
+            const botChatRefreshingAuth = this._createTwurpleRefreshingAuthProvider(twurpleOptionsBot, 'bot');
+            // Create refreshing auth provider in order to stay connected to twurple api client
+            const streamerApiRefreshingAuth = this._createTwurpleRefreshingAuthProvider(
                 twurpleOptionsStreamer,
                 'streamer'
             );
 
+            /** Init Clients and Bots */
+            // TODO warning: Can't use chat client to say anything when init.
+            // API Client for predictions/etc
+            this._streamerApiClient = new ApiClient({ authProvider: streamerApiRefreshingAuth });
             // Handle twitch chat messages and api client
-            const TwitchChatBot = await this._setupTwurpleChatBot(
-                twurpleBotRefreshingAuthProvider,
-                twurpleStreamerRefreshingAuthProvider
-            );
-            // Wait for chat bot to be registered
-            await TwitchChatBot.init();
+            this._botChatClient = await TwurpleInstance._createChatClient(botChatRefreshingAuth);
+            // API client for bot event subscriptions
+            this._botApiClient = new ApiClient({ authProvider: botApiAuth });
             // Set to twitch instance
-            this.twitchBot = TwitchChatBot;
-            // Handle client websocket messages
-            socketConnect(TwitchChatBot, this._wsInstance);
+            this._twitchBot = new TwitchBot();
+            // Wait for chat bot to be registered
+            await this._twitchBot.init();
         } else {
             console.log('Error Obtaining Twurple Options');
         }
     }
 
-    async _getOrCreateTwurpleOptions(user: string): Promise<TwurpleInterface | null> {
+    private async _getOrCreateTwurpleOptions(user: string): Promise<TwurpleInterface | null> {
         const twurpleOptions: TwurpleInterface | null = await this._twurpleConfig.findOne({ user: user });
         if (twurpleOptions) return twurpleOptions;
 
         let accessToken, refreshToken;
         // Todo Note: Running ads requires the streamer tokens for the chat client
         if (user === 'bot') {
-            accessToken = process.env.BROBOT_ACCESS_TOKEN;
-            refreshToken = process.env.BROBOT_REFRESH_TOKEN;
+            accessToken = appenv.BROBOT_ACCESS_TOKEN;
+            refreshToken = appenv.BROBOT_REFRESH_TOKEN;
         } else if (user === 'streamer') {
-            accessToken = process.env.STREAMER_ACCESS_TOKEN;
-            refreshToken = process.env.STREAMER_REFRESH_TOKEN;
+            accessToken = appenv.STREAMER_ACCESS_TOKEN;
+            refreshToken = appenv.STREAMER_REFRESH_TOKEN;
         }
 
         // If no options found
@@ -136,24 +166,21 @@ export class TwitchInstance {
     }
 
     // todo not sure if async callback onRefresh is why we need to make this function async
-    async _createTwurpleRefreshingAuthProvider(
+    private _createTwurpleRefreshingAuthProvider(
         twurpleOptions: TwurpleInterface,
         user: string
-    ): Promise<RefreshingAuthProvider> {
-        const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID || '';
-        const TWITCH_SECRET = process.env.TWITCH_SECRET || '';
-
+    ): RefreshingAuthProvider {
         return new RefreshingAuthProvider(
             {
-                clientId: TWITCH_CLIENT_ID,
-                clientSecret: TWITCH_SECRET,
-                onRefresh: async newTokenData => {
+                clientId: appenv.TWITCH_CLIENT_ID,
+                clientSecret: appenv.TWITCH_SECRET,
+                onRefresh: async (newTokenData): Promise<void> => {
                     // upsert will create a doc if not found, new will ensure newPokeDoc contains the newest db obj
                     const options: QueryOptions = { upsert: true, new: true };
 
                     // todo when updating MongooseError: Query was already executed: twurple.findOneAndUpdate({}
                     await this._twurpleConfig
-                        .findOneAndUpdate({ user: user }, newTokenData, options)
+                        .findOneAndUpdate({ user }, newTokenData, options)
                         .then(() => {
                             console.log('Success Update Twurple Options', new Date().toLocaleString());
                         })
@@ -166,25 +193,18 @@ export class TwitchInstance {
         );
     }
 
-    async _setupTwurpleChatBot(
-        twurpleBotRefreshingAuthProvider: RefreshingAuthProvider,
-        twurpleStreamerRefreshingAuthProvider: RefreshingAuthProvider
-    ): Promise<TwitchBot> {
-        const authProvider: AuthProvider = twurpleBotRefreshingAuthProvider;
-
-        const chatClient = new ChatClient({
+    private static async _createChatClient(authProvider: RefreshingAuthProvider): Promise<ChatClient> {
+        const botChatClient = new ChatClient({
             authProvider,
             isAlwaysMod: true, // https://twurple.js.org/reference/chat/interfaces/ChatClientOptions.html#isAlwaysMod
-            channels: [process.env.TWITCH_CHANNEL_LISTEN || '']
+            channels: [appenv.TWITCH_CHANNEL_LISTEN]
         });
-
-        // API Client for predictions/etc
-        const apiClient = new ApiClient({ authProvider: twurpleStreamerRefreshingAuthProvider });
-
-        // 100 per 30 seconds
+        // 100 requests per 30 seconds
         console.log('Connecting To Twurple Chat Client...');
-        await chatClient.connect();
+        await botChatClient.connect();
 
-        return new TwitchBot(chatClient, this._wsInstance, apiClient);
+        return botChatClient;
     }
 }
+
+export const twurpleInstance: TwurpleInstance = new TwurpleInstance();

@@ -3,7 +3,7 @@
 import { OAuth2Strategy } from 'passport-oauth';
 import request from 'request';
 import passport from 'passport';
-import process from 'process';
+import { appenv } from '../../config/appenv.js';
 import { Application } from 'express';
 import mongoose from 'mongoose';
 import type { UserInterface } from '../models/User.js';
@@ -11,9 +11,9 @@ import type { UserInterface } from '../models/User.js';
 export const init = (app: Application) => {
     const User = mongoose.model<UserInterface>('user');
 
-    const TWITCH_CLIENT_ID = process.env.TWITCH_CLIENT_ID;
-    const TWITCH_SECRET = process.env.TWITCH_SECRET;
-    const TWITCH_CALLBACK_URL = process.env.TWITCH_CALLBACK_URL;
+    const TWITCH_CLIENT_ID = appenv.TWITCH_CLIENT_ID;
+    const TWITCH_SECRET = appenv.TWITCH_SECRET;
+    const TWITCH_CALLBACK_URL = appenv.TWITCH_CALLBACK_URL;
 
     app.use(passport.initialize());
     app.use(passport.session());

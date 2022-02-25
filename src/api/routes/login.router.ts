@@ -15,7 +15,7 @@ const router = Router();
 
 router.get('/', (req: Request, res: Response) => {
     if (req.session?.passport && req.session.passport.user) {
-        // ${process.env.TWITCH_CLIENT_ID}, NODE:${process.env.TWITCH_CALLBACK_URL}, MONGO:${process.env.MONGO_URI}
+        // ${process.botenv.TWITCH_CLIENT_ID}, NODE:${process.botenv.TWITCH_CALLBACK_URL}, MONGO:${process.botenv.MONGO_URI}
         // User authenticated
         res.send(`
             <h1>SIGNED IN</h1>

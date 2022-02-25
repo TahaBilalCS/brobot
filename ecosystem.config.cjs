@@ -19,11 +19,11 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 // update environment variables in /etc/environment on EC2 instance. pm2 ain't working correctly
-                // pm2 caches environment variables and --update-env [--env aws] doesn't seem to be working
+                // pm2 caches environment variables and --update-botenv [--botenv aws] doesn't seem to be working
                 // Need to delete pm2 instance before starting instance again to update
             },
             'post-deploy':
-                'npm install && npm run build && pm2 startOrRestart ecosystem.config.cjs --update-env [--env aws]'
+                'npm install && npm run build && pm2 startOrRestart ecosystem.config.cjs --update-botenv [--botenv aws]'
         }
     }
 };

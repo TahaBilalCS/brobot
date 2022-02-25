@@ -1,7 +1,7 @@
-import process from 'process';
-import { ChatClient } from '@twurple/chat';
-import { Instance } from 'express-ws';
+import { appenv } from '../../config/appenv.js';
 import { OutgoingEvents } from '../types/EventsInterface.js';
+import { expressSocket } from '../../ws/ExpressSocket.js';
+import { twurpleInstance } from '../TwurpleInstance.js';
 
 // Only implements public properties (from getter)
 interface VoiceBanInterface {
@@ -12,20 +12,20 @@ interface VoiceBanInterface {
 
 // todo count how many times you lost to a user lichess
 export class VoiceBan implements VoiceBanInterface {
-    private readonly _twitchBotUsername = process.env.TWITCH_BOT_USERNAME || '';
+    private readonly _twitchBotUsername = appenv.TWITCH_BOT_USERNAME;
     private readonly _activateVoteThreshold: number;
     private readonly _channel: string; // Twitch channel
     private _currentVoteCount: number;
     private _uniqueVotedUsers: Set<string>;
     private _isListening: boolean; // Is ChatBan listening for more messages?
 
-    constructor(private _twurpleChatClient: ChatClient, private _wsInstance: Instance) {
+    constructor() {
         // Add bot so it doesn't respond to itself. This is already handled by Twurple though.
         this._uniqueVotedUsers = new Set(this._twitchBotUsername);
         this._isListening = true;
         this._currentVoteCount = 0;
         this._activateVoteThreshold = 4;
-        this._channel = process.env.TWITCH_CHANNEL_LISTEN || '';
+        this._channel = appenv.TWITCH_CHANNEL_LISTEN;
     }
 
     get currentVoteCount(): number {
@@ -44,7 +44,7 @@ export class VoiceBan implements VoiceBanInterface {
         this._isListening = isListening;
     }
 
-    _resetUniqueVotedUsers(): void {
+    public resetUniqueVotedUsers(): void {
         this._isListening = true;
         this._resetCurrentVoteCount();
         this._uniqueVotedUsers.clear();
@@ -69,7 +69,7 @@ export class VoiceBan implements VoiceBanInterface {
 
     // todo duplicate code
     getListeningClientsOnSocket(): number {
-        return this._wsInstance.getWss().clients.size;
+        return expressSocket.wsInstance.getWss().clients.size;
     }
 
     async handleMessage(username: string): Promise<void> {
@@ -82,34 +82,33 @@ export class VoiceBan implements VoiceBanInterface {
                 if (this._isUserUnique(username)) {
                     this._addUniqueUser(username);
                     this._incrementCurrentVoteCount();
-                    await this._twurpleChatClient.say(
+                    await twurpleInstance.botChatClient?.say(
                         this._channel,
                         `Your vote is ${this._currentVoteCount} of ${this._activateVoteThreshold} >:)`
                     );
                 } else {
-                    await this._twurpleChatClient.say(this._channel, `You already voted, ${username}`);
+                    await twurpleInstance.botChatClient?.say(this._channel, `You already voted, ${username}`);
                 }
                 if (this._currentVoteCount >= this._activateVoteThreshold) {
                     this._isListening = false;
                     // Send CHATBAN event to client
-                    this._wsInstance.getWss().clients.forEach(localClient => {
+                    expressSocket.wsInstance.getWss().clients.forEach(localClient => {
                         // TODO if client === trama
                         localClient.send(OutgoingEvents.VOICEBAN);
-                        // void needed since we don't need to do anything after. Can't reject
-                        void this._twurpleChatClient.say(
+                        twurpleInstance.botChatClient?.say(
                             this._channel,
                             `Vote Requirements Met. Removing ${this._channel}'s voice for 30 seconds...`
                         );
                     });
                 }
             } else {
-                await this._twurpleChatClient.say(
+                await twurpleInstance.botChatClient?.say(
                     this._channel,
                     'Trama is already muted. Wait until she is free again.'
                 );
             }
         } else {
-            await this._twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `${this._channel} is disconnected. This command won't do sheet`
             );

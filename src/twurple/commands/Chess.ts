@@ -1,7 +1,7 @@
 /* eslint-disable */
-import { ChatClient } from '@twurple/chat';
-import process from 'process';
+import { appenv } from '../../config/appenv.js';
 import axios from 'axios';
+import { twurpleInstance } from '../TwurpleInstance.js';
 
 export interface LichessChallengerUser {
     id: string;
@@ -59,13 +59,13 @@ export class Chess {
     uniqueCurrentTrankedUsers: Set<string>;
     mapTrankedUserToGameStage: Map<string, LichessGameStatus>;
 
-    constructor(public twurpleChatClient: ChatClient) {
+    constructor() {
         this.REFRESH_GAME_TIMER = 5000; // todo 1 minute, 60000
-        this.channel = process.env.TWITCH_CHANNEL_LISTEN || '';
+        this.channel = appenv.TWITCH_CHANNEL_LISTEN;
 
         this.lichessConfigReq = {
             headers: {
-                Authorization: 'Bearer ' + process.env.LICHESS_AUTH_TOKEN,
+                Authorization: 'Bearer ' + appenv.LICHESS_AUTH_TOKEN,
                 'Content-Type': 'application/json',
                 Accept: 'application/json'
             }
@@ -115,12 +115,12 @@ export class Chess {
         // console.log('Normal Game', normalGame);
 
         if (normalGame) {
-            await this.twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this.channel,
                 `${username} wants to play Chess. If you hate yourself too, click the link to challenge them! ${normalGame.url}`
             );
         } else {
-            await this.twurpleChatClient.say(this.channel, `Uhoh, something broke :(`);
+            await twurpleInstance.botChatClient?.say(this.channel, `Uhoh, something broke :(`);
         }
     }
 
@@ -194,7 +194,7 @@ export class Chess {
 //         setInterval(() => {
 //             const config = {
 //                 headers: {
-//                     Authorization: 'Bearer ' + process.env.LICHESS_AUTH_TOKEN,
+//                     Authorization: 'Bearer ' + process.botenv.LICHESS_AUTH_TOKEN,
 //                     'Content-Type': 'application/json',
 //                     Accept: 'application/json'
 //                 }

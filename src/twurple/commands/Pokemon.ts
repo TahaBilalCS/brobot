@@ -1,12 +1,13 @@
-import process from 'process';
-import { ChatClient } from '@twurple/chat';
-import { Instance } from 'express-ws';
+/* eslint-disable */
+import { appenv } from '../../config/appenv.js';
 import { BattleStreams, Dex, RandomPlayerAI, Teams } from '@pkmn/sim';
 import { TeamGenerators } from '@pkmn/randoms';
 import mongoose, { QueryOptions } from 'mongoose';
-import { PokemonInterface } from '../../models/Pokemon.js';
+import { PokemonInterface } from '../../api/models/Pokemon.js';
 import { pokedexArr, pokeRoarActions } from './pokemon/pokeInfo.js';
 import { OutgoingEvents } from '../types/EventsInterface.js';
+import { twurpleInstance } from '../TwurpleInstance.js';
+import { expressSocket } from '../../ws/ExpressSocket.js';
 
 enum BattleStatus {
     STOPPED = 'STOPPED',
@@ -24,12 +25,12 @@ interface PokemonBattle {
 // todo count how many times you lost to a user lichess
 export class Pokemon {
     private _dbPokemon: mongoose.Model<PokemonInterface> = mongoose.model<PokemonInterface>('pokemon');
-    private readonly _channel: string = process.env.TWITCH_CHANNEL_LISTEN || ''; // Twitch channel
+    private readonly _channel: string = appenv.TWITCH_CHANNEL_LISTEN; // Twitch channel
     private readonly _pokedex: string[] = pokedexArr; // Array of all pokemon strings
     private _battle: PokemonBattle = {};
     private _pokeRoarActionList = pokeRoarActions;
 
-    constructor(private _twurpleChatClient: ChatClient, private _wsInstance: Instance) {
+    constructor() {
         // test pokemon
         // const pokemon = Dex.forGen(3).species.get('Shedinja');
         // console.log(pokemon.randomBattleMoves);
@@ -70,19 +71,19 @@ export class Pokemon {
 
         if (newPokeDoc) {
             const randomRoar = this.pickRandomRoar();
-            await this._twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `/me ${username}'s Level 1 ${newPokeDoc.pokemonName} roared ${randomRoar}`
             );
             // If the new pokemon has no moves, notify user
             if (!pokemon.randomBattleMoves) {
-                await this._twurpleChatClient.say(
+                await twurpleInstance.botChatClient?.say(
                     this._channel,
                     `${username}, your pokemon can only use 'Hyperbeam' & 'Splash'... Details: https://imgur.com/a/2u62OUh`
                 );
             }
         } else {
-            await this._twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `This wasn't supposed to happen. ${username} failed to change pokemon. The refund police will be notified.`
             );
@@ -107,11 +108,11 @@ export class Pokemon {
                 if (!this._battle.userStarted) await this.createBattle(username);
                 // If no user started, create battle
                 else if (this._battle.userStarted === username)
-                    await this._twurpleChatClient.say(this._channel, `You can't battle yourself, ${username}`);
+                    await twurpleInstance.botChatClient?.say(this._channel, `You can't battle yourself, ${username}`);
                 else if (!this._battle.userAccepted) await this.acceptBattle(username);
                 // If we somehow entered this state
                 else
-                    await this._twurpleChatClient.say(
+                    twurpleInstance.botChatClient?.say(
                         this._channel,
                         `How unlucky, ${username}. Things might have gotten spammy. Try again later`
                     );
@@ -126,7 +127,7 @@ export class Pokemon {
                 }
                 break;
             default:
-                await this._twurpleChatClient.say(this._channel, `Pokemon Info: https://imgur.com/a/2u62OUh`);
+                await twurpleInstance.botChatClient?.say(this._channel, `Pokemon Info: https://imgur.com/a/2u62OUh`);
                 break;
         }
     }
@@ -142,12 +143,12 @@ export class Pokemon {
         // If level up updated inDB
         if (res) {
             // Note: The response is not the updated document for 'findOneAndUpdate'
-            await this._twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `${username}'s ${res.pokemonName} leveled up to ${res.pokemonLevel + 1}!`
             );
         } else {
-            await this._twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `${username}, you either don't have a pokemon, or something exploded. The refund police will be notified.`
             );
@@ -160,19 +161,19 @@ export class Pokemon {
         });
         if (userPokeDoc) {
             const randomRoar = this.pickRandomRoar();
-            this._wsInstance.getWss().clients.forEach(localClient => {
+            expressSocket.wsInstance.getWss().clients.forEach(localClient => {
                 // TODO if client === trama
                 console.log('Send Roar Websocket');
                 localClient.send(
                     JSON.stringify({ event: OutgoingEvents.POKEMON_ROAR, pokemonName: userPokeDoc.pokemonName })
                 );
             });
-            await this._twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `/me ${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} roared ${randomRoar}`
             );
         } else {
-            await this._twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `${username}, you either don't have a pokemon, or something exploded. As they say, git gud`
             );
@@ -188,14 +189,14 @@ export class Pokemon {
 
         // If user has pokemon in DB
         if (userPokeDoc) {
-            await this._twurpleChatClient.say(
+            twurpleInstance.botChatClient?.say(
                 this._channel,
                 `${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} wants to start a pokemon battle! You have 1 minute to accept their challenge, by using the command "!pokemon battle"`
             );
             this._battle.battleTimer = setInterval(() => {
                 // If timer not cleared yet, then end the pending battle
                 if (this._battle.battleTimer) {
-                    this._twurpleChatClient.say(
+                    twurpleInstance.botChatClient?.say(
                         this._channel,
                         `Ending pending pokemon battle for ${this._battle.userStarted}. You're just too intimidating man`
                     );
@@ -205,7 +206,7 @@ export class Pokemon {
             }, 1000 * 60);
         } else {
             this._battle.userStarted = undefined;
-            await this._twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `${username}, you either don't have a pokemon, or something exploded. As they say, git gud`
             );
@@ -230,7 +231,7 @@ export class Pokemon {
 
         if (!userStartedPokeDoc) {
             this._battle.userAccepted = undefined;
-            await this._twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `${this._battle.userStarted}, I have failed you. Something went wrong retrieving your stats. Try accepting this battle again.`
             );
@@ -238,7 +239,7 @@ export class Pokemon {
 
         if (!userAcceptedPokeDoc) {
             this._battle.userAccepted = undefined;
-            await this._twurpleChatClient.say(
+            await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `${username}, you tryna fight with your bare hands? Get a pokemon first`
             );
@@ -360,7 +361,7 @@ export class Pokemon {
                             const randomMoveString = randomMoveList[randomMoveIndex];
 
                             const moveString = noMoveString + winningMoveString; // One or the other is empty
-                            await this._twurpleChatClient.say(
+                            await twurpleInstance.botChatClient?.say(
                                 this._channel,
                                 `On turn ${turnCount}, ${winnerName}'s Level ${winnerPokeLevel} ${winnerPokeName} ${moveString} ${randomMoveString} ${loserName}'s Level ${loserPokeLevel} ${loserPokeName}`
                             );
@@ -368,7 +369,7 @@ export class Pokemon {
                             let levelUpWinner = true;
                             if (winnerPokeLevel - loserPokeLevel > 20) {
                                 levelUpWinner = false;
-                                await this._twurpleChatClient.say(
+                                await twurpleInstance.botChatClient?.say(
                                     this._channel,
                                     `${winnerName}, your pokemon is over 20 levels higher than your opponents'. You ain't gonna level up from this one`
                                 );
@@ -386,7 +387,7 @@ export class Pokemon {
                                     });
                                 // If level up updated inDB
                                 if (res) {
-                                    await this._twurpleChatClient.say(
+                                    await twurpleInstance.botChatClient?.say(
                                         this._channel,
                                         `${winnerName}'s ${winnerPokeName} leveled up to ${
                                             userStartedPokeDoc.pokemonLevel + 1
@@ -407,7 +408,7 @@ export class Pokemon {
                             const randomMoveString = randomMoveList[randomMoveIndex];
 
                             const moveString = noMoveString + winningMoveString; // One or the other is empty
-                            await this._twurpleChatClient.say(
+                            await twurpleInstance.botChatClient?.say(
                                 this._channel,
                                 `On turn ${turnCount}, ${winnerName}'s Level ${winnerPokeLevel} ${winnerPokeName} ${moveString} ${randomMoveString} ${loserName}'s Level ${loserPokeLevel} ${loserPokeName}`
                             );
@@ -415,7 +416,7 @@ export class Pokemon {
                             let levelUpWinner = true;
                             if (winnerPokeLevel - loserPokeLevel > 20) {
                                 levelUpWinner = false;
-                                await this._twurpleChatClient.say(
+                                await twurpleInstance.botChatClient?.say(
                                     this._channel,
                                     `${winnerName}, your pokemon is over 20 levels higher than your opponents'. You ain't gonna level up from this one`
                                 );
@@ -433,7 +434,7 @@ export class Pokemon {
                                     });
                                 // If level up updated inDB
                                 if (res) {
-                                    await this._twurpleChatClient.say(
+                                    await twurpleInstance.botChatClient?.say(
                                         this._channel,
                                         `${winnerName}'s ${winnerPokeName} leveled up to ${
                                             userAcceptedPokeDoc.pokemonLevel + 1
@@ -444,7 +445,7 @@ export class Pokemon {
                         } else {
                             console.log('winner', winner);
                             console.log('battle', this._battle);
-                            await this._twurpleChatClient.say(
+                            await twurpleInstance.botChatClient?.say(
                                 this._channel,
                                 `Oof, could not determine winner. Try again next time or report to the indie police`
                             );
@@ -454,11 +455,11 @@ export class Pokemon {
                         const lastNewLineIndex = turnChunk.lastIndexOf('\n');
                         const lastLineString = turnChunk.substr(lastNewLineIndex);
                         if (lastLineString.includes('tie')) {
-                            await this._twurpleChatClient.say(this._channel, `It was a...tie?`);
+                            await twurpleInstance.botChatClient?.say(this._channel, `It was a...tie?`);
                         } else {
                             // Log this too
                             console.log(`Didn't win and didn't draw? Wtf happened: ${lastLineString}`);
-                            await this._twurpleChatClient.say(
+                            await twurpleInstance.botChatClient?.say(
                                 this._channel,
                                 `Didn't win and didn't draw? Wtf happened: ${lastLineString}`
                             );
@@ -479,7 +480,7 @@ export class Pokemon {
             if (this._battle.battleTimer) clearInterval(this._battle.battleTimer);
             this._battle = {};
             console.log('Error During Pokemon Battle:', err);
-            await this._twurpleChatClient.say(this._channel, `Unknown Error During Pokemon Battle. Ending`);
+            await twurpleInstance.botChatClient?.say(this._channel, `Unknown Error During Pokemon Battle. Ending`);
         }
     }
 }
