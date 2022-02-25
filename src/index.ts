@@ -120,8 +120,7 @@ await (async function () {
         });
     } else {
         // Prod
-        await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // clean up subscriptions
-
+        // await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // clean up subscriptions
         const middleware = new EventSubMiddleware({
             apiClient: twurpleInstance.botApiClient,
             hostName: 'brobot.xyz',
@@ -133,7 +132,6 @@ await (async function () {
         app.listen(PORT, async () => {
             console.log(`Running on ${PORT} ⚡`);
             await middleware.markAsReady();
-            // await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // clean up subscriptions
             await middleware.subscribeToChannelRedemptionAddEvents(
                 streamerAuthId,
                 (event: EventSubChannelRedemptionAddEvent) => {
