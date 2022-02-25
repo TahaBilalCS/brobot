@@ -194,7 +194,7 @@ export class Chess {
 //         setInterval(() => {
 //             const config = {
 //                 headers: {
-//                     Authorization: 'Bearer ' + process.botenv.LICHESS_AUTH_TOKEN,
+//                     Authorization: 'Bearer ' + process.env.LICHESS_AUTH_TOKEN,
 //                     'Content-Type': 'application/json',
 //                     Accept: 'application/json'
 //                 }

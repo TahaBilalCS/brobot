@@ -124,7 +124,7 @@ await (async function () {
             apiClient: twurpleInstance.botApiClient,
             hostName: 'brobot.xyz',
             pathPrefix: '/twitch',
-            secret: appenv.TEST_SECRET // todo add different secret botenv
+            secret: appenv.TEST_SECRET
         });
         // @ts-ignore
         await middleware.apply(app);

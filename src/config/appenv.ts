@@ -16,7 +16,7 @@ export const appenv = {
     STREAMER_ACCESS_TOKEN: process.env.STREAMER_ACCESS_TOKEN!,
     STREAMER_REFRESH_TOKEN: process.env.STREAMER_REFRESH_TOKEN!,
     STREAMER_AUTH_ID: process.env.STREAMER_AUTH_ID!,
-    /** Shared Environment Vars Below */
+    /** Shared Environment Vars */
     PORT: process.env.PORT!,
     DOMAIN: process.env.DOMAIN!,
     BROBOT_ACCESS_TOKEN: process.env.BROBOT_ACCESS_TOKEN!,
