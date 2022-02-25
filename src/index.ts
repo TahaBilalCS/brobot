@@ -125,7 +125,7 @@ await (async function () {
             apiClient: twurpleInstance.botApiClient,
             hostName: 'brobot.xyz',
             pathPrefix: '/twitch',
-            secret: appenv.TEST_SECRET
+            secret: appenv.TEST_SECRET // Changing this secret/config requires us to delete all subscriptions
         });
         // @ts-ignore
         await middleware.apply(app);
