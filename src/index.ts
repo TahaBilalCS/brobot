@@ -7,12 +7,12 @@ import helmet from 'helmet';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
-// Models before usage in Services and Routers
+// Models before Services and Routers
 import './api/models/User.js';
 import './api/models/Twurple.js';
 import './api/models/Pokemon.js';
 
-// Initialize Twurple module
+// Initialize Twurple and Socket modules
 import { twurpleInstance } from './twurple/TwurpleInstance.js';
 import { expressSocket } from './ws/ExpressSocket.js';
 
@@ -46,7 +46,7 @@ await (async function () {
         await mongoose.connect(MONGO_URI);
         console.log('Mongoose Connected');
     } catch (err) {
-        console.log('Mongoose Failed?!', err);
+        console.log('Mongoose Connection Failed?!', err);
     }
 })();
 
