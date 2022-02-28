@@ -153,14 +153,13 @@ await (async function () {
                     console.log(
                         `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
                     );
+                    await twurpleInstance.botChatClient.say(
+                        appenv.TWITCH_CHANNEL_LISTEN,
+                        `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
+                    );
                 } catch (err) {
-                    console.log('Error Raid', err);
+                    console.log('Error Incoming Raid', err);
                 }
-
-                // await twurpleInstance.botChatClient.say(
-                //     appenv.TWITCH_CHANNEL_LISTEN,
-                //     `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
-                // );
             });
         });
     }
