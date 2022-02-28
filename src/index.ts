@@ -54,8 +54,8 @@ await (async function () {
  * Order matters
  * Use .urlencoded, .json, session, etc, before app.use(router) -> Our routes setup
  * Calling urlencoded & json to handle the Request Object from POST requests
- * todo express.json messes with subscriptions for twurple down below.
- * Need to not do it globally, and use it only in routes that need it
+ * todo express.json messes with subscriptions for twurple down below. No global, use it only in routes that need it
+ *
  */
 // app.use(express.urlencoded({ extended: true }));
 // app.use(express.json());
@@ -115,7 +115,7 @@ await (async function () {
                 console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
             });
             await devListener.subscribeToChannelBanEvents(streamerAuthId, (event: EventSubChannelBanEvent) => {
-                console.log('BANNED', event);
+                console.log(`${event.broadcasterDisplayName} just banned ${event.userDisplayName}!`);
             });
         });
     } else {
@@ -123,7 +123,7 @@ await (async function () {
         // await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // clean up subscriptions
         const middleware = new EventSubMiddleware({
             apiClient: twurpleInstance.botApiClient,
-            hostName: 'brobot.xyz',
+            hostName: appenv.DOMAIN,
             pathPrefix: '/twitch',
             secret: appenv.TEST_SECRET // Changing this secret/config requires us to delete all subscriptions
         });
@@ -153,7 +153,7 @@ await (async function () {
                     console.log(
                         `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
                     );
-                    await twurpleInstance.botChatClient.say(
+                    await twurpleInstance?.botChatClient.say(
                         appenv.TWITCH_CHANNEL_LISTEN,
                         `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
                     );

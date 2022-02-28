@@ -34,7 +34,7 @@ class ExpressSocket {
             outcomes: ['Yes', 'No'],
             title: 'Will Trama Win This Game?'
         };
-        this._wsInstance.app.ws('/ashketchum', (ws, req) => {
+        this._wsInstance.app.ws('/ashketchum', (ws /*, req*/) => {
             // On message from client
             ws.on('message', msg => {
                 const clientMessage = String(msg); // Raw Message From Client
@@ -57,6 +57,7 @@ class ExpressSocket {
                     case IncomingEvents.PLAY_AD:
                         console.log('Play Ad');
                         // Alternative: ChatClient().runCommercial
+                        // Note: Running ads requires the streamer tokens for the chat client
                         twurpleInstance.botChatClient?.say(TWITCH_CHANNEL_LISTEN, '/commercial 30').catch(err => {
                             console.log('Error Creating Ad', err);
                         });

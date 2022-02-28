@@ -1,15 +1,19 @@
 import { TwurpleInterface } from '../api/models/Twurple.js';
 import mongoose, { QueryOptions } from 'mongoose';
 import { TwitchBot } from './TwitchBot.js';
-import moment from 'moment-timezone';
+import { formatUTCToEST, getCurrentDateEST } from '../utils/TimeUtil.js';
 import { appenv } from '../config/appenv.js';
 import { ClientCredentialsAuthProvider, RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient } from '@twurple/chat';
 import { ApiClient } from '@twurple/api';
 
+enum AUTH_USER {
+    BOT = 'bot',
+    STREAMER = 'streamer'
+}
+
 class TwurpleInstance {
     private _twurpleConfig = mongoose.model<TwurpleInterface>('twurple');
-
     /**
      * Bot that incoming commands commands
      * @private
@@ -52,22 +56,22 @@ class TwurpleInstance {
 
     public async initTwurple(): Promise<void> {
         // Use config in db or update refresh & auth tokens from environment
-        const twurpleOptionsBot = await this._getOrCreateTwurpleOptions('bot');
-        const twurpleOptionsStreamer = await this._getOrCreateTwurpleOptions('streamer');
+        const twurpleOptionsBot = await this._getOrCreateTwurpleOptions(AUTH_USER.BOT);
+        const twurpleOptionsStreamer = await this._getOrCreateTwurpleOptions(AUTH_USER.STREAMER);
         // If options were created/retrieved from DB
         if (twurpleOptionsBot && twurpleOptionsStreamer) {
-            const timeNA_EST = moment.tz(twurpleOptionsBot.obtainmentTimestamp, 'America/New_York').format('ha z');
+            const timeNA_EST = formatUTCToEST(twurpleOptionsBot.obtainmentTimestamp);
             console.log(`Twurple Options Obtained: ${timeNA_EST}`);
 
             /** Create Auth Credentials */
             // Create app token for bot API
             const botApiAuth = new ClientCredentialsAuthProvider(appenv.TWITCH_CLIENT_ID, appenv.TWITCH_SECRET);
             // Create refreshing auth provider in order to stay connected to twurple chat client
-            const botChatRefreshingAuth = this._createTwurpleRefreshingAuthProvider(twurpleOptionsBot, 'bot');
+            const botChatRefreshingAuth = this._createTwurpleRefreshingAuthProvider(twurpleOptionsBot, AUTH_USER.BOT);
             // Create refreshing auth provider in order to stay connected to twurple api client
             const streamerApiRefreshingAuth = this._createTwurpleRefreshingAuthProvider(
                 twurpleOptionsStreamer,
-                'streamer'
+                AUTH_USER.STREAMER
             );
 
             /** Init Clients and Bots */
@@ -92,11 +96,10 @@ class TwurpleInstance {
         if (twurpleOptions) return twurpleOptions;
 
         let accessToken, refreshToken;
-        // Todo Note: Running ads requires the streamer tokens for the chat client
-        if (user === 'bot') {
+        if (user === AUTH_USER.BOT) {
             accessToken = appenv.BROBOT_ACCESS_TOKEN;
             refreshToken = appenv.BROBOT_REFRESH_TOKEN;
-        } else if (user === 'streamer') {
+        } else if (user === AUTH_USER.STREAMER) {
             accessToken = appenv.STREAMER_ACCESS_TOKEN;
             refreshToken = appenv.STREAMER_REFRESH_TOKEN;
         }
@@ -175,14 +178,12 @@ class TwurpleInstance {
                 clientId: appenv.TWITCH_CLIENT_ID,
                 clientSecret: appenv.TWITCH_SECRET,
                 onRefresh: async (newTokenData): Promise<void> => {
-                    // upsert will create a doc if not found, new will ensure newPokeDoc contains the newest db obj
+                    // upsert will create a doc if not found, new will ensure document contains the newest db obj
                     const options: QueryOptions = { upsert: true, new: true };
-
-                    // todo when updating MongooseError: Query was already executed: twurple.findOneAndUpdate({}
                     await this._twurpleConfig
                         .findOneAndUpdate({ user }, newTokenData, options)
                         .then(() => {
-                            console.log('Success Update Twurple Options', new Date().toLocaleString());
+                            console.log('Success Update Twurple Options', getCurrentDateEST());
                         })
                         .catch(err => {
                             console.log('Error Update Twurple Options DB:\n', err);
