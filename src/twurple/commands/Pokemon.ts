@@ -9,12 +9,18 @@ import { OutgoingEvents } from '../types/EventsInterface.js';
 import { twurpleInstance } from '../TwurpleInstance.js';
 import { expressSocket } from '../../ws/ExpressSocket.js';
 
+/**
+ * Status of pokemon battle
+ */
 enum BattleStatus {
     STOPPED = 'STOPPED',
     PENDING = 'PENDING',
     STARTED = 'STARTED'
 }
 
+/**
+ * Stores player battle info
+ */
 interface PokemonBattle {
     userStarted?: string;
     userAccepted?: string;
@@ -22,21 +28,48 @@ interface PokemonBattle {
     battleStatus?: BattleStatus;
 }
 
-// todo count how many times you lost to a user lichess
+/**
+ * Handles all pokemon related commands
+ */
 export class Pokemon {
+    /**
+     * Twurple model from db
+     * @private
+     */
     private _dbPokemon: mongoose.Model<PokemonInterface> = mongoose.model<PokemonInterface>('pokemon');
-    private readonly _channel: string = appenv.TWITCH_CHANNEL_LISTEN; // Twitch channel
-    private readonly _pokedex: string[] = pokedexArr; // Array of all pokemon strings
-    private _battle: PokemonBattle = {};
-    private _pokeRoarActionList = pokeRoarActions;
 
-    constructor() {
-        // test pokemon
-        // const pokemon = Dex.forGen(3).species.get('Shedinja');
-        // console.log(pokemon.randomBattleMoves);
-    }
+    /**
+     * Twitch streamer's channel name
+     * @private
+     */
+    private readonly _channel: string = appenv.TWITCH_CHANNEL_LISTEN;
+
+    /**
+     * Array of all pokemon strings
+     * @private
+     */
+    private readonly _pokedex: string[] = pokedexArr;
+
+    /**
+     * Stores player battle info
+     * @private
+     */
+    private _battle: PokemonBattle = {};
+
+    /**
+     * Array of quotes pokemon use when they roar
+     * @private
+     */
+    private _pokeRoarActionList: string[] = pokeRoarActions;
+
+    constructor() {}
+
     // todo pokemon lvl up, pokemon battle, pokemon roar (only once an hour)
-    async createOrChangePokemon(username: string) {
+    /**
+     * Create or replace a pokemon for a given user
+     * @param username
+     */
+    public async createOrChangePokemon(username: string) {
         // Random int from 0 - 385
         const randomPokeIndex = Math.floor(Math.random() * 385);
         // Convert to pokemon species object to ensure pokemon is usable
@@ -70,32 +103,41 @@ export class Pokemon {
             });
 
         if (newPokeDoc) {
-            const randomRoar = this.pickRandomRoar();
+            const randomRoar = this._pickRandomRoar();
             await twurpleInstance.botChatClient?.say(
                 this._channel,
-                `/me ${username}'s Level 1 ${newPokeDoc.pokemonName} roared ${randomRoar}`
+                `/me @${username}'s Level 1 ${newPokeDoc.pokemonName} roared ${randomRoar}`
             );
             // If the new pokemon has no moves, notify user
             if (!pokemon.randomBattleMoves) {
                 await twurpleInstance.botChatClient?.say(
                     this._channel,
-                    `${username}, your pokemon can only use 'Hyperbeam' & 'Splash'... Details: https://imgur.com/a/2u62OUh`
+                    `@${username}, your pokemon can only use 'Hyperbeam' & 'Splash'... Details: https://imgur.com/a/2u62OUh`
                 );
             }
         } else {
             await twurpleInstance.botChatClient?.say(
                 this._channel,
-                `This wasn't supposed to happen. ${username} failed to change pokemon. The refund police will be notified.`
+                `This wasn't supposed to happen. @${username} failed to change pokemon. The refund police will be notified.`
             );
         }
     }
 
-    pickRandomRoar(): string {
+    /**
+     * Pick a random roar from array
+     * @private
+     */
+    private _pickRandomRoar(): string {
         const randomRoadIndex = Math.floor(Math.random() * (this._pokeRoarActionList.length - 1));
         return this._pokeRoarActionList[randomRoadIndex];
     }
 
-    async handleMessage(username: string, args: string[]): Promise<void> {
+    /**
+     * Handle pokemon related commands
+     * @param username
+     * @param args
+     */
+    public async handleMessage(username: string, args: string[]): Promise<void> {
         switch (args[0]) {
             case 'create': // todo refund and remove
                 // Used to fix people's pokemon
@@ -105,16 +147,16 @@ export class Pokemon {
                 break;
             case 'battle':
                 // todo cooldown on battles?
-                if (!this._battle.userStarted) await this.createBattle(username);
+                if (!this._battle.userStarted) await this._createBattle(username);
                 // If no user started, create battle
                 else if (this._battle.userStarted === username)
-                    await twurpleInstance.botChatClient?.say(this._channel, `You can't battle yourself, ${username}`);
+                    await twurpleInstance.botChatClient?.say(this._channel, `You can't battle yourself, @${username}`);
                 else if (!this._battle.userAccepted) await this.acceptBattle(username);
                 // If we somehow entered this state
                 else
                     twurpleInstance.botChatClient?.say(
                         this._channel,
-                        `How unlucky, ${username}. Things might have gotten spammy. Try again later`
+                        `How unlucky, @${username}. Things might have gotten spammy. Try again later`
                     );
                 break;
             // case 'level': // todo refund and remove
@@ -123,7 +165,11 @@ export class Pokemon {
             case 'roar': // todo refund and remove
                 // Used to fix people's pokemon
                 if (username.toLowerCase() === 'lebrotherbill') {
-                    await this.roarUserPokemon(args[1].trim().toLowerCase());
+                    try {
+                        await this.roarUserPokemon(args[1].trim().toLowerCase());
+                    } catch (err) {
+                        console.log('ErrRoar', err);
+                    }
                 }
                 break;
             default:
@@ -132,8 +178,11 @@ export class Pokemon {
         }
     }
 
-    // todo refund police
-    async levelUpUserPokemon(username: string) {
+    /**
+     * Level up given user's pokemon in db
+     * @param username
+     */
+    public async levelUpUserPokemon(username: string) {
         // Level up winner's pokemon
         const res = await this._dbPokemon
             .findOneAndUpdate({ twitchName: username }, { $inc: { pokemonLevel: 1 } })
@@ -145,22 +194,26 @@ export class Pokemon {
             // Note: The response is not the updated document for 'findOneAndUpdate'
             await twurpleInstance.botChatClient?.say(
                 this._channel,
-                `${username}'s ${res.pokemonName} leveled up to ${res.pokemonLevel + 1}!`
+                `@${username}'s ${res.pokemonName} leveled up to ${res.pokemonLevel + 1}!`
             );
         } else {
             await twurpleInstance.botChatClient?.say(
                 this._channel,
-                `${username}, you either don't have a pokemon, or something exploded. The refund police will be notified.`
+                `@${username}, you either don't have a pokemon, or something exploded. The refund police will be notified.`
             );
         }
     }
 
-    async roarUserPokemon(username: string) {
+    /**
+     * Make a given user's pokemon roar in chat and send sound trigger event through ws
+     * @param username
+     */
+    public async roarUserPokemon(username: string) {
         const userPokeDoc = await this._dbPokemon.findOne({ twitchName: username }).catch(err => {
             console.log('Error Fetching Your Pokemon\n', err);
         });
         if (userPokeDoc) {
-            const randomRoar = this.pickRandomRoar();
+            const randomRoar = this._pickRandomRoar();
             expressSocket.wsInstance.getWss().clients.forEach(localClient => {
                 // TODO if client === trama
                 console.log('Send Roar Websocket');
@@ -170,17 +223,17 @@ export class Pokemon {
             });
             await twurpleInstance.botChatClient?.say(
                 this._channel,
-                `/me ${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} roared ${randomRoar}`
+                `/me @${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} roared ${randomRoar}`
             );
         } else {
             await twurpleInstance.botChatClient?.say(
                 this._channel,
-                `${username}, you either don't have a pokemon, or something exploded. As they say, git gud`
+                `@${username}, you either don't have a pokemon redeemed with channel points, or something exploded. Git gud`
             );
         }
     }
 
-    async createBattle(username: string) {
+    private async _createBattle(username: string) {
         this._battle.userStarted = username;
 
         const userPokeDoc = await this._dbPokemon.findOne({ twitchName: username }).catch(err => {
@@ -191,7 +244,7 @@ export class Pokemon {
         if (userPokeDoc) {
             twurpleInstance.botChatClient?.say(
                 this._channel,
-                `${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} wants to start a pokemon battle! You have 1 minute to accept their challenge, by using the command "!pokemon battle"`
+                `@${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} wants to start a pokemon battle! You have 1 minute to accept their challenge, by using the command "!pokemon battle"`
             );
             this._battle.battleTimer = setInterval(() => {
                 // If timer not cleared yet, then end the pending battle
@@ -208,13 +261,17 @@ export class Pokemon {
             this._battle.userStarted = undefined;
             await twurpleInstance.botChatClient?.say(
                 this._channel,
-                `${username}, you either don't have a pokemon, or something exploded. As they say, git gud`
+                `@${username}, you either don't have a pokemon, or something exploded. As they say, git gud`
             );
         }
     }
 
     async init() {}
 
+    /**
+     * Handle battle simulation 2nd player is confirmed
+     * @param username
+     */
     async acceptBattle(username: string) {
         this._battle.userAccepted = username; // Accept here to stop any other requests
 
@@ -233,7 +290,7 @@ export class Pokemon {
             this._battle.userAccepted = undefined;
             await twurpleInstance.botChatClient?.say(
                 this._channel,
-                `${this._battle.userStarted}, I have failed you. Something went wrong retrieving your stats. Try accepting this battle again.`
+                `@${this._battle.userStarted}, I have failed you. Something went wrong retrieving your stats. Try accepting this battle again.`
             );
         }
 
@@ -241,7 +298,7 @@ export class Pokemon {
             this._battle.userAccepted = undefined;
             await twurpleInstance.botChatClient?.say(
                 this._channel,
-                `${username}, you tryna fight with your bare hands? Get a pokemon first`
+                `@${username}, you tryna fight with your bare hands? Get a pokemon first using channel points`
             );
         }
 

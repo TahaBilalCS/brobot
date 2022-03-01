@@ -1,4 +1,3 @@
-/* eslint-disable */
 export enum IncomingEvents {
     TRAMA_CONNECTED = 'TRAMA_CONNECTED',
     CHATBAN_COMPLETE = 'CHATBAN_COMPLETE',

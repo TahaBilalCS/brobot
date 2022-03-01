@@ -1,5 +1,4 @@
 /* eslint-disable */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 import { OAuth2Strategy } from 'passport-oauth';
 import request from 'request';
 import passport from 'passport';
@@ -8,7 +7,7 @@ import { Application } from 'express';
 import mongoose from 'mongoose';
 import type { UserInterface } from '../models/User.js';
 
-export const init = (app: Application) => {
+export const init = (app: Application): void => {
     const User = mongoose.model<UserInterface>('user');
 
     const TWITCH_CLIENT_ID = appenv.TWITCH_CLIENT_ID;
@@ -31,7 +30,7 @@ export const init = (app: Application) => {
     });
 
     // Override passport profile function to get user profile from Twitch API
-    OAuth2Strategy.prototype.userProfile = function (accessToken: any, done: any): any {
+    OAuth2Strategy.prototype.userProfile = function (accessToken: string, done: any): any {
         const options = {
             url: 'https://api.twitch.tv/helix/users',
             method: 'GET',

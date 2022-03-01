@@ -1,5 +1,4 @@
-/* eslint-disable */
-import process from 'process';
+import { appenv } from '../../config/appenv.js';
 import { Router, Request, Response } from 'express';
 import passport from 'passport';
 
@@ -14,19 +13,20 @@ import passport from 'passport';
 const router = Router();
 
 router.get('/', (req: Request, res: Response) => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (req.session?.passport && req.session.passport.user) {
         // ${process.env.TWITCH_CLIENT_ID}, NODE:${process.env.TWITCH_CALLBACK_URL}, MONGO:${process.env.MONGO_URI}
         // User authenticated
         res.send(`
             <h1>SIGNED IN</h1>
-            NODE:${process.env.NODE_ENV}
+            NODE:${appenv.NODE_ENV}
             <a href='/api/logout'>Logout</a>
             <a href='/api/current_user'>Current User</a>
             <a href='/api/secret'>Secret</a>
         `);
     } else {
         res.send(`
-            NODE:${process.env.NODE_ENV}
+            NODE:${appenv.NODE_ENV}
             <a href='/auth/twitch'>Login</a>
             <a href='/api/current_user'>Current User</a>
             <a href='/api/secret'>Secret</a>
@@ -94,7 +94,9 @@ router.get(
 );
 
 /** Log out */
-router.get('/api/logout', (req: any, res: Response) => {
+router.get('/api/logout', (req: Request, res: Response) => {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     console.log('Logging out:', req.user?.displayName);
     req.logout();
     res.redirect('/');

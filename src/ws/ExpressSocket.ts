@@ -4,6 +4,7 @@ import { twurpleInstance } from '../twurple/TwurpleInstance.js';
 import { appenv } from '../config/appenv.js';
 import { IncomingEvents, OutgoingEvents } from '../twurple/types/EventsInterface.js';
 import { HelixCreatePredictionData } from '@twurple/api';
+import { getCurrentDateEST } from '../utils/TimeUtil.js';
 
 /**
  * Express App Starter - Gives access to app ws connection
@@ -12,7 +13,7 @@ class ExpressSocket {
     /** Non-null assertion on ws instance */
     private _wsInstance!: Instance;
 
-    get wsInstance(): Instance {
+    public get wsInstance(): Instance {
         return this._wsInstance;
     }
 
@@ -23,8 +24,15 @@ class ExpressSocket {
         this._wsInstance = enableWs(appBase);
     }
 
+    /**
+     * Get the number of clients listening on socket
+     */
+    public getListeningClientsOnSocket(): number {
+        return this._wsInstance.getWss().clients.size;
+    }
+
     public initSocket(): void {
-        console.log('Setup Server Websocket');
+        console.log('Init Server Websocket');
         // Init Consts
         const TWITCH_CHANNEL_LISTEN = appenv.TWITCH_CHANNEL_LISTEN;
         const authId = appenv.STREAMER_AUTH_ID;
@@ -64,8 +72,7 @@ class ExpressSocket {
                         break;
                     case IncomingEvents.VOICEBAN_COMPLETE:
                         console.log('Reset Voice Ban', new Date().toLocaleString());
-                        twurpleInstance.twitchBot?.getVoiceBan().resetUniqueVotedUsers();
-                        //TODO-BT check what happens if these error out inner callback
+                        twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
                         twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
                             `${TWITCH_CHANNEL_LISTEN} is now unmuted. All votes have been reset.`
@@ -73,7 +80,7 @@ class ExpressSocket {
                         break;
                     case IncomingEvents.CHATBAN_COMPLETE:
                         console.log('Reset Chat Ban', new Date().toLocaleString());
-                        twurpleInstance.twitchBot?.getChatBan().resetUniqueVotedUsers();
+                        twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
                         twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
                             `${TWITCH_CHANNEL_LISTEN} is now free. All votes have been reset.`
@@ -83,14 +90,14 @@ class ExpressSocket {
                         console.log('Client Connection Received', new Date().toLocaleString());
                         break;
                     case IncomingEvents.PING:
-                        console.log('Trama PING!', new Date().toLocaleString());
+                        console.log('Trama PING!', getCurrentDateEST());
                         this._wsInstance.getWss().clients.forEach(localClient => {
-                            console.log('Sending PONG!', new Date().toLocaleString());
+                            console.log('Sending PONG!', getCurrentDateEST());
                             localClient.send(OutgoingEvents.PONG);
                         });
                         break;
                     case 'broke':
-                        console.log('Chat/Voice Ban Broke', new Date().toLocaleString());
+                        console.log('Chat/Voice Ban Broke', getCurrentDateEST());
                         twurpleInstance.botChatClient?.say(TWITCH_CHANNEL_LISTEN, `Uhoh something broke :(`);
                         break;
                     default:
@@ -101,8 +108,8 @@ class ExpressSocket {
             // When client closes connection
             ws.on('close', () => {
                 // Remove underscore on these - TODO reset all commands on twitch instance
-                twurpleInstance.twitchBot?.getChatBan().resetUniqueVotedUsers();
-                twurpleInstance.twitchBot?.getVoiceBan().resetUniqueVotedUsers();
+                twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
+                twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
                 console.log('Cancelling All Ongoing Events, Client WebSocket Closed', new Date().toLocaleString());
             });
 

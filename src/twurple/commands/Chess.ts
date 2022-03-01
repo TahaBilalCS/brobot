@@ -1,9 +1,11 @@
-/* eslint-disable */
 import { appenv } from '../../config/appenv.js';
 import axios from 'axios';
 import { twurpleInstance } from '../TwurpleInstance.js';
 
-export interface LichessChallengerUser {
+/**
+ * A user on the Lichess website
+ */
+export interface LichessUser {
     id: string;
     name: string;
     online: boolean;
@@ -12,6 +14,9 @@ export interface LichessChallengerUser {
     title: string;
 }
 
+/**
+ * Lichess open ended game request
+ */
 export interface LichessOpenEndedGame {
     id: string;
     url: string;
@@ -19,14 +24,17 @@ export interface LichessOpenEndedGame {
     urlBlack: string;
     color: string;
 
-    challenger: LichessChallengerUser;
-    destUser: LichessChallengerUser;
+    challenger: LichessUser;
+    destUser: LichessUser;
 
     status: string;
     speed: string;
     rated: boolean;
 }
 
+/**
+ * Response creating Lichess challenge
+ */
 export interface LichessChallengeRes {
     data: {
         challenge: LichessOpenEndedGame;
@@ -35,35 +43,70 @@ export interface LichessChallengeRes {
     };
 }
 
+/**
+ * Designated player type (challenger or player)
+ */
 export interface LichessAssignedPlayer {
     user: string;
     url: string;
 }
 
+/**
+ * Status of a lichess game
+ */
 export interface LichessGameStatus {
     refreshGameCheckInterval: NodeJS.Timer;
     game: LichessOpenEndedGame;
     cancel?: boolean;
 }
 
+/**
+ * Handles Chess related commands
+ */
 export class Chess {
-    // CONSTS
+    /**
+     * Interval (millisecond) for getting game state
+     * @private
+     */
     private REFRESH_GAME_TIMER;
-    channel: string;
-    lichessBodyReq: any;
-    lichessConfigReq?: any;
-    // OTHERS
-    player?: LichessAssignedPlayer;
-    challenger?: LichessAssignedPlayer;
-    // TRANKED
-    uniqueCurrentTrankedUsers: Set<string>;
-    mapTrankedUserToGameStage: Map<string, LichessGameStatus>;
+
+    /**
+     * Streamer channel to broadcast messages to
+     * @private
+     */
+    private readonly _channel: string;
+
+    /**
+     * Body request
+     */
+    private _lichessBodyReq: any;
+
+    /**
+     * Body request config
+     */
+    private readonly _lichessConfigReq?: any;
+
+    /**
+     * User who is being challenged
+     */
+    // private _player?: LichessAssignedPlayer;
+
+    /**
+     * User who is challenging another user
+     */
+    // private _challenger?: LichessAssignedPlayer;
+
+    /**
+     * TODO: Use for later ranked matches
+     */
+    // private _uniqueCurrentTrankedUsers: Set<string>;
+    // private _mapTrankedUserToGameStage: Map<string, LichessGameStatus>;
 
     constructor() {
-        this.REFRESH_GAME_TIMER = 5000; // todo 1 minute, 60000
-        this.channel = appenv.TWITCH_CHANNEL_LISTEN;
+        this.REFRESH_GAME_TIMER = 5000; // todo 1 minute, 60000. Implement with later changes
+        this._channel = appenv.TWITCH_CHANNEL_LISTEN;
 
-        this.lichessConfigReq = {
+        this._lichessConfigReq = {
             headers: {
                 Authorization: 'Bearer ' + appenv.LICHESS_AUTH_TOKEN,
                 'Content-Type': 'application/json',
@@ -71,14 +114,14 @@ export class Chess {
             }
         };
 
-        this.uniqueCurrentTrankedUsers = new Set();
-        this.mapTrankedUserToGameStage = new Map();
+        // this._uniqueCurrentTrankedUsers = new Set();
+        // this._mapTrankedUserToGameStage = new Map();
     }
 
     async _createNewLichessGame(username: string): Promise<LichessOpenEndedGame | undefined> {
-        this.lichessBodyReq = {
+        this._lichessBodyReq = {
             rated: false,
-            // 'clock.limit': 3600, // todo ask ali // save this var
+            // 'clock.limit': 3600,
             // 'clock.increment': 0, // how many seconds gained after making a move
             variant: 'standard',
             name: `The Illustrious ${username} vs Super Duper Random Pooper!` // Game name
@@ -86,10 +129,10 @@ export class Chess {
         try {
             const res: LichessChallengeRes = await axios.post(
                 'https://lichess.org/api/challenge/open',
-                this.lichessBodyReq,
-                this.lichessConfigReq
+                this._lichessBodyReq,
+                this._lichessConfigReq
             );
-            const challenge: LichessOpenEndedGame = res?.data.challenge as LichessOpenEndedGame;
+            const challenge: LichessOpenEndedGame = res?.data.challenge;
             return {
                 id: challenge.id,
                 url: challenge.url,
@@ -112,21 +155,21 @@ export class Chess {
 
     async _createNormalGame(username: string): Promise<void> {
         const normalGame = await this._createNewLichessGame(username);
-        // console.log('Normal Game', normalGame);
 
         if (normalGame) {
             await twurpleInstance.botChatClient?.say(
-                this.channel,
-                `${username} wants to play Chess. If you hate yourself too, click the link to challenge them! ${normalGame.url}`
+                this._channel,
+                `@${username} wants to play Chess. If you hate yourself too, click the link to challenge them! ${normalGame.url}`
             );
         } else {
-            await twurpleInstance.botChatClient?.say(this.channel, `Uhoh, something broke :(`);
+            await twurpleInstance.botChatClient?.say(this._channel, `Uhoh, something broke :(`);
         }
     }
 
     async handleMessage(username: string): Promise<void> {
         await this._createNormalGame(username);
 
+        // TODO: Will implement more chess commands when Twitch extension is created
         // if (args.length === 0) {
         //     console.log('RULES');
         // } else if (args[0] === 'start') {
@@ -143,88 +186,3 @@ export class Chess {
         // }
     }
 }
-
-// export interface LichessCurrentGameStatusRes {
-//     id: string;
-//     rated: boolean;
-//     createdAt: number;
-//     status: string;
-//     winner?: string;
-// }
-
-//     async createTrankedGame(username: string): Promise<void> {
-//         // todo check if user not already in game
-//         let trankedGame = await this.createNewLichessGame(username);
-//         console.log('Tranked Game', trankedGame);
-//
-//         if (trankedGame) {
-//             if (Math.round(Math.random())) {
-//                 this.player = {
-//                     user: username,
-//                     url: trankedGame.urlWhite
-//                 };
-//                 this.challenger = {
-//                     user: 'Random',
-//                     url: trankedGame.urlBlack
-//                 };
-//             } else {
-//                 this.player = {
-//                     user: username,
-//                     url: trankedGame.urlBlack
-//                 };
-//                 this.challenger = {
-//                     user: 'Random',
-//                     url: trankedGame.urlWhite
-//                 };
-//             }
-//
-//             await this.twurpleChatClient.say(
-//                 this.channel,
-//                 `/me You know the rules, and so do I. ${username}, click THIS  ${this.player.url}`
-//             );
-//             await this.twurpleChatClient.say(
-//                 this.channel,
-//                 `Anyone can click THIS link to challenge ${username}. Beating them will lower their Trank :O ${this.challenger.url}`
-//             );
-//         } else {
-//             await this.twurpleChatClient.say(this.channel, `Uhoh, another thing broke :(`);
-//         }
-//
-//         // todo add game and interval into one object, and return that object. also append to list of similar objects
-//         setInterval(() => {
-//             const config = {
-//                 headers: {
-//                     Authorization: 'Bearer ' + process.env.LICHESS_AUTH_TOKEN,
-//                     'Content-Type': 'application/json',
-//                     Accept: 'application/json'
-//                 }
-//             };
-//
-//             console.log('id', id);
-//             axios
-//                 .get(`https://lichess.org/game/export/${id}`, config)
-//                 .then(res => {
-//                     const data = res.data as LichessCurrentGameStatusRes;
-//                     if (data.status === 'started') {
-//                         console.log('game started', data);
-//                     } else if (data.status === 'draw') {
-//                         console.log('draw');
-//                     } else if (data.status === 'mate') {
-//                         console.log('mate', data.winner);
-//                     } else if (data.status === 'resign') {
-//                         console.log('resign', data.winner);
-//                     } else if (data.status === 'outoftime') {
-//                         console.log('resign', data.winner);
-//                     } else {
-//                         console.log('Unknown status: ', data);
-//                         // todo check if winner is present
-//                         // if so update winner
-//                         // if not output error in chat
-//                     }
-//                 })
-//                 .catch(err => {
-//                     // todo try get request again it already does with interval once set
-//                     console.log('Game not started' /*, err*/);
-//                 });
-//         }, this.REFRESH_GAME_TIMER); // todo increase chess refresh time
-//     }

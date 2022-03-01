@@ -1,4 +1,3 @@
-/* eslint-disable */
 import process from 'process';
 import { appenv } from './config/appenv.js';
 import express, { Express } from 'express';
@@ -41,7 +40,7 @@ const { app } = expressSocket.wsInstance;
 
 // Wait for DB connection
 const MONGO_URI = appenv.MONGO_URI;
-await (async function () {
+await (async function (): Promise<void> {
     try {
         await mongoose.connect(MONGO_URI);
         console.log('Mongoose Connected');
@@ -83,12 +82,11 @@ app.use(helmet());
 passportService.init(app);
 
 /** Only other usage of top level async in order to start up app */
-await (async function () {
+await (async function (): Promise<void> {
     // Twurple setup before routes and ws init
     await twurpleInstance.initTwurple();
     // Setup ws events with twurpleInstance
     expressSocket.initSocket();
-
     /** Routes Init -controller used in router, service used in controller */
     app.use(loginRouter);
     app.use(userRouter);
@@ -107,16 +105,19 @@ await (async function () {
         await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions();
         await devListener.listen();
 
-        app.listen(PORT, async () => {
+        app.listen(PORT, () => {
             console.log(`Running on ${PORT} ⚡`);
-            await devListener.subscribeToChannelUnbanEvents(streamerAuthId, (event: EventSubChannelUnbanEvent) => {
-                const username = event.userDisplayName.trim().toLowerCase();
-                twurpleInstance.twitchBot?.Pokemon.roarUserPokemon(username);
-                console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
-            });
-            await devListener.subscribeToChannelBanEvents(streamerAuthId, (event: EventSubChannelBanEvent) => {
-                console.log(`${event.broadcasterDisplayName} just banned ${event.userDisplayName}!`);
-            });
+            // Funky syntax to handle linting error: i.e: no-misused-promises
+            void (async (): Promise<void> => {
+                await devListener.subscribeToChannelUnbanEvents(streamerAuthId, (event: EventSubChannelUnbanEvent) => {
+                    const username = event.userDisplayName.trim().toLowerCase();
+                    twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username);
+                    console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
+                });
+                await devListener.subscribeToChannelBanEvents(streamerAuthId, (event: EventSubChannelBanEvent) => {
+                    console.log(`${event.broadcasterDisplayName} just banned ${event.userDisplayName}!`);
+                });
+            })();
         });
     } else {
         // Prod
@@ -127,40 +128,43 @@ await (async function () {
             pathPrefix: '/twitch',
             secret: appenv.TEST_SECRET // Changing this secret/config requires us to delete all subscriptions
         });
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         await middleware.apply(app);
-        app.listen(PORT, async () => {
+        app.listen(PORT, () => {
             console.log(`Running on ${PORT} ⚡`);
-            await middleware.markAsReady();
-            await middleware.subscribeToChannelRedemptionAddEvents(
-                streamerAuthId,
-                (event: EventSubChannelRedemptionAddEvent) => {
-                    const username = event.userDisplayName.trim().toLowerCase();
-                    console.log(`${username} just redeemed ${event.rewardTitle}!`);
+            // Funky syntax to handle linting error: i.e: no-misused-promises
+            void (async (): Promise<void> => {
+                await middleware.markAsReady();
+                await middleware.subscribeToChannelRedemptionAddEvents(
+                    streamerAuthId,
+                    (event: EventSubChannelRedemptionAddEvent) => {
+                        const username = event.userDisplayName.trim().toLowerCase();
+                        console.log(`${username} just redeemed ${event.rewardTitle}!`);
 
-                    if (event.rewardTitle === 'Pokemon Roar') {
-                        twurpleInstance.twitchBot?.Pokemon.roarUserPokemon(username);
-                    } else if (event.rewardTitle === 'Pokemon Level Up') {
-                        twurpleInstance.twitchBot?.Pokemon.levelUpUserPokemon(username);
-                    } else if (event.rewardTitle === 'Pokemon Create') {
-                        twurpleInstance.twitchBot?.Pokemon.createOrChangePokemon(username);
+                        if (event.rewardTitle === 'Pokemon Roar') {
+                            twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username);
+                        } else if (event.rewardTitle === 'Pokemon Level Up') {
+                            twurpleInstance.twitchBot?.pokemon.levelUpUserPokemon(username);
+                        } else if (event.rewardTitle === 'Pokemon Create') {
+                            twurpleInstance.twitchBot?.pokemon.createOrChangePokemon(username);
+                        }
                     }
-                }
-            );
-
-            await middleware.subscribeToChannelRaidEventsTo(streamerAuthId, async (event: EventSubChannelRaidEvent) => {
-                try {
-                    console.log(
-                        `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
-                    );
-                    await twurpleInstance?.botChatClient.say(
-                        appenv.TWITCH_CHANNEL_LISTEN,
-                        `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
-                    );
-                } catch (err) {
-                    console.log('Error Incoming Raid', err);
-                }
-            });
+                );
+                await middleware.subscribeToChannelRaidEventsTo(streamerAuthId, (event: EventSubChannelRaidEvent) => {
+                    try {
+                        console.log(
+                            `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
+                        );
+                        twurpleInstance?.botChatClient.say(
+                            appenv.TWITCH_CHANNEL_LISTEN,
+                            `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
+                        );
+                    } catch (err) {
+                        console.log('Error Incoming Raid', err);
+                    }
+                });
+            })();
         });
     }
 })();

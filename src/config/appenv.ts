@@ -5,6 +5,7 @@ import process from 'process';
  * (?? '') used to handle possible undefined env vars
  */
 export const appenv = {
+    NODE_ENV: process.env.NODE_ENV ?? '',
     TEST_SECRET: process.env.TEST_SECRET ?? '',
     SESSION_SECRET: process.env.SESSION_SECRET ?? '',
     TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID ?? '',

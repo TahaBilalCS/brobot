@@ -1,7 +1,6 @@
-/* eslint-disable */
 /** Use controllers in router */
 import * as userService from '../services/user.service.js';
-import { NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 /**
  * Gets list of users
@@ -9,7 +8,7 @@ import { NextFunction } from 'express';
  * @param res
  * @param next
  */
-export const getUsers = async (req: Request, res: any, next: NextFunction) => {
+export const getUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const users = await userService.getUsers();
         res.send(users);
@@ -20,17 +19,18 @@ export const getUsers = async (req: Request, res: any, next: NextFunction) => {
 };
 
 /**
+ * TODO: Extend typescript typings
  * Gets a user by id
  * @param req
  * @param res
  * @param next
  */
-export const getUser = async (req: any, res: any, next: NextFunction) => {
-    try {
-        const users = await userService.getUser(req.user.id);
-        res.send(users);
-    } catch (err) {
-        console.log('Error getting user', err);
-        next(err);
-    }
-};
+// export const getUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//         const users = await userService.getUser(req.user?.oauthID as string);
+//         res.send(users);
+//     } catch (err) {
+//         console.log('Error getting user', err);
+//         next(err);
+//     }
+// };

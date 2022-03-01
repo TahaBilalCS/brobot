@@ -13,7 +13,12 @@ enum AUTH_USER {
 }
 
 class TwurpleInstance {
+    /**
+     * Twurple model from db
+     * @private
+     */
     private _twurpleConfig = mongoose.model<TwurpleInterface>('twurple');
+
     /**
      * Bot that incoming commands commands
      * @private
@@ -38,19 +43,19 @@ class TwurpleInstance {
      */
     private _botApiClient!: ApiClient;
 
-    get twitchBot(): TwitchBot {
+    public get twitchBot(): TwitchBot {
         return this._twitchBot;
     }
 
-    get botChatClient(): ChatClient {
+    public get botChatClient(): ChatClient {
         return this._botChatClient;
     }
 
-    get streamerApiClient(): ApiClient {
+    public get streamerApiClient(): ApiClient {
         return this._streamerApiClient;
     }
 
-    get botApiClient(): ApiClient {
+    public get botApiClient(): ApiClient {
         return this._botApiClient;
     }
 
@@ -78,13 +83,13 @@ class TwurpleInstance {
             // TODO warning: Can't use chat client to say anything when init.
             // API Client for predictions/etc
             this._streamerApiClient = new ApiClient({ authProvider: streamerApiRefreshingAuth });
-            // Handle twitch chat messages and api client
-            this._botChatClient = await TwurpleInstance._createChatClient(botChatRefreshingAuth);
             // API client for bot event subscriptions
             this._botApiClient = new ApiClient({ authProvider: botApiAuth });
+            // Create and wait for a chat client to be connected and registered
+            this._botChatClient = await this._createChatClientAndWaitForConnection(botChatRefreshingAuth);
             // Set to twitch instance
             this._twitchBot = new TwitchBot();
-            // Wait for chat bot to be registered
+            // Init asynchronous setup for bot commands
             await this._twitchBot.init();
         } else {
             console.log('Error Obtaining Twurple Options');
@@ -105,7 +110,7 @@ class TwurpleInstance {
         }
 
         // If no options found
-        console.log('Twurple Options Could Not Be Retrieved From DB, Making New One');
+        console.log('Twurple Options Could Not Be Retrieved From DB, Creating A New One');
         const newTwurpleConfig = {
             user: user,
             accessToken: accessToken,
@@ -194,7 +199,7 @@ class TwurpleInstance {
         );
     }
 
-    private static async _createChatClient(authProvider: RefreshingAuthProvider): Promise<ChatClient> {
+    private async _createChatClientAndWaitForConnection(authProvider: RefreshingAuthProvider): Promise<ChatClient> {
         const botChatClient = new ChatClient({
             authProvider,
             isAlwaysMod: true, // https://twurple.js.org/reference/chat/interfaces/ChatClientOptions.html#isAlwaysMod
@@ -202,9 +207,15 @@ class TwurpleInstance {
         });
         // 100 requests per 30 seconds
         console.log('Connecting To Twurple Chat Client...');
-        await botChatClient.connect();
 
-        return botChatClient;
+        // connect just makes the WSS connection, registration logs you in
+        await botChatClient.connect();
+        return new Promise<ChatClient>(resolve => {
+            botChatClient.onRegister(() => {
+                console.log('Twitch Bot Registered');
+                resolve(botChatClient);
+            });
+        });
     }
 }
 

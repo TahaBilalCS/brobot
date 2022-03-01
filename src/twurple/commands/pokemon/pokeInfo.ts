@@ -1,3 +1,6 @@
+/**
+ * Array used to randomly query a quote
+ */
 export const pokeRoarActions = [
     'as it tore through the house.',
     'at the scent of real food.',
@@ -18,6 +21,10 @@ export const pokeRoarActions = [
     `at its' body's reaction to the food.`,
     `to life at the scent of its' dark spices while it fought the urge to break down into hysterics.`
 ];
+
+/**
+ * Array used to query random pokemon
+ */
 export const pokedexArr = [
     'Bulbasaur',
     'Ivysaur',

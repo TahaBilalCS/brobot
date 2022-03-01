@@ -1,4 +1,3 @@
-/* eslint-disable */
 import { NextFunction, Request, Response } from 'express';
 
 /**
@@ -8,11 +7,12 @@ import { NextFunction, Request, Response } from 'express';
  * @param next
  */
 export function requireAuth(req: Request, res: Response, next: NextFunction): void {
-    if (req.session?.passport && req.session.passport.user) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (req.session?.passport && req.session?.passport.user) {
         next();
         return;
     }
 
-    // TODO 401?
+    // TODO: 401?
     res.status(403).send('Not permitted');
 }
