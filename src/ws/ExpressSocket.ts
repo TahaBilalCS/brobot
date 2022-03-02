@@ -71,7 +71,7 @@ class ExpressSocket {
                         });
                         break;
                     case IncomingEvents.VOICEBAN_COMPLETE:
-                        console.log('Reset Voice Ban', new Date().toLocaleString());
+                        console.log('Reset Voice Ban', getCurrentDateEST());
                         twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
                         twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
@@ -79,7 +79,7 @@ class ExpressSocket {
                         );
                         break;
                     case IncomingEvents.CHATBAN_COMPLETE:
-                        console.log('Reset Chat Ban', new Date().toLocaleString());
+                        console.log('Reset Chat Ban', getCurrentDateEST());
                         twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
                         twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
@@ -87,7 +87,7 @@ class ExpressSocket {
                         );
                         break;
                     case IncomingEvents.TRAMA_CONNECTED:
-                        console.log('Client Connection Received', new Date().toLocaleString());
+                        console.log('Client Connection Received', getCurrentDateEST());
                         break;
                     case IncomingEvents.PING:
                         console.log('Trama PING!', getCurrentDateEST());
@@ -110,7 +110,7 @@ class ExpressSocket {
                 // Remove underscore on these - TODO reset all commands on twitch instance
                 twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
                 twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
-                console.log('Cancelling All Ongoing Events, Client WebSocket Closed', new Date().toLocaleString());
+                console.log('Cancelling All Ongoing Events, Client WebSocket Closed', getCurrentDateEST());
             });
 
             ws.on('error', (err: Error) => {

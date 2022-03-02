@@ -244,7 +244,7 @@ export class Pokemon {
         if (userPokeDoc) {
             twurpleInstance.botChatClient?.say(
                 this._channel,
-                `@${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} wants to start a pokemon battle! You have 1 minute to accept their challenge, by using the command "!pokemon battle"`
+                `@${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} wants to battle! You have 1 minute to accept their challenge, by using the command "!pokemon battle"`
             );
             this._battle.battleTimer = setInterval(() => {
                 // If timer not cleared yet, then end the pending battle
