@@ -6,6 +6,7 @@ import { Pokemon } from './commands/Pokemon.js';
 import { getCurrentDateEST } from '../utils/TimeUtil.js';
 import { Vote } from './commands/Vote.js';
 import { OutgoingEvents } from './types/EventsInterface.js';
+import { PrivateMessage } from '@twurple/chat';
 
 /**
  * A bot that invokes commands based on a streamer's chat messages
@@ -85,10 +86,11 @@ export class TwitchBot {
         this._notifyChatInterval = this._setChatNotifyInterval(); // Alert chat every half an hour
         this._prizeRickRollInterval = this._setPrizeRickRollInterval(); // Rick roll every 3 days
         // Init onMessage handler
-        twurpleInstance.botChatClient?.onMessage((channel, user, message /*, msg: PrivateMessage*/) => {
+        twurpleInstance.botChatClient?.onMessage((channel, user, message, msg: PrivateMessage) => {
             // Trim whitespace on ends of strings
             const userMsg = message.trim();
             const username = user.trim().toLowerCase();
+            console.log(`@${username} Id Test:`, msg?.userInfo?.userId);
             // Funky syntax to handle linting error: i.e: no-misused-promises
             void this._handleCommand(username, userMsg).then(() => {
                 // Handle messages
