@@ -2,16 +2,18 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 export interface PokemonInterface {
+    uid: string;
     twitchName: string;
     pokemonName: string;
     pokemonLevel: number;
-    pokemonMoves: string[];
+    pokemonMoves: readonly string[];
     wins: number;
     losses: number;
 }
 
 // Mongo size limit is 4mb per record
 export const pokemonSchema = new Schema<PokemonInterface>({
+    uid: String,
     twitchName: String,
     pokemonName: String,
     pokemonLevel: Number,

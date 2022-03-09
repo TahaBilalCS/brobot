@@ -147,7 +147,7 @@ await (async function (): Promise<void> {
                         } else if (event.rewardTitle === 'Pokemon Level Up') {
                             twurpleInstance.twitchBot?.pokemon.levelUpUserPokemon(username);
                         } else if (event.rewardTitle === 'Pokemon Create') {
-                            twurpleInstance.twitchBot?.pokemon.createOrChangePokemon(username);
+                            twurpleInstance.twitchBot?.pokemon.createOrReplacePokemon(username);
                         }
                     }
                 );
