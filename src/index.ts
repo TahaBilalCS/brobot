@@ -141,6 +141,7 @@ await (async function (): Promise<void> {
                     (event: EventSubChannelRedemptionAddEvent) => {
                         const username = event.userDisplayName.trim().toLowerCase();
                         console.log(`@${username} just redeemed ${event.rewardTitle}!`);
+                        console.log('ID REDEEM:', event.userId);
 
                         if (event.rewardTitle === 'Pokemon Roar') {
                             twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username);
