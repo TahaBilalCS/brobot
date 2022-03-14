@@ -6,7 +6,7 @@ import { Pokemon } from './commands/Pokemon.js';
 import { getCurrentDateEST } from '../utils/TimeUtil.js';
 import { Vote } from './commands/Vote.js';
 import { OutgoingEvents } from './types/EventsInterface.js';
-import { PrivateMessage } from '@twurple/chat';
+import { ChatUser, PrivateMessage } from '@twurple/chat';
 
 /**
  * A bot that invokes commands based on a streamer's chat messages
@@ -88,11 +88,11 @@ export class TwitchBot {
         // Init onMessage handler
         twurpleInstance.botChatClient?.onMessage((channel, user, message, msg: PrivateMessage) => {
             // Trim whitespace on ends of strings
-            const userMsg = message.trim();
             const username = user.trim().toLowerCase();
-            console.log(`@${username} Id Test:`, msg?.userInfo?.userId);
+            const userMsg = message.trim();
+            const userInfo = msg.userInfo;
             // Funky syntax to handle linting error: i.e: no-misused-promises
-            void this._handleCommand(username, userMsg).then(() => {
+            void this._handleCommand(username, userMsg, userInfo).then(() => {
                 // Handle messages
                 void this._handleLulu(username, userMsg);
             });
@@ -198,16 +198,17 @@ export class TwitchBot {
      * No need to worry about bot responding to its' own messages. This is handled by Twurple
      * @param username
      * @param message
+     * @param userInfo
      * @private
      */
-    private async _handleCommand(username: string, message: string): Promise<void> {
+    private async _handleCommand(username: string, message: string, userInfo: ChatUser): Promise<void> {
         /**
          * Ex:
          * STRING = !chess stats
          * ARGS = ['stats', ...]
          * COMMAND = chess
          */
-        if (!message.startsWith('!')) return;
+        if (!message.startsWith('!')) return; // Do nothing if message doesn't start with "!"
         const args = message.slice(1).split(' '); // Remove ! and parse arguments after command
         const command = args.shift()?.toLowerCase(); // Only get command and modify args in place to exclude command
 
@@ -215,7 +216,7 @@ export class TwitchBot {
 
         switch (command) {
             case 'pokemon':
-                await this._pokemon.handleMessage(username, args);
+                await this._pokemon.handleMessage(username, args, userInfo.userId);
                 break;
             case 'chess':
                 await this._chess.handleMessage(username);

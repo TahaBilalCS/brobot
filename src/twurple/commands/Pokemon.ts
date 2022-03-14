@@ -1,6 +1,5 @@
-/* eslint-disable */
 import { appenv } from '../../config/appenv.js';
-import { BattleStreams, Dex, RandomPlayerAI, Teams } from '@pkmn/sim';
+import { BattleStreams, Dex, PokemonSet, RandomPlayerAI, StatsTable, Teams } from '@pkmn/sim';
 import { TeamGenerators } from '@pkmn/randoms';
 import mongoose, { QueryOptions } from 'mongoose';
 import { PokemonInterface } from '../../api/models/Pokemon.js';
@@ -14,20 +13,27 @@ import { getCurrentDateEST } from '../../utils/TimeUtil.js';
 /**
  * Status of pokemon battle
  */
-enum BattleStatus {
-    STOPPED = 'STOPPED',
-    PENDING = 'PENDING',
-    STARTED = 'STARTED'
-}
+// enum BattleStatus {
+//     PENDING = 'PENDING',
+//     STARTED = 'STARTED',
+//     FINISHED = 'FINISHED'
+// }
 
+/**
+ * Stored player info
+ */
+interface BattleUser {
+    name: string;
+    id: string;
+}
 /**
  * Stores player battle info
  */
 interface PokemonBattle {
-    userStarted?: string;
-    userAccepted?: string;
+    userStarted?: BattleUser;
+    userAccepted?: BattleUser;
     battleTimer?: NodeJS.Timer;
-    battleStatus?: BattleStatus;
+    // battleStatus?: BattleStatus;
 }
 
 /**
@@ -47,22 +53,10 @@ export class Pokemon {
     private readonly _channel: string = appenv.TWITCH_CHANNEL_LISTEN;
 
     /**
-     * Array of all pokemon strings
+     * Array of all valid pokemon names
      * @private
      */
     private readonly _pokedex: string[] = pokedexArr;
-
-    /**
-     * Stores player battle info
-     * @private
-     */
-    private _battle: PokemonBattle = {};
-
-    /**
-     * Store queried user ids to avoid re-querying
-     * @private
-     */
-    private _userNameToIdMap: Map<string, string> = new Map();
 
     /**
      * Array of quotes pokemon use when they roar
@@ -71,7 +65,14 @@ export class Pokemon {
     private _pokeRoarActionList: string[] = pokeRoarActions;
 
     /**
-     * Pick a random pokemon out of the 386 available
+     * Stores 2-player battle info
+     * @private
+     */
+    private _battle: PokemonBattle = {};
+
+    /**
+     * Return a random pokemon out of the 386 available
+     * @private
      */
     private _getRandomPokemon(): Species {
         // Random int from 0 - 385
@@ -81,56 +82,16 @@ export class Pokemon {
     }
 
     /**
-     * Return user id from map if found, otherwise return response from querying api for user
-     * @param username
+     * Determine the moves to assign a pokemon based on what's available
+     * @param pokemon
      * @private
      */
-    private async _getAndStoreUserId(username: string): Promise<string | undefined> {
-        // Return stored user id if username key found, can be undefined
-        if (this._userNameToIdMap.has(username)) {
-            const userId = this._userNameToIdMap.get(username);
-            if (userId) {
-                console.log(`@${username} ID Found: ${userId}`);
-                return userId;
-            }
-        } else {
-            // Query for user id and return id if found
-            const user = await twurpleInstance.botApiClient.users.getUserByName(username);
-            if (user?.id) {
-                this._userNameToIdMap.set(username, user.id);
-                console.log(`@${username} ID Stored: ${user.id}`);
-                return user.id;
-            }
-        }
-
-        return undefined;
-    }
-
-    public async appendIdsToAllUsersInDB(username: string): Promise<void> {
-        const allUsers = await this._dbPokemon.find({});
-        for (const user of allUsers) {
-            const storedUserId = await this._getAndStoreUserId(user.twitchName);
-            if (storedUserId) {
-                await this._dbPokemon.findOneAndUpdate({ twitchName: user.twitchName }, { uid: storedUserId });
-                console.log(user.twitchName + ' updated');
-            } else {
-                console.log(`Couldn't store used id for: @${user.twitchName}`);
-            }
-        }
-    }
-
-    /**
-     * Create or replace a pokemon for a given user
-     * @param username
-     */
-    public async createOrReplacePokemon(username: string): Promise<void | undefined> {
-        const randomPokemon = this._getRandomPokemon();
-
+    private _determinePokemonMoves(pokemon: Species): string[] {
         let pokemonMoves: string[] = [];
         // Get moves if they are available
-        if (randomPokemon.randomBattleMoves) {
-            // Convert readonly array into string array to satisfy PokemonInterface
-            randomPokemon.randomBattleMoves.forEach((move, idx) => {
+        if (pokemon && pokemon.randomBattleMoves) {
+            // Convert readonly ID type into string array to satisfy PokemonInterface
+            pokemon.randomBattleMoves.forEach((move, idx) => {
                 pokemonMoves[idx] = move;
             });
         } else {
@@ -138,9 +99,93 @@ export class Pokemon {
             pokemonMoves = ['hyperbeam', 'splash'];
         }
 
-        const storedUserId = await this._getAndStoreUserId(username);
-        const failureMessage = `@${username} failed to change pokemon. The refund police will be notified`;
+        return pokemonMoves;
+    }
+
+    /**
+     * Add or update a user's pokemon and log results
+     * @param userPokemon
+     * @param filter
+     * @param queryOptions
+     * @private
+     */
+    private async _updateOrAddUserPokemon(
+        userPokemon: PokemonInterface,
+        filter: Record<string, unknown>,
+        queryOptions?: QueryOptions
+    ): Promise<PokemonInterface | null> {
+        try {
+            // Replace user's pokemon in db or create new document if not found
+            return await this._dbPokemon.findOneAndUpdate(filter, userPokemon, queryOptions);
+        } catch (err) {
+            console.log(`Couldn't get @${userPokemon.twitchName}'s updated Pokemon: ${getCurrentDateEST()}`, err);
+            return null;
+        }
+    }
+
+    /**
+     * Add/update a pokemon for user based on their name. Can only be used by user with elevated permissions
+     * @param username
+     * @param pokemonName
+     * @param level
+     * @param wins
+     * @param loss
+     * @private
+     */
+    private async _fixPokemon(
+        username: string,
+        pokemonName: string,
+        level: string,
+        wins: string,
+        loss: string
+    ): Promise<void> {
+        const userAPI = await twurpleInstance.botApiClient.users.getUserByName(username);
+        const storedUserId = userAPI?.id;
+
+        // If user id found, create a pokemon for them
         if (storedUserId) {
+            const pokemon = Dex.forGen(3).species.get(pokemonName); // Get pokemon stats from name
+            const pokemonMoves: string[] = this._determinePokemonMoves(pokemon);
+
+            const userPokemon = {
+                twitchName: username,
+                pokemonName: pokemon.name,
+                pokemonLevel: parseInt(level),
+                pokemonMoves: pokemonMoves,
+                wins: parseInt(wins),
+                losses: parseInt(loss),
+                uid: storedUserId
+            };
+
+            // upsert will create a doc if not found, new will ensure newPokeDoc contains the newest db obj
+            const options: QueryOptions = { upsert: true, new: true };
+            const filter = { uid: userPokemon.uid };
+            await this._updateOrAddUserPokemon(userPokemon, filter, options);
+        } else {
+            await twurpleInstance.botChatClient?.say(this._channel, `Couldn't find user id for @${username}`);
+        }
+    }
+
+    /**
+     * Pick a random roar from array
+     * @private
+     */
+    private _pickRandomRoar(): string {
+        const randomRoadIndex = Math.floor(Math.random() * (this._pokeRoarActionList.length - 1));
+        return this._pokeRoarActionList[randomRoadIndex];
+    }
+
+    /**
+     * Create or replace a pokemon with base stats for a given user
+     * @param username
+     * @param userId
+     */
+    public async createOrReplacePokemon(username: string, userId: string): Promise<void | undefined> {
+        const failureMessage = `@${username} failed to change pokemon. The refund police will be notified`;
+
+        const randomPokemon = this._getRandomPokemon();
+        const pokemonMoves: string[] = this._determinePokemonMoves(randomPokemon);
+        if (userId) {
             const userRandomPokemon: PokemonInterface = {
                 twitchName: username,
                 pokemonName: randomPokemon.name,
@@ -148,21 +193,12 @@ export class Pokemon {
                 pokemonMoves: pokemonMoves,
                 wins: 0,
                 losses: 0,
-                uid: storedUserId
+                uid: userId
             };
 
-            // upsert will create a doc if not found, new will ensure newPokeDoc contains the newest db obj
             const options: QueryOptions = { upsert: true, new: true };
-            // Replace user's pokemon in db or create new document if not found
-            const newPokeDoc = await this._dbPokemon
-                .findOneAndUpdate({ uid: userRandomPokemon.uid }, userRandomPokemon, options)
-                .catch(err => {
-                    // Notify user
-                    twurpleInstance.botChatClient?.say(this._channel, failureMessage);
-                    // Log error
-                    console.log(`Couldn't change @${username}'s Pokemon: ${getCurrentDateEST()}`, err);
-                    return;
-                });
+            const filter = { uid: userRandomPokemon.uid };
+            const newPokeDoc = await this._updateOrAddUserPokemon(userRandomPokemon, filter, options);
 
             // If updated document retrieved from db
             if (newPokeDoc) {
@@ -178,10 +214,6 @@ export class Pokemon {
                         `@${username}, your pokemon can only use 'Hyperbeam' & 'Splash'... Details: https://imgur.com/a/2u62OUh`
                     );
                 }
-            } else {
-                // This shouldn't really happen
-                console.log(`Couldn't get @${username}'s updated Pokemon: ${getCurrentDateEST()}`);
-                await twurpleInstance.botChatClient?.say(this._channel, failureMessage);
             }
         } else {
             console.log(`Can't get user id for @${username}. Create Pokemon Cancelled`);
@@ -190,86 +222,28 @@ export class Pokemon {
     }
 
     /**
-     * Pick a random roar from array
-     * @private
-     */
-    private _pickRandomRoar(): string {
-        const randomRoadIndex = Math.floor(Math.random() * (this._pokeRoarActionList.length - 1));
-        return this._pokeRoarActionList[randomRoadIndex];
-    }
-
-    /**
-     * Handle pokemon related commands
-     * @param username
-     * @param args
-     */
-    public async handleMessage(username: string, args: string[]): Promise<void> {
-        switch (args[0]) {
-            case 'create': // todo refund and remove
-                // Used to fix people's pokemon
-                if (username.toLowerCase() === 'lebrotherbill') {
-                    await this.createOrReplacePokemon(args[1].trim().toLowerCase());
-                }
-                break;
-            case 'battle':
-                // todo cooldown on battles?
-                if (!this._battle.userStarted) await this._createBattle(username);
-                // If no user started, create battle
-                else if (this._battle.userStarted === username)
-                    await twurpleInstance.botChatClient?.say(this._channel, `You can't battle yourself, @${username}`);
-                else if (!this._battle.userAccepted) await this._acceptBattle(username);
-                // If we somehow entered this state
-                else
-                    twurpleInstance.botChatClient?.say(
-                        this._channel,
-                        `How unlucky, @${username}. Things might have gotten spammy. Try again later`
-                    );
-                break;
-            case 'level': // todo refund and remove
-                if (username.toLowerCase() === 'lebrotherbill') {
-                    await this.levelUpUserPokemon(args[1].trim().toLowerCase());
-                }
-                break;
-            case 'roar': // todo refund and remove
-                // Used to fix people's pokemon
-                if (username.toLowerCase() === 'lebrotherbill') {
-                    try {
-                        await this.roarUserPokemon(args[1].trim().toLowerCase());
-                    } catch (err) {
-                        console.log('ErrRoar', err);
-                    }
-                }
-                break;
-            case 'fix':
-                if (username.toLowerCase() === 'lebrotherbill') {
-                    await this.appendIdsToAllUsersInDB(args[1].trim().toLowerCase());
-                }
-                break;
-            default:
-                await twurpleInstance.botChatClient?.say(this._channel, `Pokemon Info: https://imgur.com/a/2u62OUh`);
-                break;
-        }
-    }
-
-    /**
      * Level up given user's pokemon in db
      * @param username
+     * @param userId
      */
-    public async levelUpUserPokemon(username: string) {
-        const storedUserId = await this._getAndStoreUserId(username);
-        if (storedUserId) {
-            // Level up winner's pokemon
-            const res = await this._dbPokemon
-                .findOneAndUpdate({ uid: storedUserId }, { $inc: { pokemonLevel: 1 } })
-                .catch(err => {
-                    console.log(`Error Leveling Pokemon for @${username} \n ${err}`);
-                });
-            // If level up updated inDB
-            if (res) {
+    public async levelUpUserPokemon(username: string, userId: string): Promise<void> {
+        if (userId) {
+            let userPokeDoc: PokemonInterface | null = null;
+            try {
+                const filter = { uid: userId };
+                const options: QueryOptions = { new: true };
+                // Level up winner's pokemon
+                userPokeDoc = await this._dbPokemon.findOneAndUpdate(filter, { $inc: { pokemonLevel: 1 } }, options);
+            } catch (err) {
+                console.log(`Couldn't get @${username}'s updated Pokemon: ${getCurrentDateEST()}`, err);
+            }
+
+            // If level up updated and retrieved from DB
+            if (userPokeDoc) {
                 // Note: The response is not the updated document for 'findOneAndUpdate'
                 await twurpleInstance.botChatClient?.say(
                     this._channel,
-                    `@${username}'s ${res.pokemonName} leveled up to ${res.pokemonLevel + 1}!`
+                    `@${username}'s ${userPokeDoc.pokemonName} leveled up to ${userPokeDoc.pokemonLevel}!`
                 );
             } else {
                 await twurpleInstance.botChatClient?.say(
@@ -278,28 +252,31 @@ export class Pokemon {
                 );
             }
         } else {
-            console.log(`Couldn't retrieve user id for @${username} when leveling a pokemon`);
+            console.log(`Couldn't retrieve user id for @${username} when leveling a pokemon: ${getCurrentDateEST()}`);
         }
     }
 
     /**
      * Make a given user's pokemon roar in chat and send sound trigger event through ws
      * @param username
+     * @param userId
      */
-    public async roarUserPokemon(username: string) {
-        const storedUserId = await this._getAndStoreUserId(username);
+    public async roarUserPokemon(username: string, userId: string): Promise<void> {
+        if (userId) {
+            let userPokeDoc: PokemonInterface | null = null;
+            try {
+                userPokeDoc = await this._dbPokemon.findOne({ uid: userId });
+            } catch (err) {
+                console.log(`Couldn't get @${username}'s updated Pokemon: ${getCurrentDateEST()}`, err);
+            }
 
-        if (storedUserId) {
-            const userPokeDoc = await this._dbPokemon.findOne({ uid: storedUserId }).catch(err => {
-                console.log(`Error When Pokemon Roar, @${username} \n`, err);
-            });
             if (userPokeDoc) {
                 const randomRoar = this._pickRandomRoar();
                 expressSocket.wsInstance.getWss().clients.forEach(localClient => {
                     // TODO if client === trama
                     console.log('Send Roar Websocket');
                     localClient.send(
-                        JSON.stringify({ event: OutgoingEvents.POKEMON_ROAR, pokemonName: userPokeDoc.pokemonName })
+                        JSON.stringify({ event: OutgoingEvents.POKEMON_ROAR, pokemonName: userPokeDoc?.pokemonName })
                     );
                 });
                 await twurpleInstance.botChatClient?.say(
@@ -313,32 +290,43 @@ export class Pokemon {
                 );
             }
         } else {
-            console.log(`Couldn't retrieve user id for @${username} when pokemon roars`);
+            console.log(`Couldn't retrieve user id for @${username} when pokemon roars: ${getCurrentDateEST()}`);
         }
     }
 
-    private async _createBattle(username: string) {
-        this._battle.userStarted = username;
+    /**
+     * Create a battle request and check user who started the battle has a pokemon
+     * @param username
+     * @param userId
+     * @private
+     */
+    private async _createBattle(username: string, userId: string): Promise<void> {
+        // Immediately set user to ensure no other battles are created while retrieving info
+        this._battle.userStarted = { name: username, id: userId };
 
-        const storedUserId = await this._getAndStoreUserId(username);
-        // todo check for error?
-        const userPokeDoc = await this._dbPokemon.findOne({ uid: storedUserId }).catch(err => {
-            console.log('Error Fetching Your Pokemon\n', err);
-        });
+        let userPokeDoc;
+        try {
+            userPokeDoc = await this._dbPokemon.findOne({ uid: userId });
+        } catch (err) {
+            console.log(`Error Finding Pokemon for User @${username}`, err);
+        }
 
         // If user has pokemon in DB
         if (userPokeDoc) {
             twurpleInstance.botChatClient?.say(
                 this._channel,
-                `@${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} wants to battle! You have 1 minute to accept their challenge, by using the command "!pokemon battle"`
+                `@${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} wants to battle! 
+                You have 1 minute to accept their challenge, by using the command "!pokemon battle"`
             );
             this._battle.battleTimer = setInterval(() => {
                 // If timer not cleared yet, then end the pending battle
                 if (this._battle.battleTimer) {
-                    twurpleInstance.botChatClient?.say(
-                        this._channel,
-                        `Ending pending pokemon battle for ${this._battle.userStarted}. You're just too intimidating man`
-                    );
+                    if (this._battle.userStarted) {
+                        twurpleInstance.botChatClient?.say(
+                            this._channel,
+                            `Ending pending pokemon battle for @${this._battle.userStarted?.name}. You're just too intimidating man`
+                        );
+                    }
                     clearInterval(this._battle.battleTimer);
                     this._battle = {};
                 }
@@ -352,32 +340,39 @@ export class Pokemon {
         }
     }
 
-    async init() {}
-
     /**
      * Handle battle simulation 2nd player is confirmed
      * @param username
+     * @param userId
      */
-    private async _acceptBattle(username: string): Promise<void> {
-        this._battle.userAccepted = username; // Accept here to stop any other requests
+    private async _acceptBattle(username: string, userId: string): Promise<void> {
+        // Immediately set user to ensure no other battles are created while retrieving info
+        this._battle.userAccepted = { name: username, id: userId };
 
         if (this._battle.userStarted) {
-            // todo does this error out?
-            const storedUserStartedId = await this._getAndStoreUserId(this._battle.userStarted);
-            const userStartedPokeDoc = await this._dbPokemon.findOne({ uid: storedUserStartedId }).catch(err => {
-                console.log('Error Fetching Your Pokemon\n', err);
-            });
-
-            const storedUserAcceptedId = await this._getAndStoreUserId(this._battle.userAccepted);
-            const userAcceptedPokeDoc = await this._dbPokemon.findOne({ uid: storedUserAcceptedId }).catch(err => {
-                console.log('Error Fetching Your Pokemon\n', err);
-            });
+            let userStartedPokeDoc, userAcceptedPokeDoc;
+            try {
+                const options: QueryOptions = { new: true };
+                // Find user by id, and update the username in case username has changed since they last used pokemon
+                userStartedPokeDoc = await this._dbPokemon.findOneAndUpdate(
+                    { uid: this._battle.userStarted.id },
+                    { twitchName: this._battle.userStarted.name },
+                    options
+                );
+                userAcceptedPokeDoc = await this._dbPokemon.findOneAndUpdate(
+                    { uid: this._battle.userAccepted.id },
+                    { twitchName: this._battle.userAccepted.name },
+                    options
+                );
+            } catch (err) {
+                console.log(`Error Fetching Pokemon for battle:`, this._battle, err);
+            }
 
             if (!userStartedPokeDoc) {
                 this._battle.userAccepted = undefined;
                 await twurpleInstance.botChatClient?.say(
                     this._channel,
-                    `@${this._battle.userStarted}, I have failed you. Something went wrong retrieving your stats. Try accepting this battle again.`
+                    `Something went horribly wrong. Try accepting this battle again...`
                 );
             }
 
@@ -389,36 +384,8 @@ export class Pokemon {
                 );
             }
 
-            try {
-                if (
-                    userStartedPokeDoc &&
-                    userAcceptedPokeDoc &&
-                    this._battle.userStarted &&
-                    this._battle.userAccepted
-                ) {
-                    let winnerName = '';
-                    let winnerPokeLevel = 0;
-                    let winnerPokeName = '';
-
-                    let noMoveString = '';
-                    let winningMoveString = '';
-
-                    let loserName = '';
-                    let loserPokeLevel = 0;
-                    let loserPokeName = '';
-
-                    const randomMoveList = [
-                        'completely obliterated',
-                        'absolutely brutalized',
-                        'thoroughly whooped',
-                        'downright annihilated',
-                        'unreservedly decimated',
-                        'utterly devastated',
-                        'totally eradicated',
-                        'perfectly liquidated',
-                        'unconditionally demolished'
-                    ];
-
+            if (userStartedPokeDoc && userAcceptedPokeDoc && this._battle.userStarted && this._battle.userAccepted) {
+                try {
                     // Initialize teams and pokemon battle stream
                     Teams.setGeneratorFactory(TeamGenerators);
                     const streams = BattleStreams.getPlayerStreams(new BattleStreams.BattleStream());
@@ -431,12 +398,13 @@ export class Pokemon {
                             gender: '',
                             moves: userStartedPokeDoc.pokemonMoves,
                             ability: '',
-                            evs: {},
-                            ivs: {},
+                            evs: {} as StatsTable,
+                            ivs: {} as StatsTable,
                             item: '',
                             level: userStartedPokeDoc.pokemonLevel,
-                            shiny: false
-                        }
+                            shiny: false,
+                            nature: ''
+                        } as PokemonSet
                     ];
 
                     const teamAccepted = [
@@ -446,32 +414,35 @@ export class Pokemon {
                             gender: '',
                             moves: userAcceptedPokeDoc.pokemonMoves,
                             ability: '',
-                            evs: {},
-                            ivs: {},
+                            evs: {} as StatsTable,
+                            ivs: {} as StatsTable,
                             item: '',
                             level: userAcceptedPokeDoc.pokemonLevel,
-                            shiny: false
-                        }
+                            shiny: false,
+                            nature: ''
+                        } as PokemonSet
                     ];
 
-                    // @ts-ignore
-                    const p1spec = { name: this._battle.userStarted, team: Teams.pack(teamStarted) };
-                    // @ts-ignore
-                    const p2spec = { name: this._battle.userAccepted, team: Teams.pack(teamAccepted) };
+                    // Init players' teams
+                    const p1spec = { name: this._battle.userStarted.name, team: Teams.pack(teamStarted) };
+                    const p2spec = { name: this._battle.userAccepted.name, team: Teams.pack(teamAccepted) };
 
+                    // Init players
                     const p1 = new RandomPlayerAI(streams.p1);
                     const p2 = new RandomPlayerAI(streams.p2);
 
-                    // Recommended usage in docs
-                    // A little weird but using await here will prevent the server from continuing.
+                    // Recommended usage in Pokemon-Showdown documentation
+                    // A little weird but using await here will prevent the app from continuing.
                     // Seems the way this library works is it initializes some things asynchronously and then
                     // lets the stream handle future inputs
                     void p1.start().then();
                     void p2.start().then();
 
-                    void (async () => {
+                    // Handle what happens during simulation
+                    void (async (): Promise<void> => {
                         let turnCount = 0;
                         let turnChunk = '';
+                        // Loop through each chunk of info in simulation
                         for await (turnChunk of streams.omniscient) {
                             // Count total number of turns in simulation
                             if (turnChunk.includes('|turn|')) {
@@ -479,135 +450,58 @@ export class Pokemon {
                             }
                         }
 
-                        const indexOfMove = turnChunk.lastIndexOf('|move|');
-                        // If winning move found
-                        if (indexOfMove !== -1) {
-                            const moveUnparsed = turnChunk.substr(indexOfMove);
-                            const move = moveUnparsed.split('\n')[0];
-                            const winnerMove = move.split('|');
-                            winningMoveString = 'used ' + winnerMove[3] + ' and'; // Ice Beam
-                        } else {
-                            noMoveString = 'mysteriously';
-                        }
-
+                        // Find index where winner is determined
                         const indexOfWin = turnChunk.lastIndexOf('|win|');
-                        // If won
+                        // If someone won
                         if (indexOfWin !== -1) {
-                            const winString = turnChunk.substr(indexOfWin);
+                            // The line where the winner is determined
+                            const winString = turnChunk.substring(indexOfWin);
+                            // Parsing out the winner's name.
+                            // Note: Winner string sometimes has new line e.g WinnerName \n |upkeep, use .includes() to determine
                             const winner = winString.split('|win|')[1];
-                            // Make winner
-                            // todo sometimes winner has new line like davisdior \n |upkeep, do a string includes comparison maybe
-                            if (winner === this._battle.userStarted) {
-                                winnerName = userStartedPokeDoc.twitchName;
-                                winnerPokeLevel = userStartedPokeDoc.pokemonLevel;
-                                winnerPokeName = userStartedPokeDoc.pokemonName;
 
-                                loserName = userAcceptedPokeDoc.twitchName;
-                                loserPokeLevel = userAcceptedPokeDoc.pokemonLevel;
-                                loserPokeName = userAcceptedPokeDoc.pokemonName;
-
-                                const randomMoveIndex = Math.floor(Math.random() * (randomMoveList.length - 1));
-                                const randomMoveString = randomMoveList[randomMoveIndex];
-
-                                const moveString = noMoveString + winningMoveString; // One or the other is empty
-                                await twurpleInstance.botChatClient?.say(
-                                    this._channel,
-                                    `On turn ${turnCount}, ${winnerName}'s Level ${winnerPokeLevel} ${winnerPokeName} ${moveString} ${randomMoveString} ${loserName}'s Level ${loserPokeLevel} ${loserPokeName}`
+                            // Handle winner outcomes
+                            if (this._battle.userStarted?.name && winner.includes(this._battle.userStarted.name)) {
+                                await this._handleBattleOutcome(
+                                    userStartedPokeDoc,
+                                    userAcceptedPokeDoc,
+                                    turnChunk,
+                                    turnCount
                                 );
-
-                                let levelUpWinner = true;
-                                if (winnerPokeLevel - loserPokeLevel > 20) {
-                                    levelUpWinner = false;
-                                    await twurpleInstance.botChatClient?.say(
-                                        this._channel,
-                                        `${winnerName}, your pokemon is over 20 levels higher than your opponents'. You ain't gonna level up from this one`
-                                    );
-                                }
-
-                                if (levelUpWinner) {
-                                    // Level up winner's pokemon
-                                    const res = await this._dbPokemon
-                                        .findOneAndUpdate(
-                                            { uid: storedUserStartedId },
-                                            { pokemonLevel: userStartedPokeDoc.pokemonLevel + 1 }
-                                        )
-                                        .catch(err => {
-                                            console.log('Error Leveling Pokemon\n', err);
-                                        });
-                                    // If level up updated inDB
-                                    if (res) {
-                                        await twurpleInstance.botChatClient?.say(
-                                            this._channel,
-                                            `${winnerName}'s ${winnerPokeName} leveled up to ${
-                                                userStartedPokeDoc.pokemonLevel + 1
-                                            }!`
-                                        );
-                                    }
-                                }
-                            } else if (winner === this._battle.userAccepted) {
-                                winnerName = userAcceptedPokeDoc.twitchName;
-                                winnerPokeLevel = userAcceptedPokeDoc.pokemonLevel;
-                                winnerPokeName = userAcceptedPokeDoc.pokemonName;
-
-                                loserName = userStartedPokeDoc.twitchName;
-                                loserPokeLevel = userStartedPokeDoc.pokemonLevel;
-                                loserPokeName = userStartedPokeDoc.pokemonName;
-
-                                const randomMoveIndex = Math.floor(Math.random() * (randomMoveList.length - 1));
-                                const randomMoveString = randomMoveList[randomMoveIndex];
-
-                                const moveString = noMoveString + winningMoveString; // One or the other is empty
-                                await twurpleInstance.botChatClient?.say(
-                                    this._channel,
-                                    `On turn ${turnCount}, ${winnerName}'s Level ${winnerPokeLevel} ${winnerPokeName} ${moveString} ${randomMoveString} ${loserName}'s Level ${loserPokeLevel} ${loserPokeName}`
+                            } else if (
+                                this._battle.userAccepted?.name &&
+                                winner.includes(this._battle.userAccepted.name)
+                            ) {
+                                await this._handleBattleOutcome(
+                                    userAcceptedPokeDoc,
+                                    userStartedPokeDoc,
+                                    turnChunk,
+                                    turnCount
                                 );
-
-                                let levelUpWinner = true;
-                                if (winnerPokeLevel - loserPokeLevel > 20) {
-                                    levelUpWinner = false;
-                                    await twurpleInstance.botChatClient?.say(
-                                        this._channel,
-                                        `${winnerName}, your pokemon is over 20 levels higher than your opponents'. You ain't gonna level up from this one`
-                                    );
-                                }
-
-                                if (levelUpWinner) {
-                                    // Level up winner's pokemon
-                                    const res = await this._dbPokemon
-                                        .findOneAndUpdate(
-                                            { uid: storedUserAcceptedId },
-                                            { pokemonLevel: userAcceptedPokeDoc.pokemonLevel + 1 }
-                                        )
-                                        .catch(err => {
-                                            console.log('Error Leveling Pokemon\n', err);
-                                        });
-                                    // If level up updated inDB
-                                    if (res) {
-                                        await twurpleInstance.botChatClient?.say(
-                                            this._channel,
-                                            `${winnerName}'s ${winnerPokeName} leveled up to ${
-                                                userAcceptedPokeDoc.pokemonLevel + 1
-                                            }!`
-                                        );
-                                    }
-                                }
                             } else {
-                                console.log('winner', winner);
-                                console.log('battle', this._battle);
+                                console.log('Debug Winner', winner);
+                                console.log('Debug Battle', this._battle);
                                 await twurpleInstance.botChatClient?.say(
                                     this._channel,
                                     `Oof, could not determine winner. Try again next time or report to the indie police`
                                 );
                             }
                         } else {
-                            // Assuming the last line contains the tie string
+                            // If no one won, check for a tie (Assuming the last line contains the tie string)
                             const lastNewLineIndex = turnChunk.lastIndexOf('\n');
-                            const lastLineString = turnChunk.substr(lastNewLineIndex);
+                            const lastLineString = turnChunk.substring(lastNewLineIndex);
                             if (lastLineString.includes('tie')) {
-                                await twurpleInstance.botChatClient?.say(this._channel, `It was a...tie?`);
+                                await twurpleInstance.botChatClient?.say(
+                                    this._channel,
+                                    `After ${turnCount} turns...it was a tie?`
+                                );
+                                await twurpleInstance.botChatClient?.say(
+                                    this._channel,
+                                    `Last Turn Details: \n ${turnChunk}`
+                                );
                             } else {
-                                // Log this too
                                 console.log(`Didn't win and didn't draw? Wtf happened: ${lastLineString}`);
+                                console.log(`Last Turn Details: \n ${turnChunk}`);
                                 await twurpleInstance.botChatClient?.say(
                                     this._channel,
                                     `Didn't win and didn't draw? Wtf happened: ${lastLineString}`
@@ -620,17 +514,130 @@ export class Pokemon {
                     })().then();
 
                     // Write streams but will jump to logic above
-                    streams.omniscient.write(`>start ${JSON.stringify(spec)}`);
-                    streams.omniscient.write(`>player p1 ${JSON.stringify(p1spec)}`);
-                    streams.omniscient.write(`>player p2 ${JSON.stringify(p2spec)}`);
+                    void streams.omniscient.write(`>start ${JSON.stringify(spec)}`);
+                    void streams.omniscient.write(`>player p1 ${JSON.stringify(p1spec)}`);
+                    void streams.omniscient.write(`>player p2 ${JSON.stringify(p2spec)}`);
+                } catch (err) {
+                    // Empty battle regardless of outcome
+                    if (this._battle.battleTimer) clearInterval(this._battle.battleTimer);
+                    this._battle = {};
+                    console.log('Error During Pokemon Battle:', err);
+                    await twurpleInstance.botChatClient?.say(this._channel, `Unknown Error. Ending Battle...`);
                 }
-            } catch (err) {
-                // Empty battle regardless of outcome
-                if (this._battle.battleTimer) clearInterval(this._battle.battleTimer);
-                this._battle = {};
-                console.log('Error During Pokemon Battle:', err);
-                await twurpleInstance.botChatClient?.say(this._channel, `Unknown Error During Pokemon Battle. Ending`);
             }
+        }
+    }
+
+    /**
+     * Handle the outcome of the battle and reward the winner with a level up if applicable
+     * @param winnerPokeDoc user from pokemon DB who won
+     * @param loserPokeDoc user from pokemon DB who lost
+     * @param turnChunk the last chunk of info from a simulation
+     * @param turnCount the number of turns in the simulation
+     * @private
+     */
+    private async _handleBattleOutcome(
+        winnerPokeDoc: PokemonInterface,
+        loserPokeDoc: PokemonInterface,
+        turnChunk: string,
+        turnCount: number
+    ): Promise<void> {
+        // Array of ways to win a battle - Adds a bit of flair you know
+        const randomMoveList = [
+            'completely obliterated',
+            'absolutely brutalized',
+            'thoroughly whooped',
+            'downright annihilated',
+            'unreservedly decimated',
+            'utterly devastated',
+            'totally eradicated',
+            'perfectly liquidated',
+            'unconditionally demolished'
+        ];
+
+        let noMoveString = '';
+        let winningMoveString = '';
+        // Find index of last move used to determine battle outcome
+        const indexOfWinningMove = turnChunk.lastIndexOf('|move|');
+        // If winning move found
+        if (indexOfWinningMove !== -1) {
+            const moveUnparsed = turnChunk.substring(indexOfWinningMove);
+            const move = moveUnparsed.split('\n')[0];
+            const winnerMove = move.split('|');
+            winningMoveString = 'used ' + winnerMove[3] + ' and'; // e.g. used Ice Beam and
+        } else {
+            noMoveString = 'mysteriously'; // Use temp string since winning move not found
+        }
+
+        const randomMoveIndex = Math.floor(Math.random() * (randomMoveList.length - 1));
+        const randomMoveString = randomMoveList[randomMoveIndex];
+        const moveString = noMoveString + winningMoveString; // One or the other is empty
+
+        // e.g. On turn 6, Bill's Level 6 Charizard totally eradicated Elia's Level 3 Bulbasaur
+        await twurpleInstance.botChatClient?.say(
+            this._channel,
+            `On turn ${turnCount}, ${winnerPokeDoc.twitchName}'s Level ${winnerPokeDoc.pokemonLevel} 
+            ${winnerPokeDoc.pokemonName} ${moveString} ${randomMoveString} ${loserPokeDoc.twitchName}'s Level 
+            ${loserPokeDoc.pokemonLevel} ${loserPokeDoc.pokemonName}`
+        );
+
+        // Determine if the winner should level up. Winner has to be <= 20 levels higher than opponents' level
+        let levelUpWinner = true;
+        if (winnerPokeDoc.pokemonLevel - loserPokeDoc.pokemonLevel > 20) {
+            levelUpWinner = false;
+            await twurpleInstance.botChatClient?.say(
+                this._channel,
+                `${winnerPokeDoc.twitchName}, your pokemon is over 20 levels higher than your opponents'. 
+                You ain't leveling up from this one`
+            );
+        }
+
+        // Level up winner if it applies
+        if (levelUpWinner) {
+            await this.levelUpUserPokemon(winnerPokeDoc.twitchName, winnerPokeDoc.uid);
+        }
+    }
+
+    /**
+     * Handle pokemon related commands
+     * @param username
+     * @param args
+     * @param userId
+     */
+    public async handleMessage(username: string, args: string[], userId: string): Promise<void> {
+        switch (args[0]) {
+            case 'battle':
+                if (!this._battle.userStarted) await this._createBattle(username, userId);
+                // If no user started, create battle
+                else if (this._battle.userStarted.name === username)
+                    await twurpleInstance.botChatClient?.say(this._channel, `You can't battle yourself, @${username}`);
+                else if (!this._battle.userAccepted) await this._acceptBattle(username, userId);
+                // If we somehow entered this state
+                else
+                    twurpleInstance.botChatClient?.say(
+                        this._channel,
+                        `How unlucky, @${username}. Things might have gotten spammy. Try again later`
+                    );
+                break;
+            // Note: Since we cannot redeem channel points on dev channel, the below cases are for ensuring it works on prod
+            case 'roar':
+                // Used to fix people's pokemon
+                if (username.toLowerCase() === 'lebrotherbill') {
+                    try {
+                        await this.roarUserPokemon(args[1].trim().toLowerCase(), args[2]);
+                    } catch (err) {
+                        console.log('Error Roar', err);
+                    }
+                }
+                break;
+            case 'fix':
+                if (username.toLowerCase() === 'lebrotherbill') {
+                    await this._fixPokemon(args[1].trim().toLowerCase(), args[2], args[3], args[4], args[5]);
+                }
+                break;
+            default:
+                await twurpleInstance.botChatClient?.say(this._channel, `Pokemon Info: https://imgur.com/a/2u62OUh`);
+                break;
         }
     }
 }

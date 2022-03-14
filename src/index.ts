@@ -111,7 +111,7 @@ await (async function (): Promise<void> {
             void (async (): Promise<void> => {
                 await devListener.subscribeToChannelUnbanEvents(streamerAuthId, (event: EventSubChannelUnbanEvent) => {
                     const username = event.userDisplayName.trim().toLowerCase();
-                    twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username);
+                    twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username, event.userId);
                     console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
                 });
                 await devListener.subscribeToChannelBanEvents(streamerAuthId, (event: EventSubChannelBanEvent) => {
@@ -141,28 +141,24 @@ await (async function (): Promise<void> {
                     (event: EventSubChannelRedemptionAddEvent) => {
                         const username = event.userDisplayName.trim().toLowerCase();
                         console.log(`@${username} just redeemed ${event.rewardTitle}!`);
-                        console.log('ID REDEEM:', event.userId);
 
                         if (event.rewardTitle === 'Pokemon Roar') {
-                            twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username);
+                            twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username, event.userId);
                         } else if (event.rewardTitle === 'Pokemon Level Up') {
-                            twurpleInstance.twitchBot?.pokemon.levelUpUserPokemon(username);
+                            twurpleInstance.twitchBot?.pokemon.levelUpUserPokemon(username, event.userId);
                         } else if (event.rewardTitle === 'Pokemon Create') {
-                            twurpleInstance.twitchBot?.pokemon.createOrReplacePokemon(username);
+                            twurpleInstance.twitchBot?.pokemon.createOrReplacePokemon(username, event.userId);
                         }
                     }
                 );
                 await middleware.subscribeToChannelRaidEventsTo(streamerAuthId, (event: EventSubChannelRaidEvent) => {
                     try {
-                        console.log(
-                            `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
-                        );
                         twurpleInstance?.botChatClient.say(
                             appenv.TWITCH_CHANNEL_LISTEN,
                             `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
                         );
                     } catch (err) {
-                        console.log('Error Incoming Raid', err);
+                        console.log('Error Incoming Raid:', err);
                     }
                 });
             })();

@@ -49,6 +49,7 @@ class ExpressSocket {
                 switch (clientMessage) {
                     case IncomingEvents.CREATE_MARKER:
                         console.log('Create Marker');
+                        // Can't use try catch since we can't await this promise
                         twurpleInstance.streamerApiClient?.streams.createStreamMarker(streamerAuthId, '').catch(err => {
                             console.log('Error Creating Marker', err);
                         });
@@ -75,7 +76,7 @@ class ExpressSocket {
                         twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
                         twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
-                            `${TWITCH_CHANNEL_LISTEN} is now unmuted. All votes have been reset.`
+                            `${TWITCH_CHANNEL_LISTEN} is free from VoiceBan. All votes have been reset.`
                         );
                         break;
                     case IncomingEvents.CHATBAN_COMPLETE:
@@ -83,7 +84,7 @@ class ExpressSocket {
                         twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
                         twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
-                            `${TWITCH_CHANNEL_LISTEN} is now free. All votes have been reset.`
+                            `${TWITCH_CHANNEL_LISTEN} is free from ChatBan. All votes have been reset.`
                         );
                         break;
                     case IncomingEvents.TRAMA_CONNECTED:

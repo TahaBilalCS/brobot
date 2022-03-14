@@ -185,14 +185,12 @@ class TwurpleInstance {
                 onRefresh: async (newTokenData): Promise<void> => {
                     // upsert will create a doc if not found, new will ensure document contains the newest db obj
                     const options: QueryOptions = { upsert: true, new: true };
-                    await this._twurpleConfig
-                        .findOneAndUpdate({ user }, newTokenData, options)
-                        .then(() => {
-                            console.log('Success Update Twurple Options', getCurrentDateEST());
-                        })
-                        .catch(err => {
-                            console.log('Error Update Twurple Options DB:\n', err);
-                        });
+                    try {
+                        await this._twurpleConfig.findOneAndUpdate({ user }, newTokenData, options);
+                        console.log('Success Update Twurple Options', getCurrentDateEST());
+                    } catch (err) {
+                        console.log('Error Update Twurple Options DB:\n', err);
+                    }
                 }
             },
             twurpleOptions
