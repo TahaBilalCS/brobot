@@ -24,5 +24,6 @@ export const appenv = {
     BROBOT_REFRESH_TOKEN: process.env.BROBOT_REFRESH_TOKEN ?? '',
     RIOT_API_KEY: process.env.RIOT_API_KEY ?? '',
     TWITCH_BOT_USERNAME: process.env.TWITCH_BOT_USERNAME ?? '',
-    LICHESS_AUTH_TOKEN: process.env.LICHESS_AUTH_TOKEN ?? ''
+    LICHESS_AUTH_TOKEN: process.env.LICHESS_AUTH_TOKEN ?? '',
+    WS_SECRET: process.env.WS_SECRET ?? ''
 };

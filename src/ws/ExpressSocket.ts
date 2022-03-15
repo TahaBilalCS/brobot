@@ -1,5 +1,5 @@
 import { Express } from 'express';
-import enableWs, { Instance } from 'express-ws';
+import enableWs, { Instance, Options } from 'express-ws';
 import { twurpleInstance } from '../twurple/TwurpleInstance.js';
 import { appenv } from '../config/appenv.js';
 import { IncomingEvents, OutgoingEvents } from '../twurple/types/EventsInterface.js';
@@ -21,7 +21,24 @@ class ExpressSocket {
      * Start express websocket app (Not in class constructor to control execution flow)
      */
     public setupSocket(appBase: Express): void {
-        this._wsInstance = enableWs(appBase);
+        const wsOptions: Options = {
+            wsOptions: {
+                // Authenticate client before establishing connection
+                verifyClient: (info, done) => {
+                    const token = info.req.headers.token;
+                    if (!token) {
+                        done(false, 401, 'Unauthorized');
+                    } else {
+                        if (token === appenv.WS_SECRET) {
+                            done(true);
+                        } else {
+                            done(false, 401, 'Unauthorized');
+                        }
+                    }
+                }
+            }
+        };
+        this._wsInstance = enableWs(appBase, undefined, wsOptions);
     }
 
     /**
@@ -108,7 +125,6 @@ class ExpressSocket {
 
             // When client closes connection
             ws.on('close', () => {
-                // Remove underscore on these - TODO reset all commands on twitch instance
                 twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
                 twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
                 console.log('Cancelling All Ongoing Events, Client WebSocket Closed', getCurrentDateEST());

@@ -53,7 +53,7 @@ await (async function (): Promise<void> {
  * Order matters
  * Use .urlencoded, .json, session, etc, before app.use(router) -> Our routes setup
  * Calling urlencoded & json to handle the Request Object from POST requests
- * todo express.json messes with subscriptions for twurple down below. No global, use it only in routes that need it
+ * Todo: express.json breaks subscriptions for twurple. Don't apply globally, use it only in routes that need it
  *
  */
 // app.use(express.urlencoded({ extended: true }));
@@ -94,6 +94,7 @@ await (async function (): Promise<void> {
     const PORT = appenv.PORT ? parseInt(appenv.PORT) : 3000;
     const streamerAuthId = parseInt(appenv.STREAMER_AUTH_ID);
 
+    // If in development, setup NgrokAdapter to handle event subscriptions
     if (process.env.NODE_ENV === 'development') {
         const devListener = new EventSubListener({
             logger: { name: 'Dev Logger', minLevel: LogLevel.DEBUG },
@@ -109,11 +110,13 @@ await (async function (): Promise<void> {
             console.log(`Running on ${PORT} ⚡`);
             // Funky syntax to handle linting error: i.e: no-misused-promises
             void (async (): Promise<void> => {
+                // Subscribe to unban event
                 await devListener.subscribeToChannelUnbanEvents(streamerAuthId, (event: EventSubChannelUnbanEvent) => {
                     const username = event.userDisplayName.trim().toLowerCase();
                     twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username, event.userId);
                     console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
                 });
+                // Subscribe to ban event
                 await devListener.subscribeToChannelBanEvents(streamerAuthId, (event: EventSubChannelBanEvent) => {
                     console.log(`${event.broadcasterDisplayName} just banned ${event.userDisplayName}!`);
                 });
@@ -121,12 +124,12 @@ await (async function (): Promise<void> {
         });
     } else {
         // Prod
-        // await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // clean up subscriptions
+        // await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // Clean up subscriptions
         const middleware = new EventSubMiddleware({
             apiClient: twurpleInstance.botApiClient,
             hostName: appenv.DOMAIN,
             pathPrefix: '/twitch',
-            secret: appenv.TEST_SECRET // Changing this secret/config requires us to delete all subscriptions
+            secret: appenv.TEST_SECRET // Note: changing this secret/config requires us to delete all subscriptions
         });
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
@@ -136,12 +139,14 @@ await (async function (): Promise<void> {
             // Funky syntax to handle linting error: i.e: no-misused-promises
             void (async (): Promise<void> => {
                 await middleware.markAsReady();
+                // Subscribe to all channel point redemption events
                 await middleware.subscribeToChannelRedemptionAddEvents(
                     streamerAuthId,
                     (event: EventSubChannelRedemptionAddEvent) => {
                         const username = event.userDisplayName.trim().toLowerCase();
                         console.log(`@${username} just redeemed ${event.rewardTitle}!`);
 
+                        // Handle redemptions tied to Pokemon
                         if (event.rewardTitle === 'Pokemon Roar') {
                             twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username, event.userId);
                         } else if (event.rewardTitle === 'Pokemon Level Up') {
@@ -151,8 +156,10 @@ await (async function (): Promise<void> {
                         }
                     }
                 );
+                // Subscribe to raid events
                 await middleware.subscribeToChannelRaidEventsTo(streamerAuthId, (event: EventSubChannelRaidEvent) => {
                     try {
+                        // Shout out the user who raided the stream
                         twurpleInstance?.botChatClient.say(
                             appenv.TWITCH_CHANNEL_LISTEN,
                             `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`

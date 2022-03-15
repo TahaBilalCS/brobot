@@ -587,7 +587,7 @@ export class Pokemon {
             levelUpWinner = false;
             await twurpleInstance.botChatClient?.say(
                 this._channel,
-                `${winnerPokeDoc.twitchName}, your pokemon is over 20 levels higher than your opponents'. 
+                `${winnerPokeDoc.twitchName}, your pokemon is over 20 levels higher than your opponent's. 
                 You ain't leveling up from this one`
             );
         }
