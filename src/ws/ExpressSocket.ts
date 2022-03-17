@@ -93,7 +93,7 @@ class ExpressSocket {
                         twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
                         twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
-                            `${TWITCH_CHANNEL_LISTEN} is free from VoiceBan. All votes have been reset.`
+                            `${TWITCH_CHANNEL_LISTEN} is now free. All VoiceBan votes have been reset.`
                         );
                         break;
                     case IncomingEvents.CHATBAN_COMPLETE:
@@ -101,7 +101,7 @@ class ExpressSocket {
                         twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
                         twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
-                            `${TWITCH_CHANNEL_LISTEN} is free from ChatBan. All votes have been reset.`
+                            `${TWITCH_CHANNEL_LISTEN} is now free. All ChatBan votes have been reset.`
                         );
                         break;
                     case IncomingEvents.TRAMA_CONNECTED:
