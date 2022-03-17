@@ -124,15 +124,15 @@ await (async function (): Promise<void> {
         });
     } else {
         // Prod
-        // await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // Clean up subscriptions
+        await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // Clean up subscriptions
         const middleware = new EventSubMiddleware({
             apiClient: twurpleInstance.botApiClient,
             hostName: appenv.DOMAIN,
             pathPrefix: '/twitch',
             secret: appenv.TEST_SECRET // Note: changing this secret/config requires us to delete all subscriptions
         });
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
+
+        // Note: We are passing the base express app, not the app returned from the ws instance
         await middleware.apply(appBase);
         app.listen(PORT, () => {
             console.log(`Running on ${PORT} ⚡`);
