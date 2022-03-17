@@ -133,7 +133,7 @@ await (async function (): Promise<void> {
         });
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        await middleware.apply(app);
+        await middleware.apply(appBase);
         app.listen(PORT, () => {
             console.log(`Running on ${PORT} ⚡`);
             // Funky syntax to handle linting error: i.e: no-misused-promises
