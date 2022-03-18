@@ -197,7 +197,7 @@ class TwurpleInstance {
                     const options: QueryOptions = { upsert: true, new: true };
                     try {
                         await this._twurpleConfig.findOneAndUpdate({ user }, newTokenData, options);
-                        logger.info('Success Update Twurple Options');
+                        logger.warn('Success Update Twurple Options');
                     } catch (err) {
                         logger.error('Error Update Twurple Options DB');
                         logger.error(err);
