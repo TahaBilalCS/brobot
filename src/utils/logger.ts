@@ -1,5 +1,5 @@
 import { transports, format, createLogger } from 'winston';
-const { combine, timestamp, ms, colorize, printf, errors, align } = format;
+const { combine, timestamp, ms, colorize, printf, align } = format;
 import { getCurrentDateEST } from './TimeUtil.js';
 
 /**
@@ -8,7 +8,6 @@ import { getCurrentDateEST } from './TimeUtil.js';
 export const logger = createLogger({
     level: 'info',
     format: combine(
-        errors({ stack: true }), // Stack trace for errors
         align(),
         timestamp({ format: getCurrentDateEST }), // Custom timestamp
         ms(), // Duration between logs
