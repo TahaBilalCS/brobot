@@ -126,7 +126,7 @@ export class Vote implements VoteInterface {
                     this._isListening = false;
                     // Send ChatBan ws event to client
                     expressSocket.wsInstance.getWss().clients.forEach(localClient => {
-                        // TODO: if client === trama
+                        // TODO: if client === trama (already authenticated though)
                         localClient.send(this._socketEvent);
                         twurpleInstance.botChatClient?.say(
                             this._channel,
