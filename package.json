@@ -1,7 +1,7 @@
 {
   "name": "brobot",
-  "version": "21.7.0",
-  "description": "Running on AWS EC2 instance for https and websocket server",
+  "version": "22.3.0",
+  "description": "Running a websocket & https server on an AWS EC2 instance",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
