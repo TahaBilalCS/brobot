@@ -1,4 +1,5 @@
 /** Use controllers in router */
+import { logger } from '../../utils/logger.js';
 import * as userService from '../services/user.service.js';
 import { Request, Response, NextFunction } from 'express';
 
@@ -13,7 +14,8 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction):
         const users = await userService.getUsers();
         res.send(users);
     } catch (err) {
-        console.log('Error getting users', err);
+        logger.error('Error getting users');
+        logger.error(err);
         next(err);
     }
 };
@@ -30,7 +32,8 @@ export const getUsers = async (req: Request, res: Response, next: NextFunction):
 //         const users = await userService.getUser(req.user?.oauthID as string);
 //         res.send(users);
 //     } catch (err) {
-//         console.log('Error getting user', err);
+//         logger.error('Error getting user');
+//         logger.error(err);
 //         next(err);
 //     }
 // };

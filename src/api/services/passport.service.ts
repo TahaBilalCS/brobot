@@ -1,4 +1,5 @@
 /* eslint-disable */
+import { logger } from '../../utils/logger.js';
 import { OAuth2Strategy } from 'passport-oauth';
 import request from 'request';
 import passport from 'passport';
@@ -7,6 +8,11 @@ import { Application } from 'express';
 import mongoose from 'mongoose';
 import type { UserInterface } from '../models/User.js';
 
+/**
+ * Override passport OAuth2 prototype to handle Twitch API's v3 migration
+ * TODO: Use library once supported
+ * @param app
+ */
 export const init = (app: Application): void => {
     const User = mongoose.model<UserInterface>('user');
 
@@ -66,10 +72,9 @@ export const init = (app: Application): void => {
                 state: true
             },
             async (accessToken: any, refreshToken: any, profile: any, done: any) => {
-                console.log('Access Token:', accessToken);
-                console.log('Refresh Token:', refreshToken);
+                logger.warn(`Access Token: ${accessToken}`);
+                logger.warn(`Refresh Token: ${refreshToken}`);
 
-                // todo lower case names
                 // Profile information stored in this response
                 const userProfile = profile.data[0];
 
@@ -77,7 +82,7 @@ export const init = (app: Application): void => {
 
                 // If user already exists
                 if (user) {
-                    console.log(`Existing User Login: ${userProfile.display_name}`);
+                    logger.info(`Existing User Login: ${userProfile.display_name}`);
                     done(null, user);
                 } else {
                     // TODO try/catch with done(errorObject,newUser)
@@ -92,11 +97,11 @@ export const init = (app: Application): void => {
                         }
                     }).save();
                     done(null, newUser);
-                    console.log(`New User Login: ${userProfile.display_name}`);
+                    logger.info(`New User Login: ${userProfile.display_name}`);
                 }
             }
         )
     );
 
-    console.log('Passport Initialized');
+    logger.warn('Passport Initialized');
 };

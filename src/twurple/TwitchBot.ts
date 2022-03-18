@@ -1,9 +1,9 @@
+import { logger } from '../utils/logger.js';
 import { appenv } from '../config/appenv.js';
 import { expressSocket } from '../ws/ExpressSocket.js';
 import { twurpleInstance } from './TwurpleInstance.js';
 import { Chess } from './commands/Chess.js';
 import { Pokemon } from './commands/Pokemon.js';
-import { getCurrentDateEST } from '../utils/TimeUtil.js';
 import { Vote } from './commands/Vote.js';
 import { OutgoingEvents } from './types/EventsInterface.js';
 import { ChatUser, PrivateMessage } from '@twurple/chat';
@@ -131,12 +131,13 @@ export class TwitchBot {
                     try {
                         await twurpleInstance.botChatClient?.timeout(this._channel, username, 30, 'Lulu');
                     } catch (err) {
-                        console.log('Error Timing Out (Possibly Modded) User', err);
+                        logger.error('Error Timing Out (Possibly Modded) User');
+                        logger.error(err);
                     }
                     this._angeeCount = 0;
                     break;
                 default:
-                    console.log(`How did we get here? Count: ${this._angeeCount}: ${getCurrentDateEST()}`);
+                    logger.error(`How did we get here? Count: ${this._angeeCount}`);
                     this._angeeCount = 0;
             }
         }
@@ -176,7 +177,7 @@ export class TwitchBot {
                     `Remember to use the commands: "!chatban" or "!voiceban", when Trama gets too emotional. Also rock, paper, scissor: !rps. Also pokemon: https://imgur.com/a/2u62OUh` // TODO OVERRIDDEN BY TRAMA
                 );
             }
-            console.log(`Clients On Socket: ${expressSocket.getListeningClientsOnSocket()}: ${getCurrentDateEST()}`);
+            logger.warn(`Clients On Socket: ${expressSocket.getListeningClientsOnSocket()}`);
         }, 1000 * 60 * 40); // Every 40 minutes
     }
 
@@ -212,7 +213,7 @@ export class TwitchBot {
         const args = message.slice(1).split(' '); // Remove ! and parse arguments after command
         const command = args.shift()?.toLowerCase(); // Only get command and modify args in place to exclude command
 
-        console.log(`@${username}: ${message} | ${getCurrentDateEST()}`);
+        logger.info(`@${username}: ${message}`);
 
         switch (command) {
             case 'pokemon':

@@ -4,7 +4,7 @@ import { twurpleInstance } from '../twurple/TwurpleInstance.js';
 import { appenv } from '../config/appenv.js';
 import { IncomingEvents, OutgoingEvents } from '../twurple/types/EventsInterface.js';
 import { HelixCreatePredictionData } from '@twurple/api';
-import { getCurrentDateEST } from '../utils/TimeUtil.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Express App Starter - Gives access to app ws connection
@@ -49,7 +49,7 @@ class ExpressSocket {
     }
 
     public initSocket(): void {
-        console.log('Init Server Websocket');
+        logger.warn('Init Server Websocket');
         // Init Consts
         const TWITCH_CHANNEL_LISTEN = appenv.TWITCH_CHANNEL_LISTEN;
         const authId = appenv.STREAMER_AUTH_ID;
@@ -65,31 +65,34 @@ class ExpressSocket {
                 const clientMessage = String(msg); // Raw Message From Client
                 switch (clientMessage) {
                     case IncomingEvents.CREATE_MARKER:
-                        console.log('Create Marker');
+                        logger.info('Create Marker');
                         // Can't use try catch since we can't await this promise
                         twurpleInstance.streamerApiClient?.streams.createStreamMarker(streamerAuthId, '').catch(err => {
-                            console.log('Error Creating Marker', err);
+                            logger.error('Error Creating Marker');
+                            logger.error(err);
                         });
                         break;
                     case IncomingEvents.CREATE_PREDICTION:
-                        console.log('Create Prediction');
+                        logger.info('Create Prediction');
                         twurpleInstance.streamerApiClient?.predictions
                             .createPrediction(streamerAuthId, helixPrediction)
                             .catch(err => {
-                                console.log('Error Creating Prediction', err);
+                                logger.error('Error Creating Prediction');
+                                logger.error(err);
                             });
 
                         break;
                     case IncomingEvents.PLAY_AD:
-                        console.log('Play Ad');
+                        logger.info('Play Ad');
                         // Alternative: ChatClient().runCommercial
                         // Note: Running ads requires the streamer tokens for the chat client
                         twurpleInstance.botChatClient?.say(TWITCH_CHANNEL_LISTEN, '/commercial 30').catch(err => {
-                            console.log('Error Creating Ad', err);
+                            logger.error('Error Creating Ad');
+                            logger.error(err);
                         });
                         break;
                     case IncomingEvents.VOICEBAN_COMPLETE:
-                        console.log('Reset Voice Ban', getCurrentDateEST());
+                        logger.info('Reset Voice Ban');
                         twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
                         twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
@@ -97,7 +100,7 @@ class ExpressSocket {
                         );
                         break;
                     case IncomingEvents.CHATBAN_COMPLETE:
-                        console.log('Reset Chat Ban', getCurrentDateEST());
+                        logger.info('Reset Chat Ban');
                         twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
                         twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
@@ -105,21 +108,22 @@ class ExpressSocket {
                         );
                         break;
                     case IncomingEvents.TRAMA_CONNECTED:
-                        console.log('Client Connection Received', getCurrentDateEST());
+                        logger.warn('Client Connection Received');
                         break;
                     case IncomingEvents.PING:
-                        console.log('Trama PING!', getCurrentDateEST());
+                        logger.warn('Trama PING!');
+                        // Respond with PONG when pinged
                         this._wsInstance.getWss().clients.forEach(localClient => {
-                            console.log('Sending PONG!', getCurrentDateEST());
+                            logger.warn('Sending PONG!');
                             localClient.send(OutgoingEvents.PONG);
                         });
                         break;
                     case 'broke':
-                        console.log('Chat/Voice Ban Broke', getCurrentDateEST());
+                        logger.info('Chat/Voice Ban Broke');
                         twurpleInstance.botChatClient?.say(TWITCH_CHANNEL_LISTEN, `Uhoh something broke :(`);
                         break;
                     default:
-                        console.log('BrobotSocket Received Unknown Message From Client', clientMessage);
+                        logger.info('BrobotSocket Received Unknown Message From Client', clientMessage);
                 }
             });
 
@@ -127,11 +131,12 @@ class ExpressSocket {
             ws.on('close', () => {
                 twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
                 twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
-                console.log('Cancelling All Ongoing Events, Client WebSocket Closed', getCurrentDateEST());
+                logger.warn('Cancelling All Ongoing Events, Client WebSocket Closed');
             });
 
             ws.on('error', (err: Error) => {
-                console.log('Server Websocket Error', err);
+                logger.error('Server Websocket Error');
+                logger.error(err);
             });
         });
     }

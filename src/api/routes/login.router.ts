@@ -1,3 +1,4 @@
+import { logger } from '../../utils/logger.js';
 import { appenv } from '../../config/appenv.js';
 import { Router, Request, Response } from 'express';
 import passport from 'passport';
@@ -97,7 +98,7 @@ router.get(
 router.get('/api/logout', (req: Request, res: Response) => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    console.log('Logging out:', req.user?.displayName);
+    logger.info(`Logging out: ${req.user?.displayName}`);
     req.logout();
     res.redirect('/');
 });

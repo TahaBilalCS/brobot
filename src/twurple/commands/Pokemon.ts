@@ -8,7 +8,7 @@ import { OutgoingEvents } from '../types/EventsInterface.js';
 import { twurpleInstance } from '../TwurpleInstance.js';
 import { expressSocket } from '../../ws/ExpressSocket.js';
 import { Species } from '@pkmn/sim/build/sim/dex-species';
-import { getCurrentDateEST } from '../../utils/TimeUtil.js';
+import { logger } from '../../utils/logger.js';
 
 /**
  * Status of pokemon battle
@@ -118,7 +118,8 @@ export class Pokemon {
             // Replace user's pokemon in db or create new document if not found
             return await this._dbPokemon.findOneAndUpdate(filter, userPokemon, queryOptions);
         } catch (err) {
-            console.log(`Couldn't get @${userPokemon.twitchName}'s updated Pokemon: ${getCurrentDateEST()}`, err);
+            logger.error(`Couldn't get @${userPokemon.twitchName}'s updated Pokemon`);
+            logger.error(err);
             return null;
         }
     }
@@ -216,7 +217,7 @@ export class Pokemon {
                 }
             }
         } else {
-            console.log(`Can't get user id for @${username}. Create Pokemon Cancelled`);
+            logger.error(`No user id for @${username} when creating pokemon`);
             await twurpleInstance.botChatClient?.say(this._channel, failureMessage);
         }
     }
@@ -235,7 +236,8 @@ export class Pokemon {
                 // Level up winner's pokemon
                 userPokeDoc = await this._dbPokemon.findOneAndUpdate(filter, { $inc: { pokemonLevel: 1 } }, options);
             } catch (err) {
-                console.log(`Couldn't get @${username}'s updated Pokemon: ${getCurrentDateEST()}`, err);
+                logger.error(`Couldn't get @${username}'s updated Pokemon`);
+                logger.error(err);
             }
 
             // If level up updated and retrieved from DB
@@ -252,7 +254,7 @@ export class Pokemon {
                 );
             }
         } else {
-            console.log(`Couldn't retrieve user id for @${username} when leveling a pokemon: ${getCurrentDateEST()}`);
+            logger.error(`No user id for @${username} when leveling pokemon`);
         }
     }
 
@@ -267,14 +269,15 @@ export class Pokemon {
             try {
                 userPokeDoc = await this._dbPokemon.findOne({ uid: userId });
             } catch (err) {
-                console.log(`Couldn't get @${username}'s updated Pokemon: ${getCurrentDateEST()}`, err);
+                logger.error(`Couldn't get @${username}'s updated Pokemon`);
+                logger.error(err);
             }
 
             if (userPokeDoc) {
                 const randomRoar = this._pickRandomRoar();
                 expressSocket.wsInstance.getWss().clients.forEach(localClient => {
-                    // TODO if client === trama
-                    console.log('Send Roar Websocket');
+                    // TODO if client === trama, although its authenticated anyways
+                    logger.info('Send Roar Websocket');
                     localClient.send(
                         JSON.stringify({ event: OutgoingEvents.POKEMON_ROAR, pokemonName: userPokeDoc?.pokemonName })
                     );
@@ -290,7 +293,7 @@ export class Pokemon {
                 );
             }
         } else {
-            console.log(`Couldn't retrieve user id for @${username} when pokemon roars: ${getCurrentDateEST()}`);
+            logger.error(`No user id for @${username} when pokemon roars`);
         }
     }
 
@@ -308,7 +311,8 @@ export class Pokemon {
         try {
             userPokeDoc = await this._dbPokemon.findOne({ uid: userId });
         } catch (err) {
-            console.log(`Error Finding Pokemon for User @${username}`, err);
+            logger.error(`Can't retrieve Pokemon for @${username}`);
+            logger.error(err);
         }
 
         // If user has pokemon in DB
@@ -365,7 +369,8 @@ export class Pokemon {
                     options
                 );
             } catch (err) {
-                console.log(`Error Fetching Pokemon for battle:`, this._battle, err);
+                logger.error(`Error Fetching Pokemon for battle:`, this._battle);
+                logger.error(err);
             }
 
             if (!userStartedPokeDoc) {
@@ -479,8 +484,8 @@ export class Pokemon {
                                     turnCount
                                 );
                             } else {
-                                console.log('Debug Winner', winner);
-                                console.log('Debug Battle', this._battle);
+                                logger.warn('Winner', winner);
+                                logger.warn('Battle', this._battle);
                                 await twurpleInstance.botChatClient?.say(
                                     this._channel,
                                     `Oof, could not determine winner. Try again next time or report to the indie police`
@@ -500,8 +505,8 @@ export class Pokemon {
                                     `Last Turn Details: \n ${turnChunk}`
                                 );
                             } else {
-                                console.log(`Didn't win and didn't draw? Wtf happened: ${lastLineString}`);
-                                console.log(`Last Turn Details: \n ${turnChunk}`);
+                                logger.info(`Didn't win and didn't draw? Wtf happened: ${lastLineString}`);
+                                logger.info(`Last Turn Details: \n ${turnChunk}`);
                                 await twurpleInstance.botChatClient?.say(
                                     this._channel,
                                     `Didn't win and didn't draw? Wtf happened: ${lastLineString}`
@@ -521,7 +526,8 @@ export class Pokemon {
                     // Empty battle regardless of outcome
                     if (this._battle.battleTimer) clearInterval(this._battle.battleTimer);
                     this._battle = {};
-                    console.log('Error During Pokemon Battle:', err);
+                    logger.error('Error During Pokemon Battle');
+                    logger.error(err);
                     await twurpleInstance.botChatClient?.say(this._channel, `Unknown Error. Ending Battle...`);
                 }
             }
@@ -626,13 +632,19 @@ export class Pokemon {
                     try {
                         await this.roarUserPokemon(args[1].trim().toLowerCase(), args[2]);
                     } catch (err) {
-                        console.log('Error Roar', err);
+                        logger.error('Error Brother Roar');
+                        logger.error(err);
                     }
                 }
                 break;
             case 'fix':
                 if (username.toLowerCase() === 'lebrotherbill') {
-                    await this._fixPokemon(args[1].trim().toLowerCase(), args[2], args[3], args[4], args[5]);
+                    try {
+                        await this._fixPokemon(args[1].trim().toLowerCase(), args[2], args[3], args[4], args[5]);
+                    } catch (err) {
+                        logger.error('Error Brother Pokemon Fix');
+                        logger.error(err);
+                    }
                 }
                 break;
             default:

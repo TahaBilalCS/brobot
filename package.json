@@ -50,6 +50,7 @@
     "request": "^2.88.2",
     "rimraf": "^3.0.2",
     "typescript": "^4.3.5",
+    "winston": "^3.6.0",
     "ws": "^8.2.3"
   },
   "devDependencies": {

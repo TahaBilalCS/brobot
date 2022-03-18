@@ -1,7 +1,7 @@
+import { logger } from '../utils/logger.js';
 import { TwurpleInterface } from '../api/models/Twurple.js';
 import mongoose, { QueryOptions } from 'mongoose';
 import { TwitchBot } from './TwitchBot.js';
-import { formatUTCToEST, getCurrentDateEST } from '../utils/TimeUtil.js';
 import { appenv } from '../config/appenv.js';
 import { ClientCredentialsAuthProvider, RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient } from '@twurple/chat';
@@ -65,8 +65,7 @@ class TwurpleInstance {
         const twurpleOptionsStreamer = await this._getOrCreateTwurpleOptions(AUTH_USER.STREAMER);
         // If options were created/retrieved from DB
         if (twurpleOptionsBot && twurpleOptionsStreamer) {
-            const timeNA_EST = formatUTCToEST(twurpleOptionsBot.obtainmentTimestamp);
-            console.log(`Twurple Options Obtained: ${timeNA_EST}`);
+            logger.warn(`Twurple Options Obtained`);
 
             /** Create Auth Credentials */
             // Create app token for bot API
@@ -80,7 +79,6 @@ class TwurpleInstance {
             );
 
             /** Init Clients and Bots */
-            // TODO warning: Can't use chat client to say anything when init.
             // API Client for predictions/etc
             this._streamerApiClient = new ApiClient({ authProvider: streamerApiRefreshingAuth });
             // API client for bot event subscriptions
@@ -92,12 +90,24 @@ class TwurpleInstance {
             // Init asynchronous setup for bot commands
             await this._twitchBot.init();
         } else {
-            console.log('Error Obtaining Twurple Options');
+            logger.error('Error Obtaining Twurple Options');
         }
     }
 
+    /**
+     * Get twurple config from DB
+     * @param user
+     * @private
+     */
     private async _getOrCreateTwurpleOptions(user: string): Promise<TwurpleInterface | null> {
-        const twurpleOptions: TwurpleInterface | null = await this._twurpleConfig.findOne({ user: user });
+        let twurpleOptions: TwurpleInterface | null = null;
+        try {
+            twurpleOptions = await this._twurpleConfig.findOne({ user: user });
+        } catch (err) {
+            logger.error('Error Getting Twurple Options From DB');
+            logger.error(err);
+        }
+
         if (twurpleOptions) return twurpleOptions;
 
         let accessToken, refreshToken;
@@ -110,7 +120,7 @@ class TwurpleInstance {
         }
 
         // If no options found
-        console.log('Twurple Options Could Not Be Retrieved From DB, Creating A New One');
+        logger.warn('Twurple Options Could Not Be Retrieved From DB, Creating A New One');
         const newTwurpleConfig = {
             user: user,
             accessToken: accessToken,
@@ -168,7 +178,7 @@ class TwurpleInstance {
             // https://stackoverflow.com/questions/38939507/error-ts2348-value-of-type-typeof-objectid-is-not-callable-did-you-mean-to-i
             return await new this._twurpleConfig(newTwurpleConfig).save();
         } catch (err) {
-            console.log('Error Saving New Twurple Config To DB');
+            logger.error('Error Saving New Twurple Config To DB');
             return null;
         }
     }
@@ -187,9 +197,10 @@ class TwurpleInstance {
                     const options: QueryOptions = { upsert: true, new: true };
                     try {
                         await this._twurpleConfig.findOneAndUpdate({ user }, newTokenData, options);
-                        console.log('Success Update Twurple Options', getCurrentDateEST());
+                        logger.info('Success Update Twurple Options');
                     } catch (err) {
-                        console.log('Error Update Twurple Options DB:\n', err);
+                        logger.error('Error Update Twurple Options DB');
+                        logger.error(err);
                     }
                 }
             },
@@ -204,13 +215,13 @@ class TwurpleInstance {
             channels: [appenv.TWITCH_CHANNEL_LISTEN]
         });
         // 100 requests per 30 seconds
-        console.log('Connecting To Twurple Chat Client...');
+        logger.warn('Connecting To Twurple Chat Client...');
 
         // connect just makes the WSS connection, registration logs you in
         await botChatClient.connect();
         return new Promise<ChatClient>(resolve => {
             botChatClient.onRegister(() => {
-                console.log('Twitch Bot Registered');
+                logger.warn('Twitch Bot Registered');
                 resolve(botChatClient);
             });
         });

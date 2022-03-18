@@ -1,6 +1,7 @@
 import { appenv } from '../../config/appenv.js';
 import axios from 'axios';
 import { twurpleInstance } from '../TwurpleInstance.js';
+import { logger } from '../../utils/logger.js';
 
 /**
  * A user on the Lichess website
@@ -148,7 +149,8 @@ export class Chess {
                 rated: challenge.rated
             };
         } catch (err) {
-            console.log("COULDN'T CREATE LICHESS GAME");
+            logger.error('Error Creating Lichess Game');
+            logger.error(err);
             return undefined;
         }
     }
@@ -171,18 +173,18 @@ export class Chess {
 
         // TODO: Will implement more chess commands when Twitch extension is created
         // if (args.length === 0) {
-        //     console.log('RULES');
+        //     logger.info('RULES');
         // } else if (args[0] === 'start') {
         //     await this.LichessBot.createNormalGame(username);
         // } else if (args[0] === 'trank') {
         //     // TODO find better way to async init - Stop Gap
         //     await this.LichessBot.createTrankedGame(username); // todo move this to !chess opponent
         // } else if (args[0] === 'cancel') {
-        //     console.log('CANCEL');
+        //     logger.info('CANCEL');
         // } else if (args[0] === 'stats') {
-        //     console.log('STATS');
+        //    logger.info('STATS');
         // } else {
-        //     console.log("Couldn't Parse Chess Args", args);
+        //    logger.info("Couldn't Parse Chess Args", args);
         // }
     }
 }
