@@ -633,6 +633,7 @@ export class Pokemon {
                         await this.roarUserPokemon(args[1].trim().toLowerCase(), args[2]);
                     } catch (err) {
                         logger.error('Error Brother Roar');
+                        console.error('some error');
                         logger.error(err);
                     }
                 }
