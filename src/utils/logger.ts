@@ -15,5 +15,5 @@ export const logger = createLogger({
         colorize({ all: true }),
         printf(info => `${info.ms}: ${info.timestamp} ${info.message}`)
     ),
-    transports: [new transports.Console({ stderrLevels: ['error', 'warn'] })]
+    transports: [new transports.Console({ stderrLevels: ['error'] })]
 });
