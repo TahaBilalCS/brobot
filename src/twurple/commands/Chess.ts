@@ -1,7 +1,7 @@
-import { appenv } from '../../config/appenv.js';
+import { appenv } from '../../config/appenv';
 import axios from 'axios';
-import { twurpleInstance } from '../TwurpleInstance.js';
-import { logger } from '../../utils/logger.js';
+import { twurpleInstance } from '../TwurpleInstance';
+import { logger } from '../../utils/logger';
 
 /**
  * A user on the Lichess website
@@ -62,6 +62,28 @@ export interface LichessGameStatus {
 }
 
 /**
+ * Lichess body request
+ */
+interface LichessBodyReq {
+    rated: boolean;
+    // 'clock.limit': 3600,
+    // 'clock.increment': 0, // how many seconds gained after making a move
+    variant: string;
+    name: string;
+}
+
+/**
+ * Lichess config for request
+ */
+interface LichessConfigReq {
+    headers: {
+        Authorization: string;
+        'Content-Type': string;
+        Accept: string;
+    };
+}
+
+/**
  * Handles Chess related commands
  */
 export class Chess {
@@ -80,12 +102,12 @@ export class Chess {
     /**
      * Body request
      */
-    private _lichessBodyReq: any;
+    private _lichessBodyReq?: LichessBodyReq;
 
     /**
      * Body request config
      */
-    private readonly _lichessConfigReq?: any;
+    private readonly _lichessConfigReq?: LichessConfigReq;
 
     /**
      * User who is being challenged

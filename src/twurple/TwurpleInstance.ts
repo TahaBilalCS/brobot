@@ -1,8 +1,8 @@
-import { logger } from '../utils/logger.js';
-import { TwurpleInterface } from '../api/models/Twurple.js';
+import { logger } from '../utils/logger';
+import { TwurpleInterface } from '../api/models/Twurple';
 import mongoose, { QueryOptions } from 'mongoose';
-import { TwitchBot } from './TwitchBot.js';
-import { appenv } from '../config/appenv.js';
+import { TwitchBot } from './TwitchBot';
+import { appenv } from '../config/appenv';
 import { ClientCredentialsAuthProvider, RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient } from '@twurple/chat';
 import { ApiClient } from '@twurple/api';
@@ -63,6 +63,7 @@ class TwurpleInstance {
         // Use config in db or update refresh & auth tokens from environment
         const twurpleOptionsBot = await this._getOrCreateTwurpleOptions(AUTH_USER.BOT);
         const twurpleOptionsStreamer = await this._getOrCreateTwurpleOptions(AUTH_USER.STREAMER);
+
         // If options were created/retrieved from DB
         if (twurpleOptionsBot && twurpleOptionsStreamer) {
             logger.warn(`Twurple Options Obtained`);
@@ -183,7 +184,6 @@ class TwurpleInstance {
         }
     }
 
-    // todo not sure if async callback onRefresh is why we need to make this function async
     private _createTwurpleRefreshingAuthProvider(
         twurpleOptions: TwurpleInterface,
         user: string
@@ -192,16 +192,18 @@ class TwurpleInstance {
             {
                 clientId: appenv.TWITCH_CLIENT_ID,
                 clientSecret: appenv.TWITCH_SECRET,
-                onRefresh: async (newTokenData): Promise<void> => {
+                onRefresh: (newTokenData): void => {
                     // upsert will create a doc if not found, new will ensure document contains the newest db obj
                     const options: QueryOptions = { upsert: true, new: true };
-                    try {
-                        await this._twurpleConfig.findOneAndUpdate({ user }, newTokenData, options);
-                        logger.warn('Success Update Twurple Options');
-                    } catch (err) {
-                        logger.error('Error Update Twurple Options DB');
-                        logger.error(err);
-                    }
+                    this._twurpleConfig
+                        .findOneAndUpdate({ user }, newTokenData, options)
+                        .then(() => {
+                            logger.warn('Success Update Twurple Options');
+                        })
+                        .catch(err => {
+                            logger.error('Error Update Twurple Options DB');
+                            logger.error(err);
+                        });
                 }
             },
             twurpleOptions

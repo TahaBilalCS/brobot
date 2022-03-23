@@ -1,11 +1,11 @@
-import { logger } from '../utils/logger.js';
-import { appenv } from '../config/appenv.js';
-import { expressSocket } from '../ws/ExpressSocket.js';
-import { twurpleInstance } from './TwurpleInstance.js';
-import { Chess } from './commands/Chess.js';
-import { Pokemon } from './commands/Pokemon.js';
-import { Vote } from './commands/Vote.js';
-import { OutgoingEvents } from './types/EventsInterface.js';
+import { logger } from '../utils/logger';
+import { appenv } from '../config/appenv';
+import { expressSocket } from '../ws/ExpressSocket';
+import { twurpleInstance } from './TwurpleInstance';
+import { Chess } from './commands/Chess';
+import { Pokemon } from './commands/Pokemon';
+import { Vote } from './commands/Vote';
+import { OutgoingEvents } from './types/EventsInterface';
 import { ChatUser, PrivateMessage } from '@twurple/chat';
 
 /**
@@ -151,11 +151,11 @@ export class TwitchBot {
             // TODO: Check for specific client (Trama)
             // Only notify chat if client connected
             if (expressSocket.getListeningClientsOnSocket() > 0) {
-                twurpleInstance.botChatClient?.say(
+                void twurpleInstance.botChatClient?.say(
                     this._channel,
                     `/me OFFICIAL TRAMADC PRIZE DROP ALERT?! https://tinyurl.com/tramaDCPrizeNow`
                 );
-                twurpleInstance.botChatClient?.say(
+                void twurpleInstance.botChatClient?.say(
                     this._channel,
                     `/me OFFICIAL TRAMADC PRIZE DROP ALERT?! https://tinyurl.com/tramaDCPrizeNow`
                 );
@@ -172,7 +172,7 @@ export class TwitchBot {
             // Only  notify chat if client connected
             if (expressSocket.getListeningClientsOnSocket() > 0) {
                 // TODO: Create a commands cheatsheet and link that instead of listing all commands in this message
-                twurpleInstance.botChatClient?.say(
+                void twurpleInstance.botChatClient?.say(
                     this._channel,
                     `Remember to use the commands: "!chatban" or "!voiceban", when Trama gets too emotional. Also rock, paper, scissor: !rps. Also pokemon: https://imgur.com/a/2u62OUh` // TODO OVERRIDDEN BY TRAMA
                 );

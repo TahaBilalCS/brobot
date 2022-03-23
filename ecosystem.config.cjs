@@ -5,7 +5,16 @@ module.exports = {
     apps: [
         {
             name: 'brobot',
-            script: 'dist/index.js',
+            script: 'dist/src/index.js',
+            node_args: "--experimental-modules --es-module-specifier-resolution=node",
+            // args: "",
+            watch: ["src"],
+            watch_delay: 1000,
+            ignore_watch: ["node_modules", "dist", "__tests__"],
+            env: {
+                NODE_ENV: "development",
+                // Add env vars here if you want them to update on restart. Can just kill the daemon
+            }
         }
     ],
     deploy: {
@@ -16,6 +25,7 @@ module.exports = {
             ref: 'origin/main',
             repo: 'git@github.com:TahaBilalCS/brobot.git',
             path: process.env.AWS_EC2_PATH,
+            node_args: "--experimental-modules --es-module-specifier-resolution=node",
             env: {
                 NODE_ENV: 'production',
                 // update environment variables in /etc/environment on EC2 instance. pm2 ain't working correctly

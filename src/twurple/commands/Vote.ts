@@ -1,7 +1,7 @@
-import { appenv } from '../../config/appenv.js';
-import { twurpleInstance } from '../TwurpleInstance.js';
-import { expressSocket } from '../../ws/ExpressSocket.js';
-import { OutgoingEvents } from '../types/EventsInterface.js';
+import { appenv } from '../../config/appenv';
+import { twurpleInstance } from '../TwurpleInstance';
+import { expressSocket } from '../../ws/ExpressSocket';
+import { OutgoingEvents } from '../types/EventsInterface';
 
 /**
  * Only implements public properties (from getter)
@@ -128,7 +128,7 @@ export class Vote implements VoteInterface {
                     expressSocket.wsInstance.getWss().clients.forEach(localClient => {
                         // TODO: if client === trama (already authenticated though)
                         localClient.send(this._socketEvent);
-                        twurpleInstance.botChatClient?.say(
+                        void twurpleInstance.botChatClient?.say(
                             this._channel,
                             `Vote Requirements Met. ${this._voteMessage}`
                         );

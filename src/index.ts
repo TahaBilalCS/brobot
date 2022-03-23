@@ -1,6 +1,6 @@
-import { logger } from './utils/logger.js'; // Init winston logger singleton
 import process from 'process';
-import { appenv } from './config/appenv.js';
+import { logger } from './utils/logger'; // Init winston logger singleton
+import { appenv } from './config/appenv';
 import express, { Express } from 'express';
 import cookieSession from 'cookie-session';
 import helmet from 'helmet';
@@ -8,20 +8,20 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 
 // Models before Services & Routers
-import './api/models/User.js';
-import './api/models/Twurple.js';
-import './api/models/Pokemon.js';
+import './api/models/User';
+import './api/models/Twurple';
+import './api/models/Pokemon';
 
 // Init Twurple & Socket module singletons
-import { twurpleInstance } from './twurple/TwurpleInstance.js';
-import { expressSocket } from './ws/ExpressSocket.js';
+import { twurpleInstance } from './twurple/TwurpleInstance';
+import { expressSocket } from './ws/ExpressSocket';
 
 // Routers after Models
-import { router as loginRouter } from './api/routes/login.router.js';
-import { router as userRouter } from './api/routes/user.router.js';
+import { router as loginRouter } from './api/routes/login.router';
+import { router as userRouter } from './api/routes/user.router';
 
 // Services after Models
-import * as passportService from './api/services/passport.service.js';
+import * as passportService from './api/services/passport.service';
 import {
     EventSubChannelBanEvent,
     EventSubChannelRaidEvent,
@@ -111,7 +111,7 @@ await (async function (): Promise<void> {
                 // Subscribe to unban event
                 await devListener.subscribeToChannelUnbanEvents(streamerAuthId, (event: EventSubChannelUnbanEvent) => {
                     const username = event.userDisplayName.trim().toLowerCase();
-                    twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username, event.userId);
+                    void twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username, event.userId);
                     logger.info(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
                 });
                 // Subscribe to ban event
@@ -146,21 +146,22 @@ await (async function (): Promise<void> {
 
                         // Handle redemptions tied to Pokemon
                         if (event.rewardTitle === 'Pokemon Roar') {
-                            twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username, event.userId);
+                            void twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username, event.userId);
                         } else if (event.rewardTitle === 'Pokemon Level Up') {
-                            twurpleInstance.twitchBot?.pokemon.levelUpUserPokemon(username, event.userId);
+                            void twurpleInstance.twitchBot?.pokemon.levelUpUserPokemon(username, event.userId);
                         } else if (event.rewardTitle === 'Pokemon Create') {
-                            twurpleInstance.twitchBot?.pokemon.createOrReplacePokemon(username, event.userId);
+                            void twurpleInstance.twitchBot?.pokemon.createOrReplacePokemon(username, event.userId);
                         }
                     }
                 );
                 // Subscribe to raid events
                 await middleware.subscribeToChannelRaidEventsTo(streamerAuthId, (event: EventSubChannelRaidEvent) => {
                     // Shout out the user who raided the stream
-                    twurpleInstance?.botChatClient.say(
+                    void twurpleInstance?.botChatClient.say(
                         appenv.TWITCH_CHANNEL_LISTEN,
                         `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
                     );
+                    logger.info(`${event.raidingBroadcasterName} raided ${appenv.TWITCH_CHANNEL_LISTEN}!`);
                 });
             })();
         });

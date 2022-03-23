@@ -1,10 +1,10 @@
 import { Express } from 'express';
 import enableWs, { Instance, Options } from 'express-ws';
-import { twurpleInstance } from '../twurple/TwurpleInstance.js';
-import { appenv } from '../config/appenv.js';
-import { IncomingEvents, OutgoingEvents } from '../twurple/types/EventsInterface.js';
+import { twurpleInstance } from '../twurple/TwurpleInstance';
+import { appenv } from '../config/appenv';
+import { IncomingEvents, OutgoingEvents } from '../twurple/types/EventsInterface';
 import { HelixCreatePredictionData } from '@twurple/api';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/logger';
 
 /**
  * Express App Starter - Gives access to app ws connection
@@ -94,7 +94,7 @@ class ExpressSocket {
                     case IncomingEvents.VOICEBAN_COMPLETE:
                         logger.info('Reset Voice Ban');
                         twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
-                        twurpleInstance.botChatClient?.say(
+                        void twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
                             `${TWITCH_CHANNEL_LISTEN} is now free. All VoiceBan votes have been reset.`
                         );
@@ -102,7 +102,7 @@ class ExpressSocket {
                     case IncomingEvents.CHATBAN_COMPLETE:
                         logger.info('Reset Chat Ban');
                         twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
-                        twurpleInstance.botChatClient?.say(
+                        void twurpleInstance.botChatClient?.say(
                             TWITCH_CHANNEL_LISTEN,
                             `${TWITCH_CHANNEL_LISTEN} is now free. All ChatBan votes have been reset.`
                         );
@@ -120,7 +120,7 @@ class ExpressSocket {
                         break;
                     case 'broke':
                         logger.info('Chat/Voice Ban Broke');
-                        twurpleInstance.botChatClient?.say(TWITCH_CHANNEL_LISTEN, `Uhoh something broke :(`);
+                        void twurpleInstance.botChatClient?.say(TWITCH_CHANNEL_LISTEN, `Uhoh something broke :(`);
                         break;
                     default:
                         logger.info('BrobotSocket Received Unknown Message From Client', clientMessage);

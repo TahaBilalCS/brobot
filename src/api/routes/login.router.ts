@@ -1,5 +1,5 @@
-import { logger } from '../../utils/logger.js';
-import { appenv } from '../../config/appenv.js';
+import { logger } from '../../utils/logger';
+import { appenv } from '../../config/appenv';
 import { Router, Request, Response } from 'express';
 import passport from 'passport';
 
@@ -38,6 +38,7 @@ router.get('/', (req: Request, res: Response) => {
 /** Regular User Auth Route - Also for adding permissions to b_robot and streamer */
 router.get(
     '/auth/twitch',
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     passport.authenticate('twitch', {
         scope: [
             'user_read',
@@ -88,6 +89,7 @@ router.get(
 /** Set route for OAuth redirect */
 router.get(
     '/auth/twitch/callback',
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     passport.authenticate('twitch', {
         successRedirect: '/',
         failureRedirect: '/fail'

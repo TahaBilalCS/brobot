@@ -1,14 +1,14 @@
-import { appenv } from '../../config/appenv.js';
+import { appenv } from '../../config/appenv';
 import { BattleStreams, Dex, PokemonSet, RandomPlayerAI, StatsTable, Teams } from '@pkmn/sim';
 import { TeamGenerators } from '@pkmn/randoms';
 import mongoose, { QueryOptions } from 'mongoose';
-import { PokemonInterface } from '../../api/models/Pokemon.js';
-import { pokedexArr, pokeRoarActions } from './pokemon/pokeInfo.js';
-import { OutgoingEvents } from '../types/EventsInterface.js';
-import { twurpleInstance } from '../TwurpleInstance.js';
-import { expressSocket } from '../../ws/ExpressSocket.js';
+import { PokemonInterface } from '../../api/models/Pokemon';
+import { pokedexArr, pokeRoarActions } from './pokemon/pokeInfo';
+import { OutgoingEvents } from '../types/EventsInterface';
+import { twurpleInstance } from '../TwurpleInstance';
+import { expressSocket } from '../../ws/ExpressSocket';
 import { Species } from '@pkmn/sim/build/sim/dex-species';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../../utils/logger';
 
 /**
  * Status of pokemon battle
@@ -317,7 +317,7 @@ export class Pokemon {
 
         // If user has pokemon in DB
         if (userPokeDoc) {
-            twurpleInstance.botChatClient?.say(
+            void twurpleInstance.botChatClient?.say(
                 this._channel,
                 `@${username}'s Level ${userPokeDoc.pokemonLevel} ${userPokeDoc.pokemonName} wants to battle! 
                 You have 1 minute to accept their challenge, by using the command "!pokemon battle"`
@@ -326,7 +326,7 @@ export class Pokemon {
                 // If timer not cleared yet, then end the pending battle
                 if (this._battle.battleTimer) {
                     if (this._battle.userStarted) {
-                        twurpleInstance.botChatClient?.say(
+                        void twurpleInstance.botChatClient?.say(
                             this._channel,
                             `Ending pending pokemon battle for @${this._battle.userStarted?.name}. You're just too intimidating man`
                         );
@@ -616,11 +616,11 @@ export class Pokemon {
                 if (!this._battle.userStarted) await this._createBattle(username, userId);
                 // If no user started, create battle
                 else if (this._battle.userStarted.name === username)
-                    await twurpleInstance.botChatClient?.say(this._channel, `You can't battle yourself, @${username}`);
+                    void twurpleInstance.botChatClient?.say(this._channel, `You can't battle yourself, @${username}`);
                 else if (!this._battle.userAccepted) await this._acceptBattle(username, userId);
                 // If we somehow entered this state
                 else
-                    twurpleInstance.botChatClient?.say(
+                    void twurpleInstance.botChatClient?.say(
                         this._channel,
                         `How unlucky, @${username}. Things might have gotten spammy. Try again later`
                     );
