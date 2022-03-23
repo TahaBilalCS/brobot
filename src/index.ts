@@ -100,6 +100,8 @@ await (async function (): Promise<void> {
             adapter: new NgrokAdapter(),
             secret: appenv.TEST_SECRET
         });
+        logger.info('Enter Dev');
+
         // Delete all previous subscriptions for dev (only use with ngrok), as re-subscribing can cause rate limiting errors
         await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions();
         await devListener.listen();
