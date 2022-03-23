@@ -5,7 +5,7 @@ module.exports = {
     apps: [
         {
             name: 'brobot',
-            script: 'dist/src/index.js',
+            script: 'dist/index.js',
             node_args: "--experimental-modules --es-module-specifier-resolution=node",
             // args: "",
             watch: ["src"],
@@ -33,7 +33,7 @@ module.exports = {
                 // Need to delete pm2 instance before starting instance again to update
             },
             'post-deploy':
-                'npm install && npm run build && pm2 startOrRestart ecosystem.config.cjs --update-env [--env aws]'
+                'npm install && npm run build && pm2 startOrRestart ecosystem.config.cjs --update-env'
         }
     }
 };
