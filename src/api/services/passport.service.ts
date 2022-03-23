@@ -1,12 +1,12 @@
 /* eslint-disable */
-import { logger } from '../../utils/logger';
+import { logger } from '../../utils/logger.js';
 import { OAuth2Strategy } from 'passport-oauth';
 import request from 'request';
 import passport from 'passport';
-import { appenv } from '../../config/appenv';
+import { appenv } from '../../config/appenv.js';
 import { Application } from 'express';
 import mongoose from 'mongoose';
-import type { UserInterface } from '../models/User';
+import type { UserInterface } from '../models/User.js';
 
 /**
  * Override passport OAuth2 prototype to handle Twitch API's v3 migration

@@ -6,7 +6,7 @@ module.exports = {
         {
             name: 'brobot',
             script: 'dist/index.js',
-            node_args: "--experimental-modules --es-module-specifier-resolution=node",
+            node_args: "",
             // args: "",
             watch: ["src"],
             watch_delay: 1000,
@@ -25,7 +25,7 @@ module.exports = {
             ref: 'origin/main',
             repo: 'git@github.com:TahaBilalCS/brobot.git',
             path: process.env.AWS_EC2_PATH,
-            node_args: "--experimental-modules --es-module-specifier-resolution=node",
+            node_args: "",
             env: {
                 NODE_ENV: 'production',
                 // update environment variables in /etc/environment on EC2 instance. pm2 ain't working correctly
