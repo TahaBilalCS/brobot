@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "rimraf dist && tsc",
-    "test": "NODE_ENV=testing mocha --exit",
+    "test": "mocha",
     "dev": "tsc -w & pm2 kill && pm2 startOrRestart --update-env ecosystem.config.cjs",
     "dev:old": "cross-env NODE_ENV=development concurrently \"tsc -w\" \"nodemon -q -r dotenv/config --experimental-modules --es-module-specifier-resolution=node dist/src/index\"",
     "deploy": "pm2 deploy ecosystem.config.cjs production",
