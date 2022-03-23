@@ -129,6 +129,7 @@ await (async function (): Promise<void> {
             pathPrefix: '/twitch',
             secret: appenv.TEST_SECRET // Note: changing this secret/config requires us to delete all subscriptions
         });
+        logger.info('Enter Prod');
 
         // Note: We are passing the base express app, not the app returned from the ws instance
         await middleware.apply(appBase);
