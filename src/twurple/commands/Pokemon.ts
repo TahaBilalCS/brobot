@@ -1,14 +1,14 @@
-import { appenv } from '../../config/appenv.js';
+import { appenv } from '../../config/appenv';
 import { BattleStreams, Dex, PokemonSet, RandomPlayerAI, StatsTable, Teams } from '@pkmn/sim';
 import { TeamGenerators } from '@pkmn/randoms';
 import mongoose, { QueryOptions } from 'mongoose';
-import { PokemonInterface } from '../../api/models/Pokemon.js';
-import { pokedexArr, pokeRoarActions } from './pokemon/pokeInfo.js';
-import { OutgoingEvents } from '../types/EventsInterface.js';
-import { twurpleInstance } from '../TwurpleInstance.js';
-import { expressSocket } from '../../ws/ExpressSocket.js';
+import { PokemonInterface } from '../../api/models/Pokemon';
+import { pokedexArr, pokeRoarActions } from './pokemon/pokeInfo';
+import { OutgoingEvents } from '../types/EventsInterface';
+import { twurpleInstance } from '../TwurpleInstance';
+import { expressSocket } from '../../ws/ExpressSocket';
 import { Species } from '@pkmn/sim/build/sim/dex-species';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../../utils/logger';
 
 /**
  * Status of pokemon battle

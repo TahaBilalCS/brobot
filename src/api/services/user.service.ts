@@ -1,6 +1,6 @@
 /** Use service in controller */
 import mongoose from 'mongoose';
-import { UserInterface } from '../models/User.js';
+import { UserInterface } from '../models/User';
 
 const User = mongoose.model<UserInterface>('user');
 

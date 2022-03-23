@@ -1,7 +1,7 @@
 /** User router in index.ts | router -> controller -> service*/
 import { NextFunction, Request, Response, Router } from 'express';
-import { requireAuth } from '../middlewares/requireAuth.js';
-import * as userController from '../controllers/user.controller.js';
+import { requireAuth } from '../middlewares/requireAuth';
+import * as userController from '../controllers/user.controller';
 const router = Router();
 
 // Current logged in user

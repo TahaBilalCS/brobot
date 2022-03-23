@@ -1,11 +1,11 @@
-import { logger } from '../utils/logger.js';
-import { appenv } from '../config/appenv.js';
-import { expressSocket } from '../ws/ExpressSocket.js';
-import { twurpleInstance } from './TwurpleInstance.js';
-import { Chess } from './commands/Chess.js';
-import { Pokemon } from './commands/Pokemon.js';
-import { Vote } from './commands/Vote.js';
-import { OutgoingEvents } from './types/EventsInterface.js';
+import { logger } from '../utils/logger';
+import { appenv } from '../config/appenv';
+import { expressSocket } from '../ws/ExpressSocket';
+import { twurpleInstance } from './TwurpleInstance';
+import { Chess } from './commands/Chess';
+import { Pokemon } from './commands/Pokemon';
+import { Vote } from './commands/Vote';
+import { OutgoingEvents } from './types/EventsInterface';
 import { ChatUser, PrivateMessage } from '@twurple/chat';
 
 /**

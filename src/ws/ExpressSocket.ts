@@ -1,10 +1,10 @@
 import { Express } from 'express';
 import enableWs, { Instance, Options } from 'express-ws';
-import { twurpleInstance } from '../twurple/TwurpleInstance.js';
-import { appenv } from '../config/appenv.js';
-import { IncomingEvents, OutgoingEvents } from '../twurple/types/EventsInterface.js';
+import { twurpleInstance } from '../twurple/TwurpleInstance';
+import { appenv } from '../config/appenv';
+import { IncomingEvents, OutgoingEvents } from '../twurple/types/EventsInterface';
 import { HelixCreatePredictionData } from '@twurple/api';
-import { logger } from '../utils/logger.js';
+import { logger } from '../utils/logger';
 
 /**
  * Express App Starter - Gives access to app ws connection
