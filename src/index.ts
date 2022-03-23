@@ -46,7 +46,7 @@ await (async function (): Promise<void> {
         await mongoose.connect(MONGO_URI);
         logger.warn('Mongoose Connected');
     } catch (err) {
-        logger.error('Mongoose Connection Failed?!?');
+        logger.error('Mongoose Connection Failed?!');
         logger.error(err);
     }
 })();
