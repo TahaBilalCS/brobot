@@ -100,8 +100,6 @@ await (async function (): Promise<void> {
             adapter: new NgrokAdapter(),
             secret: appenv.TEST_SECRET
         });
-        logger.info(`Enter Dev ${appenv.NODE_ENV}`);
-        logger.info(`Enter Dev ${appenv.TEST_SECRET}`);
 
         // Delete all previous subscriptions for dev (only use with ngrok), as re-subscribing can cause rate limiting errors
         await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions();
@@ -132,7 +130,6 @@ await (async function (): Promise<void> {
             pathPrefix: '/twitch',
             secret: appenv.TEST_SECRET // Note: changing this secret/config requires us to delete all subscriptions
         });
-        logger.info('Enter Prod');
 
         // Note: We are passing the base express app, not the app returned from the ws instance
         await middleware.apply(appBase);
