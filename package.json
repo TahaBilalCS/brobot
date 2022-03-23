@@ -12,7 +12,6 @@
     "deploy": "pm2 deploy ecosystem.config.cjs production",
     "lint": "eslint . --ext .ts",
     "stage": "echo \"No script just yet\"",
-    "prepare": "husky install",
     "preserve": "npm run build",
     "format": "prettier --write 'src/**/*'.ts"
   },
