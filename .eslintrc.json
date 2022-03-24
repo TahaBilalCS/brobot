@@ -21,9 +21,7 @@
         "project": ["./tsconfig.json"],
         "extraFileExtensions": true
     },
-    "plugins": [
-        "@typescript-eslint"
-    ],
+    "plugins": ["@typescript-eslint"],
     /*
       "off" - 0 (turns the rule off completely)
       "warn" - 1 (turns the rule on but won't make the linter fail)
