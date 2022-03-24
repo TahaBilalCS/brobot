@@ -8,9 +8,9 @@ module.exports = {
             script: 'dist/index.js',
             node_args: "--es-module-specifier-resolution=node", // So we can remove ".js" extensions from imports
             // args: "",
-            watch: ["src"],
-            watch_delay: 1000,
-            ignore_watch: ["node_modules", "dist", "__tests__"],
+            // watch: ["src"],
+            // watch_delay: 1000,
+            // ignore_watch: ["node_modules", "dist", "__tests__"],
             env: {
                 NODE_ENV: "development",
                 // Add env vars here if you want them to update on restart. Can just kill the daemon
