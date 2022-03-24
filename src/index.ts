@@ -34,6 +34,7 @@ import {
 import { NgrokAdapter } from '@twurple/eventsub-ngrok';
 import { LogLevel } from '@d-fischer/logger';
 
+console.log('TEST', process.version);
 /** Base Express App - Start before middlewares */
 const appBase: Express = express();
 expressSocket.setupSocket(appBase);
