@@ -7,8 +7,7 @@
     "scripts": {
         "build": "rimraf dist && tsc",
         "test": "mocha",
-        "dev": "tsc -w & pm2 kill && pm2 startOrRestart --update-env ecosystem.config.cjs",
-        "dev:old": "cross-env NODE_ENV=development concurrently \"tsc -w\" \"nodemon -q -r dotenv/config --es-module-specifier-resolution=node dist/index.js\"",
+        "dev": "concurrently --kill-others \"tsc -w\" \"pm2-dev start ecosystem.config.cjs\"",
         "prod:test": "cross-env NODE_ENV=production tsc",
         "deploy": "pm2 deploy ecosystem.config.cjs production",
         "lint": "eslint . --ext .ts",
