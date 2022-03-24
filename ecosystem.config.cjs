@@ -25,7 +25,7 @@ module.exports = {
             ref: 'origin/main',
             repo: 'git@github.com:TahaBilalCS/brobot.git',
             path: process.env.AWS_EC2_PATH,
-            node_args: "--es-module-specifier-resolution=node",
+            node_args: "",
             env: {
                 NODE_ENV: 'production',
                 // update environment variables in /etc/environment on EC2 instance. pm2 ain't working correctly
@@ -33,7 +33,7 @@ module.exports = {
                 // Need to delete pm2 instance before starting instance again to update
             },
             'post-deploy':
-                'npm install && npm run build && pm2 startOrRestart ecosystem.config.cjs'
+                'npm install && npm run build && pm2 startOrRestart ecosystem.config.cjs --env production'
         }
     }
 };
