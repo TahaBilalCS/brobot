@@ -83,7 +83,7 @@
     },
     "lint-staged": {
         "*.{js,ts}": [
-            "eslint --cache --fix",
+            "eslint --cache",
             "prettier --check"
         ]
     }
