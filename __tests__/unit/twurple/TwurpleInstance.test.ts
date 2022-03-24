@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { describe, it } from 'mocha';
+import { describe, it, beforeEach } from 'mocha';
 // import { expect } from 'chai';
 import { stub } from 'sinon';
 import mongoose from 'mongoose';
