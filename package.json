@@ -2,7 +2,7 @@
   "name": "brobot",
   "version": "22.3.0",
   "description": "Running a websocket & https server on an AWS EC2 instance",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "type": "module",
   "engineStrict": true,
   "engines": {
@@ -13,7 +13,7 @@
     "build": "rimraf dist && tsc",
     "test": "mocha",
     "dev": "tsc -w & pm2 kill && pm2 startOrRestart --update-env ecosystem.config.cjs",
-    "dev:old": "cross-env NODE_ENV=development concurrently \"tsc -w\" \"nodemon -q -r dotenv/config --es-module-specifier-resolution=node dist/index\"",
+    "dev:old": "cross-env NODE_ENV=development concurrently \"tsc -w\" \"nodemon -q -r dotenv/config --es-module-specifier-resolution=node dist/src/index.js\"",
     "deploy": "pm2 deploy ecosystem.config.cjs production",
     "lint": "eslint . --ext .ts",
     "stage": "echo \"No script just yet\"",
