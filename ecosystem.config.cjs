@@ -33,7 +33,7 @@ module.exports = {
                 // Need to delete pm2 instance before starting instance again to update
             },
             'post-deploy':
-                'npm install && npm run build && pm2 startOrRestart ecosystem.config.cjs --env production'
+                'npm install && npm run build && pm2 startOrRestart ecosystem.config.cjs'
         }
     }
 };
