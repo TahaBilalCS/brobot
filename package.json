@@ -4,6 +4,11 @@
   "description": "Running a websocket & https server on an AWS EC2 instance",
   "main": "dist/index.js",
   "type": "module",
+  "engineStrict": true,
+  "engines": {
+    "node": "^16.14.2",
+    "npm": "8.5.0"
+  },
   "scripts": {
     "build": "rimraf dist && tsc",
     "test": "mocha",
