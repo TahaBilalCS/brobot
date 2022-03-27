@@ -1,11 +1,12 @@
 {
     "extension": ["ts"],
     "spec": "__tests__/**/*.test.ts",
-    "require": "ts-node/register",
+    "require": ["ts-node/register"],
     "recursive": true,
     "parallel": true,
     "timeout": 2500,
-    "watch": true,
-    "watch-files": ["__tests__/**/*.ts"],
+    "full-trace": true,
+    "watch": false,
+    "watch-files": ["__tests__/**/*.ts", "src/**/*.ts"],
     "node-option": ["experimental-specifier-resolution=node", "loader=ts-node/esm"]
 }

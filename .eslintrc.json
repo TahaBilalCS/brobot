@@ -7,21 +7,26 @@
         "es2021": true,
         "node": true
     },
-    "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking",
-        "prettier"
-    ],
     "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "ecmaVersion": 2021,
-        "sourceType": "module",
-        "files": ["*.ts, *.cjs"],
-        "project": ["./tsconfig.json"],
-        "extraFileExtensions": true
-    },
     "plugins": ["@typescript-eslint"],
+    "overrides": [
+        {
+            "files": ["*.ts"],
+            "extends": [
+                "plugin:@typescript-eslint/recommended",
+                "plugin:@typescript-eslint/recommended-requiring-type-checking"
+            ],
+            "parserOptions": {
+                "ecmaVersion": 2021,
+                "sourceType": "module",
+                "files": ["*.ts, *.cjs"],
+                "project": ["./tsconfig.json"],
+                "extraFileExtensions": true
+            }
+        }
+    ],
+    "extends": ["eslint:recommended", "prettier"],
+
     /*
       "off" - 0 (turns the rule off completely)
       "warn" - 1 (turns the rule on but won't make the linter fail)

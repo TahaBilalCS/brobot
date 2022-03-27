@@ -63,7 +63,6 @@ class TwurpleInstance {
         // Use config in db or update refresh & auth tokens from environment
         const twurpleOptionsBot = await this._getOrCreateTwurpleOptions(AUTH_USER.BOT);
         const twurpleOptionsStreamer = await this._getOrCreateTwurpleOptions(AUTH_USER.STREAMER);
-
         // If options were created/retrieved from DB
         if (twurpleOptionsBot && twurpleOptionsStreamer) {
             logger.warn(`Twurple Options Obtained`);

@@ -69,7 +69,7 @@ app.use(
     cookieSession({
         maxAge: 30 * 24 * 60 * 60 * 1000,
         keys: [appenv.COOKIE_KEY]
-        // secret: SESSION_SECRET
+        // secret: appenv.SESSION_SECRET
     })
 );
 
