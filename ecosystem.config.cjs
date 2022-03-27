@@ -5,7 +5,7 @@ module.exports = {
     apps: [
         {
             name: 'brobot',
-            script: 'dist/index.js',
+            script: 'dist/src/index.js',
             node_args: '--experimental-specifier-resolution=node', // So we can remove ".js" extensions from imports
             env: {
                 NODE_ENV: 'development'
