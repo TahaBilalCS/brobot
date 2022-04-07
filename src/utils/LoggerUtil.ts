@@ -17,3 +17,20 @@ export const logger = createLogger({
     ),
     transports: [new transports.Console({ stderrLevels: ['error'] })]
 });
+
+/**
+ * Handle and log catch clause error messages
+ * @param err
+ * @param customMsg
+ */
+export const logError = (err: unknown, customMsg: string): void => {
+    let msg;
+    if (err instanceof Error) msg = err.message; // narrowed to Error
+    else if (typeof err === 'string') msg = err; // narrowed to string
+    else {
+        logger.error('Could not determine type of error');
+        msg = String(err);
+    }
+    logger.error(customMsg);
+    logger.error(msg);
+};

@@ -1,7 +1,7 @@
 import { appenv } from '../../config/appenv';
 import axios from 'axios';
 import { twurpleInstance } from '../TwurpleInstance';
-import { logger } from '../../utils/logger';
+import { logError } from '../../utils/LoggerUtil';
 
 /**
  * A user on the Lichess website
@@ -141,7 +141,12 @@ export class Chess {
         // this._mapTrankedUserToGameStage = new Map();
     }
 
-    async _createNewLichessGame(username: string): Promise<LichessOpenEndedGame | undefined> {
+    /**
+     * Create and fetch a new game from lichess api
+     * @param username
+     * @private
+     */
+    private async _createNewLichessGame(username: string): Promise<LichessOpenEndedGame> {
         this._lichessBodyReq = {
             rated: false,
             // 'clock.limit': 3600,
@@ -149,48 +154,51 @@ export class Chess {
             variant: 'standard',
             name: `The Illustrious ${username} vs Super Duper Random Pooper!` // Game name
         };
-        try {
-            const res: LichessChallengeRes = await axios.post(
-                'https://lichess.org/api/challenge/open',
-                this._lichessBodyReq,
-                this._lichessConfigReq
-            );
-            const challenge: LichessOpenEndedGame = res?.data.challenge;
-            return {
-                id: challenge.id,
-                url: challenge.url,
-                urlWhite: res.data.urlWhite,
-                urlBlack: res.data.urlBlack,
-                color: challenge.color,
-                //
-                challenger: challenge.challenger,
-                destUser: challenge.destUser,
-                //
-                status: challenge.status,
-                speed: challenge.speed,
-                rated: challenge.rated
-            };
-        } catch (err) {
-            logger.error('Error Creating Lichess Game');
-            logger.error(err);
-            return undefined;
-        }
+        const res: LichessChallengeRes = await axios.post(
+            'https://lichess.org/api/challenge/open',
+            this._lichessBodyReq,
+            this._lichessConfigReq
+        );
+        const challenge: LichessOpenEndedGame = res?.data.challenge;
+        return {
+            id: challenge.id,
+            url: challenge.url,
+            urlWhite: res.data.urlWhite,
+            urlBlack: res.data.urlBlack,
+            color: challenge.color,
+            //
+            challenger: challenge.challenger,
+            destUser: challenge.destUser,
+            //
+            status: challenge.status,
+            speed: challenge.speed,
+            rated: challenge.rated
+        };
     }
 
-    async _createNormalGame(username: string): Promise<void> {
-        const normalGame = await this._createNewLichessGame(username);
-
-        if (normalGame) {
+    /**
+     * Create an unranked game and send the url to viewers
+     * @param username
+     * @private
+     */
+    private async _createNormalGame(username: string): Promise<void> {
+        try {
+            const normalGame = await this._createNewLichessGame(username);
             await twurpleInstance.botChatClient?.say(
                 this._channel,
                 `@${username} wants to play Chess. If you hate yourself too, click the link to challenge them! ${normalGame.url}`
             );
-        } else {
-            await twurpleInstance.botChatClient?.say(this._channel, `Uhoh, something broke :(`);
+        } catch (err) {
+            logError(err, 'Error Creating Lichess Game');
+            await twurpleInstance.botChatClient?.say(this._channel, `Uhoh, couldn't fetch Chess URL :(`);
         }
     }
 
-    async handleMessage(username: string): Promise<void> {
+    /**
+     * Handle any chess related messages from a specific user
+     * @param username
+     */
+    public async handleMessage(username: string): Promise<void> {
         await this._createNormalGame(username);
 
         // TODO: Will implement more chess commands when Twitch extension is created

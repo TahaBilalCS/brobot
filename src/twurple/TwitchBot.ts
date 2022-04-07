@@ -1,4 +1,4 @@
-import { logger } from '../utils/logger';
+import { logger } from '../utils/LoggerUtil';
 import { appenv } from '../config/appenv';
 import { expressSocket } from '../ws/ExpressSocket';
 import { twurpleInstance } from './TwurpleInstance';
@@ -9,7 +9,7 @@ import { OutgoingEvents } from './types/EventsInterface';
 import { ChatUser, PrivateMessage } from '@twurple/chat';
 
 /**
- * A bot that invokes commands based on a streamer's chat messages
+ * Responds to incoming Twitch chat messages and sets up handlers
  */
 export class TwitchBot {
     /**
@@ -112,6 +112,7 @@ export class TwitchBot {
      * @param message
      */
     private async _handleLulu(username: string, message: string): Promise<void> {
+        // TODO: Handle case where clever users use an uppercase I for lulu
         // Replace whitespace and parse string for lulu
         if (message.toLowerCase().replace(/\s+/g, '').indexOf('lulu') !== -1) {
             switch (this._angeeCount) {

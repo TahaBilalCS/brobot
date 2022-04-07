@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { logger } from '../../utils/logger';
+import { logger } from '../../utils/LoggerUtil';
 import { OAuth2Strategy } from 'passport-oauth';
 import request from 'request';
 import passport from 'passport';

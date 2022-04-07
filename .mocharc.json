@@ -1,3 +1,4 @@
+// For testing single case: Parallel = false, and don't watch. ESM is currently not supported by mocha with -w
 {
     "extension": ["ts"],
     "spec": "__tests__/**/*.test.ts",

@@ -1,4 +1,4 @@
-import { logger } from '../utils/logger';
+import { logger } from '../utils/LoggerUtil';
 import { TwurpleInterface } from '../api/models/Twurple';
 import mongoose, { QueryOptions } from 'mongoose';
 import { TwitchBot } from './TwitchBot';
@@ -43,22 +43,37 @@ class TwurpleInstance {
      */
     private _botApiClient!: ApiClient;
 
+    /**
+     * Bot that handles initializing all chat commands and onMessage listeners
+     */
     public get twitchBot(): TwitchBot {
         return this._twitchBot;
     }
 
+    /**
+     * Client connection registered under bot's credentials (used primarily to send messages to Twitch chat)
+     */
     public get botChatClient(): ChatClient {
         return this._botChatClient;
     }
 
+    /**
+     * Api client registered under streamer's credentials for more options (creating markers & predictions)
+     */
     public get streamerApiClient(): ApiClient {
         return this._streamerApiClient;
     }
 
+    /**
+     * Api client registered under bot's credentials for event sub
+     */
     public get botApiClient(): ApiClient {
         return this._botApiClient;
     }
 
+    /**
+     * Init all twurple related bots and wait for successful connections
+     */
     public async initTwurple(): Promise<void> {
         // Use config in db or update refresh & auth tokens from environment
         const twurpleOptionsBot = await this._getOrCreateTwurpleOptions(AUTH_USER.BOT);
@@ -70,16 +85,16 @@ class TwurpleInstance {
             /** Create Auth Credentials */
             // Create app token for bot API
             const botApiAuth = new ClientCredentialsAuthProvider(appenv.TWITCH_CLIENT_ID, appenv.TWITCH_SECRET);
-            // Create refreshing auth provider in order to stay connected to twurple chat client
+            // Refreshing auth provider (stay connected to bot chat client)
             const botChatRefreshingAuth = this._createTwurpleRefreshingAuthProvider(twurpleOptionsBot, AUTH_USER.BOT);
-            // Create refreshing auth provider in order to stay connected to twurple api client
+            // Refreshing auth provider (stay connected to streamer api client)
             const streamerApiRefreshingAuth = this._createTwurpleRefreshingAuthProvider(
                 twurpleOptionsStreamer,
                 AUTH_USER.STREAMER
             );
 
             /** Init Clients and Bots */
-            // API Client for predictions/etc
+            // API Client for predictions/markers/etc
             this._streamerApiClient = new ApiClient({ authProvider: streamerApiRefreshingAuth });
             // API client for bot event subscriptions
             this._botApiClient = new ApiClient({ authProvider: botApiAuth });
@@ -183,6 +198,12 @@ class TwurpleInstance {
         }
     }
 
+    /**
+     * Create and return a refreshing auth provider that periodically updates our refresh tokens
+     * @param twurpleOptions
+     * @param user
+     * @private
+     */
     private _createTwurpleRefreshingAuthProvider(
         twurpleOptions: TwurpleInterface,
         user: string
@@ -209,6 +230,11 @@ class TwurpleInstance {
         );
     }
 
+    /**
+     * Create and wait on chat client registration
+     * @param authProvider
+     * @private
+     */
     private async _createChatClientAndWaitForConnection(authProvider: RefreshingAuthProvider): Promise<ChatClient> {
         const botChatClient = new ChatClient({
             authProvider,
@@ -217,11 +243,12 @@ class TwurpleInstance {
         });
         // 100 requests per 30 seconds
         logger.warn('Connecting To Twurple Chat Client...');
-
         // connect just makes the WSS connection, registration logs you in
         await botChatClient.connect();
+
+        // Don't return until chat client is registered and connected. TODO: Very dangerous eh
         return new Promise<ChatClient>(resolve => {
-            botChatClient.onRegister(() => {
+            botChatClient.on(botChatClient.onRegister, () => {
                 logger.warn('Twitch Bot Registered');
                 resolve(botChatClient);
             });

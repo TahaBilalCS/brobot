@@ -4,7 +4,7 @@ import { twurpleInstance } from '../twurple/TwurpleInstance';
 import { appenv } from '../config/appenv';
 import { IncomingEvents, OutgoingEvents } from '../twurple/types/EventsInterface';
 import { HelixCreatePredictionData } from '@twurple/api';
-import { logger } from '../utils/logger';
+import { logger } from '../utils/LoggerUtil';
 
 /**
  * Express App Starter - Gives access to app ws connection
@@ -13,6 +13,7 @@ class ExpressSocket {
     /** Non-null assertion on ws instance */
     private _wsInstance!: Instance;
 
+    /** This modules websocket instance */
     public get wsInstance(): Instance {
         return this._wsInstance;
     }
@@ -48,6 +49,9 @@ class ExpressSocket {
         return this._wsInstance.getWss().clients.size;
     }
 
+    /**
+     * Create socket connection and handle incoming messages
+     */
     public initSocket(): void {
         logger.warn('Init Server Websocket');
         // Init Consts

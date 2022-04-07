@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { logger } from '../../utils/LoggerUtil';
 import { appenv } from '../../config/appenv';
 import { Router, Request, Response } from 'express';
 import passport from 'passport';

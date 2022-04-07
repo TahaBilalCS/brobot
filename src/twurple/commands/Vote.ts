@@ -137,7 +137,7 @@ export class Vote implements VoteInterface {
             } else {
                 await twurpleInstance.botChatClient?.say(
                     this._channel,
-                    `${this._channel} is already caged. Wait until she is free again.`
+                    `${this._channel} is already caged. Wait until they are free again.`
                 );
             }
         } else {

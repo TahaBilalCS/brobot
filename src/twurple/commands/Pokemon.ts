@@ -8,7 +8,7 @@ import { OutgoingEvents } from '../types/EventsInterface';
 import { twurpleInstance } from '../TwurpleInstance';
 import { expressSocket } from '../../ws/ExpressSocket';
 import { Species } from '@pkmn/sim/build/sim/dex-species';
-import { logger } from '../../utils/logger';
+import { logger } from '../../utils/LoggerUtil';
 
 /**
  * Status of pokemon battle
@@ -44,7 +44,7 @@ export class Pokemon {
      * Twurple model from db
      * @private
      */
-    private _dbPokemon: mongoose.Model<PokemonInterface> = mongoose.model<PokemonInterface>('pokemon');
+    private _dbPokemon = mongoose.model<PokemonInterface>('pokemon');
 
     /**
      * Twitch streamer's channel name
@@ -613,10 +613,12 @@ export class Pokemon {
     public async handleMessage(username: string, args: string[], userId: string): Promise<void> {
         switch (args[0]) {
             case 'battle':
-                if (!this._battle.userStarted) await this._createBattle(username, userId);
                 // If no user started, create battle
+                if (!this._battle.userStarted) await this._createBattle(username, userId);
+                // If same user tried to start battle
                 else if (this._battle.userStarted.name === username)
                     void twurpleInstance.botChatClient?.say(this._channel, `You can't battle yourself, @${username}`);
+                // If second unique user initiates battle
                 else if (!this._battle.userAccepted) await this._acceptBattle(username, userId);
                 // If we somehow entered this state
                 else

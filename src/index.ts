@@ -1,6 +1,6 @@
-import process from 'process';
-import { logger } from './utils/logger'; // Init winston logger singleton
 import { appenv } from './config/appenv';
+import { logger } from './utils/LoggerUtil'; // Init winston logger singleton
+import process from 'process';
 import express, { Express } from 'express';
 import cookieSession from 'cookie-session';
 import helmet from 'helmet';
@@ -52,19 +52,14 @@ await (async function (): Promise<void> {
 })();
 
 /**
- * Todo-Note: express.json breaks event subscriptions for twurple. Don't apply globally, use it only in routes that need it
+ * TODO: express.json breaks event subscriptions for twurple. Don't apply globally.
+ * Use it only in routes that need it
  * Use during PUT/PATCH requests
+ * app.use(express.urlencoded({ extended: true }));
+ * app.use(express.json());
  */
-// app.use(express.urlencoded({ extended: true }));
-// app.use(express.json());
 
-/**
- * Key difference between cookie-session and express-session is how the keys are stored
- * Cookie Session: Cookie IS the session -> Take user ID, find user, set it on req.session
- * Express Session: Cookie references a session -> Take session ID, then look at server side session store
- * Cookie has a small size limit with cookie-session compared to bucket of data from express-session. Only care about id
- * Passes into req.session. Cookie expires in 30 days, extracts cookie data to be passed into passport
- */
+// Cookie Session: Cookie IS the session -> Take user ID, find user, set it on req.session
 app.use(
     cookieSession({
         maxAge: 30 * 24 * 60 * 60 * 1000,
