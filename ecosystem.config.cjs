@@ -27,7 +27,8 @@ module.exports = {
                 // update environment variables in /etc/environment on EC2 instance. pm2 ain't working correctly
                 // pm2 caches environment variables and --update-env doesn't seem to be working
             },
-            'post-deploy': 'npm install && npm run build && pm2 startOrRestart ecosystem.config.cjs --env production'
+            // Install dev dependencies since we clone our repo and need to rebuild on the server in production
+            'post-deploy': 'npm install --production=false && npm run build && pm2 startOrRestart ecosystem.config.cjs --env production'
         }
     }
 };
