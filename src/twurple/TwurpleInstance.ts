@@ -7,11 +7,17 @@ import { ClientCredentialsAuthProvider, RefreshingAuthProvider } from '@twurple/
 import { ChatClient } from '@twurple/chat';
 import { ApiClient } from '@twurple/api';
 
+/**
+ * Auth for either bot or streamer credentials
+ */
 enum AUTH_USER {
     BOT = 'bot',
     STREAMER = 'streamer'
 }
 
+/**
+ * Initializes and waits for all Twurple related configurations
+ */
 class TwurpleInstance {
     /**
      * Twurple model from db
