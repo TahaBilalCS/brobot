@@ -85,7 +85,7 @@ export const init = (app: Application): void => {
                     logger.info(`Existing User Login: ${userProfile.display_name}`);
                     done(null, user);
                 } else {
-                    // TODO try/catch with done(errorObject,newUser)
+                    // TODO: try/catch with done(errorObject,newUser)
                     // Create new user
                     const newUser = await new User({
                         oauthID: userProfile.id,

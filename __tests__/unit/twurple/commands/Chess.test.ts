@@ -1,10 +1,12 @@
+// Import models
+import '../../../../src/api/models/Twurple';
+
 import sinon, { stub, spy, SinonStub, SinonSpy } from 'sinon';
 import { expect } from 'chai';
 import axios from 'axios';
-import '../../../../src/api/models/Twurple';
 import { twurpleInstance } from '../../../../src/twurple/TwurpleInstance';
-// import * as LogUtil from '../../../../src/utils/LoggerUtil';
 import { Chess } from '../../../../src/twurple/commands/Chess';
+import { logger } from '../../../../src/utils/LoggerUtil';
 
 describe('Chess', () => {
     let chessInstance: Chess;
@@ -17,6 +19,7 @@ describe('Chess', () => {
         // logErrorStub = stub(LogUtil, 'logError')
         chatSpy = spy();
         stub(twurpleInstance, 'botChatClient').value({ say: chatSpy });
+        stub(logger, 'error');
         axiosStub = stub(axios, 'post');
         chessInstance = new Chess();
     });
@@ -41,10 +44,9 @@ describe('Chess', () => {
         expect(axiosStub.getCall(0).firstArg).equal('https://lichess.org/api/challenge/open');
     });
 
-    // See TODO above
-    // it('notifies users that an error occurred while fetching url', async () => {
-    //     axiosStub.throws(new Error('Error fetching Chess URL'));
-    //     await chessInstance.handleMessage(username);
-    //     expect(chatSpy.getCall(0).lastArg).equal(`Uhoh, couldn't fetch Chess URL :(`);
-    // });
+    it('notifies users that an error occurred while fetching url', async () => {
+        axiosStub.throws(new Error('Error fetching Chess URL'));
+        await chessInstance.handleMessage(username);
+        expect(chatSpy.getCall(0).lastArg).equal(`Uhoh, couldn't fetch Chess URL :(`);
+    });
 });

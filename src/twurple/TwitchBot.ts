@@ -175,7 +175,7 @@ export class TwitchBot {
                 // TODO: Create a commands cheatsheet and link that instead of listing all commands in this message
                 void twurpleInstance.botChatClient?.say(
                     this._channel,
-                    `Remember to use the commands: "!chatban" or "!voiceban", when Trama gets too emotional. Also rock, paper, scissor: !rps. Also pokemon: https://imgur.com/a/2u62OUh` // TODO OVERRIDDEN BY TRAMA
+                    `Remember to use the commands: "!chatban" or "!voiceban", when Trama gets too emotional. Also rock, paper, scissor: !rps. Also pokemon: https://imgur.com/a/2u62OUh` // TODO: OVERRIDDEN BY TRAMA
                 );
             }
             logger.warn(`Clients On Socket: ${expressSocket.getListeningClientsOnSocket()}`);

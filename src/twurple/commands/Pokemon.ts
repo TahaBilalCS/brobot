@@ -276,7 +276,7 @@ export class Pokemon {
             if (userPokeDoc) {
                 const randomRoar = this._pickRandomRoar();
                 expressSocket.wsInstance.getWss().clients.forEach(localClient => {
-                    // TODO if client === trama, although its authenticated anyways
+                    // TODO: if client === trama, although its authenticated anyways
                     logger.info('Send Roar Websocket');
                     localClient.send(
                         JSON.stringify({ event: OutgoingEvents.POKEMON_ROAR, pokemonName: userPokeDoc?.pokemonName })

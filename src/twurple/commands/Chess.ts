@@ -126,7 +126,7 @@ export class Chess {
     // private _mapTrankedUserToGameStage: Map<string, LichessGameStatus>;
 
     constructor() {
-        this.REFRESH_GAME_TIMER = 5000; // todo 1 minute, 60000. Implement with later changes
+        this.REFRESH_GAME_TIMER = 5000; // TODO: 1 minute, 60000. Implement with later changes
         this._channel = appenv.TWITCH_CHANNEL_LISTEN;
 
         this._lichessConfigReq = {
@@ -207,8 +207,8 @@ export class Chess {
         // } else if (args[0] === 'start') {
         //     await this.LichessBot.createNormalGame(username);
         // } else if (args[0] === 'trank') {
-        //     // TODO find better way to async init - Stop Gap
-        //     await this.LichessBot.createTrankedGame(username); // todo move this to !chess opponent
+        //     // TODO: find better way to async init - Stop Gap
+        //     await this.LichessBot.createTrankedGame(username); // TODO: move this to !chess opponent
         // } else if (args[0] === 'cancel') {
         //     logger.info('CANCEL');
         // } else if (args[0] === 'stats') {
