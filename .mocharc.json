@@ -1,13 +1,13 @@
-// For testing single case: Parallel = false, and don't watch. ESM is currently not supported by mocha with -w
 {
     "extension": ["ts"],
     "spec": "__tests__/**/*.test.ts",
-    "require": ["ts-node/register"],
+    "require": ["@babel/register"], // Pre-Babel: "ts-node/register"
     "recursive": true,
-    "parallel": true,
+    "parallel": true, // true if running tests normally (--w enabled/disabled), false if only testing single case
     "timeout": 2500,
     "full-trace": true,
-    "watch": false,
+    "exit": true,
+    "watch": false, // ESM is currently not supported by mocha with -w when testing a single case (eg. describe.only)
     "watch-files": ["__tests__/**/*.ts", "src/**/*.ts"],
     "node-option": ["experimental-specifier-resolution=node", "loader=ts-node/esm"]
 }

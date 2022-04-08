@@ -5,7 +5,8 @@ module.exports = {
     apps: [
         {
             name: 'brobot',
-            script: 'dist/src/index.js',
+            // Pre-Babel: dist/src/index.js
+            script: 'lib/index.js',
             node_args: '--experimental-specifier-resolution=node', // So we can remove ".js" extensions from imports
             env: {
                 NODE_ENV: 'development'
@@ -28,7 +29,7 @@ module.exports = {
                 // pm2 caches environment variables and --update-env doesn't seem to be working
             },
             // Install dev dependencies since we clone our repo and need to rebuild on the server in production
-            'post-deploy': 'npm install --production=false && npm run build && pm2 startOrRestart ecosystem.config.cjs --env production'
+            'post-deploy': 'npm install --production=false && npm run type:check && npm run build && pm2 startOrRestart ecosystem.config.cjs --env production'
         }
     }
 };
