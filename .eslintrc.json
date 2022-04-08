@@ -9,7 +9,7 @@
         "mocha": true
     },
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint"],
+    "plugins": ["@typescript-eslint", "mocha"],
     "overrides": [
         {
             "files": ["*.ts"],
@@ -26,7 +26,7 @@
             }
         }
     ],
-    "extends": ["eslint:recommended", "prettier"],
+    "extends": ["eslint:recommended", "prettier", "plugin:mocha/recommended"],
 
     /*
       "off" - 0 (turns the rule off completely)
