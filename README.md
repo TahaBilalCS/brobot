@@ -71,6 +71,8 @@ WS_SECRET= Any secret string for basic websocket authentication
 TEST_SECRET= Any secret string (used to subscribe to event subscriptions)
 ```
 
+After that run: `npm run build` and then `npm run dev` to start up your server.
+
 ## Tests
 
 Generate coverage report with: `npm run test`
