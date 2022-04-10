@@ -95,6 +95,7 @@ export class TwitchBot {
             void this._handleCommand(username, userMsg, userInfo).then(() => {
                 // Handle messages
                 void this._handleLulu(username, userMsg);
+                return null;
             });
         });
     }

@@ -26,7 +26,12 @@
             }
         }
     ],
-    "extends": ["eslint:recommended", "prettier", "plugin:mocha/recommended"],
+    "extends": [
+        "eslint:recommended",
+        "plugin:mocha/recommended",
+        "plugin:promise/recommended",
+        "prettier"
+    ],
 
     /*
       "off" - 0 (turns the rule off completely)

@@ -440,8 +440,8 @@ export class Pokemon {
                     // A little weird but using await here will prevent the app from continuing.
                     // Seems the way this library works is it initializes some things asynchronously and then
                     // lets the stream handle future inputs
-                    void p1.start().then();
-                    void p2.start().then();
+                    void p1.start().then(null);
+                    void p2.start().then(null);
 
                     // Handle what happens during simulation
                     void (async (): Promise<void> => {
@@ -516,7 +516,7 @@ export class Pokemon {
                         // Empty battle regardless of outcome
                         if (this._battle.battleTimer) clearInterval(this._battle.battleTimer);
                         this._battle = {};
-                    })().then();
+                    })().then(null);
 
                     // Write streams but will jump to logic above
                     void streams.omniscient.write(`>start ${JSON.stringify(spec)}`);

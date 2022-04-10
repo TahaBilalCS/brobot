@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 const { Schema } = mongoose;
-import { TwitchUserInterface, TwitchUserSchema } from './TwitchUser.js';
+import { TwitchUserInterface, TwitchUserSchema } from './TwitchUser';
 
 export interface UserInterface {
     oauthID: string;

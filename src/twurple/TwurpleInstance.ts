@@ -225,6 +225,7 @@ class TwurpleInstance {
                         .findOneAndUpdate({ user }, newTokenData, options)
                         .then(() => {
                             logger.warn('Success Update Twurple Options');
+                            return null;
                         })
                         .catch(err => {
                             logger.error('Error Update Twurple Options DB');
