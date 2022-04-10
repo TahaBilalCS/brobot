@@ -26,18 +26,7 @@
             }
         }
     ],
-    "extends": [
-        "eslint:recommended",
-        "plugin:mocha/recommended",
-        "plugin:promise/recommended",
-        "prettier"
-    ],
-
-    /*
-      "off" - 0 (turns the rule off completely)
-      "warn" - 1 (turns the rule on but won't make the linter fail)
-      "error" - 2 (turns the rule on and will make the linter fail)
-    */
+    "extends": ["eslint:recommended", "plugin:mocha/recommended", "plugin:promise/recommended", "prettier"],
     "rules": {
         "@typescript-eslint/explicit-function-return-type": 1,
         "@typescript-eslint/no-unused-vars": 2,
