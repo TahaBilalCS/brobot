@@ -12,7 +12,7 @@
         "build:js": "babel src -d lib --extensions \".ts,.tsx\"",
         "dev": "concurrently --kill-others \"npm run type-check:watch\" \"npm run build:js -- --watch\" \"pm2-dev start ecosystem.config.cjs\"",
         "deploy": "pm2 deploy ecosystem.config.cjs production",
-        "test": "c8 --all -r html -r text mocha",
+        "test": "c8 mocha",
         "test-watch": "npm run test -- -w",
         "lint": "eslint . --ext .ts",
         "format": "prettier --write ."

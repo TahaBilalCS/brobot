@@ -33,22 +33,22 @@ const expectClientsToBeDefined = (): void => {
     expect(twurpleInstance.botApiClient).to.be.ok;
 };
 
-describe('TwurpleInstance', function() {
+describe('TwurpleInstance', function () {
     let dbFindOneStub: SinonStub;
     let logWarnStub: SinonStub;
     let logErrStub: SinonStub;
 
-    beforeEach(function() {
+    beforeEach(function () {
         dbFindOneStub = stub(mongoose.Model, 'findOne');
         logWarnStub = stub(logger, 'warn');
         logErrStub = stub(logger, 'error');
     });
 
-    afterEach(function() {
+    afterEach(function () {
         sinon.restore();
     });
 
-    it('should initialize and resolve undefined clients', async function() {
+    it('should initialize and resolve undefined clients', async function () {
         // Stub and resolve mongoose methods
         dbFindOneStub.resolves(undefined);
         stub(mongoose.Model.prototype, 'save');
@@ -68,7 +68,7 @@ describe('TwurpleInstance', function() {
         );
     });
 
-    it('should initialize and resolve connected clients', async function() {
+    it('should initialize and resolve connected clients', async function () {
         // Mock options from DB
         const botOptions: TwurpleInterface = {
             user: 'bot-test',

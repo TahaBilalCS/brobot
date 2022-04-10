@@ -2,7 +2,7 @@ import { useFakeTimers, SinonFakeTimers } from 'sinon';
 import { expect } from 'chai';
 import { getCurrentDateEST } from '../../../src/utils/TimeUtil';
 
-describe('TimeUtil', function() {
+describe('TimeUtil', function () {
     let clock: SinonFakeTimers;
 
     beforeEach(function () {

@@ -8,13 +8,13 @@ import { twurpleInstance } from '../../../../src/twurple/TwurpleInstance';
 import { Chess } from '../../../../src/twurple/commands/Chess';
 import { logger } from '../../../../src/utils/LoggerUtil';
 
-describe('Chess', function() {
+describe('Chess', function () {
     let chessInstance: Chess;
     let axiosStub: SinonStub;
     // let logErrorStub: SinonStub; TODO: Need to use babel to stub ES Modules
     let chatSpy: SinonSpy;
     let username: string;
-    beforeEach(function() {
+    beforeEach(function () {
         username = 'random_user_123';
         // logErrorStub = stub(LogUtil, 'logError')
         chatSpy = spy();
@@ -24,11 +24,11 @@ describe('Chess', function() {
         chessInstance = new Chess();
     });
 
-    afterEach(function() {
+    afterEach(function () {
         sinon.restore();
     });
 
-    it('returns url after successful fetch', async function() {
+    it('returns url after successful fetch', async function () {
         const res = {
             data: {
                 challenge: {
@@ -44,7 +44,7 @@ describe('Chess', function() {
         expect(axiosStub.getCall(0).firstArg).equal('https://lichess.org/api/challenge/open');
     });
 
-    it('notifies users that an error occurred while fetching url', async function() {
+    it('notifies users that an error occurred while fetching url', async function () {
         axiosStub.throws(new Error('Error fetching Chess URL'));
         await chessInstance.handleMessage(username);
         expect(chatSpy.getCall(0).lastArg).equal(`Uhoh, couldn't fetch Chess URL :(`);
