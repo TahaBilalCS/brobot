@@ -4,6 +4,9 @@
     "description": "Running a websocket & https server on an AWS EC2 instance",
     "main": "lib/index.js",
     "type": "module",
+    "engines": {
+        "node": "^17.18.0"
+    },
     "scripts": {
         "type-check": "tsc --noEmit",
         "type-check:watch": "npm run type-check -- --watch",
