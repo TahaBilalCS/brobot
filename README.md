@@ -27,6 +27,7 @@ I was able to expose myself to many technologies that I'm interested in such as:
 -   Development vs Production Environments
 -   Reverse proxy and re-routing with `nginx`
 -   OAuth2 using `passport.js`
+-   SSL
 -   MongoDB Atlas Cloud Database
 -   API MVC architecture
 -   Windows Subsystem for Linux (`WSL2`)
