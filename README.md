@@ -18,16 +18,15 @@ I was able to expose myself to many technologies that I'm interested in such as:
 
 -   Websockets
 -   Hosting on an AWS EC2 instance
--   Automated deployment
+-   Automated deployment using the pm2 package manager
 -   Git hooks, linting, and formatting configurations
 -   Pub/Sub event messaging
 -   Unit testing with `Mocha/Chai/Sinon`
 -   Daemon process management with `pm2`
--   Integrating `Typescript` with `Babel` using the latest ES Module syntax
+-   Integrating `Typescript` with `Babel` with the latest ECMAScript standard
 -   Development vs Production Environments
--   Reverse proxy and re-routing with `nginx`
+-   SSL and Reverse proxy and re-routing with `NGINX`
 -   OAuth2 using `passport.js`
--   SSL
 -   MongoDB Atlas Cloud Database
 -   API MVC architecture
 -   Windows Subsystem for Linux (`WSL2`)
