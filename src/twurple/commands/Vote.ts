@@ -2,6 +2,7 @@ import { appenv } from '../../config/appenv.js';
 import { twurpleInstance } from '../TwurpleInstance.js';
 import { expressSocket } from '../../ws/ExpressSocket.js';
 import { OutgoingEvents } from '../types/EventsInterface.js';
+import { logger } from '../../utils/LoggerUtil.js';
 
 /**
  * Only implements public properties (from getter)
@@ -127,6 +128,7 @@ export class Vote implements VoteInterface {
                     // Send ChatBan ws event to client
                     expressSocket.wsInstance.getWss().clients.forEach(localClient => {
                         // TODO: if client === trama (already authenticated though)
+                        logger.info('Sending VoiceBan event to Client');
                         localClient.send(this._socketEvent);
                         void twurpleInstance.botChatClient?.say(
                             this._channel,
