@@ -1,7 +1,7 @@
 {
     "extension": ["ts"],
     "spec": "__tests__/**/*.test.ts",
-    "require": ["@babel/register"], # Pre-Babel: "ts-node/register"
+    "require": ["ts-node/register"], # Babel: "@babel/register"
     "recursive": true,
     "parallel": true, # true if running tests normally (--w enabled/disabled), false if only testing single case
     "timeout": 2500,

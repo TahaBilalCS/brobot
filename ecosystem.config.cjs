@@ -5,8 +5,8 @@ module.exports = {
     apps: [
         {
             name: 'brobot',
-            // Pre-Babel: dist/src/index.js
-            script: 'lib/index.js',
+            // Babel: lib/index.js
+            script: 'dist/src/index.js',
             node_args: '--experimental-specifier-resolution=node', // So we can remove ".js" extensions from imports
             env: {
                 NODE_ENV: 'development'
@@ -30,7 +30,8 @@ module.exports = {
             },
             // Install dev dependencies since we clone our repo and need to rebuild on the server in production
             'post-deploy':
-                'npm install --production=false && npm run type-check && npm run build && pm2 startOrRestart ecosystem.config.cjs --env production'
+                'npm install --production=false && npm run build && pm2 startOrRestart ecosystem.config.cjs --env production'
+            // Babel - 'npm install --production=false && npm run type:check && npm run build && pm2 startOrRestart ecosystem.config.cjs --env production'
         }
     }
 };

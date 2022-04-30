@@ -1,7 +1,6 @@
 # Ignore
 node_modules/
 dist/
-lib/
 coverage/
 .idea/
 .env
