@@ -1,12 +1,12 @@
 // Import models
-import '../../../../src/api/models/Twurple';
+import '../../../../src/api/models/Twurple.js';
 
 import sinon, { stub, spy, SinonStub, SinonSpy } from 'sinon';
 import { expect } from 'chai';
 import axios from 'axios';
-import { twurpleInstance } from '../../../../src/twurple/TwurpleInstance';
-import { Chess } from '../../../../src/twurple/commands/Chess';
-import { logger } from '../../../../src/utils/LoggerUtil';
+import { twurpleInstance } from '../../../../src/twurple/TwurpleInstance.js';
+import { Chess } from '../../../../src/twurple/commands/Chess.js';
+import { logger } from '../../../../src/utils/LoggerUtil.js';
 
 describe('Chess', function () {
     let chessInstance: Chess;

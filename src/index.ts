@@ -1,5 +1,5 @@
-import { appenv } from './config/appenv';
-import { logger } from './utils/LoggerUtil'; // Init winston logger singleton
+import { appenv } from './config/appenv.js';
+import { logger } from './utils/LoggerUtil.js'; // Init winston logger singleton
 import process from 'process';
 import express, { Express } from 'express';
 import cookieSession from 'cookie-session';
@@ -8,20 +8,20 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 
 // Models before Services & Routers
-import './api/models/User';
-import './api/models/Twurple';
-import './api/models/Pokemon';
+import './api/models/User.js';
+import './api/models/Twurple.js';
+import './api/models/Pokemon.js';
 
 // Init Twurple & Socket module singletons
-import { twurpleInstance } from './twurple/TwurpleInstance';
-import { expressSocket } from './ws/ExpressSocket';
+import { twurpleInstance } from './twurple/TwurpleInstance.js';
+import { expressSocket } from './ws/ExpressSocket.js';
 
 // Routers after Models
-import { router as loginRouter } from './api/routes/login.router';
-import { router as userRouter } from './api/routes/user.router';
+import { router as loginRouter } from './api/routes/login.router.js';
+import { router as userRouter } from './api/routes/user.router.js';
 
 // Services after Models
-import * as passportService from './api/services/passport.service';
+import * as passportService from './api/services/passport.service.js';
 import {
     EventSubChannelBanEvent,
     EventSubChannelRaidEvent,

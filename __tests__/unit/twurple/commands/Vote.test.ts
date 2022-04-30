@@ -1,12 +1,12 @@
 // Import models
-import '../../../../src/api/models/Twurple';
+import '../../../../src/api/models/Twurple.js';
 
 import { expect } from 'chai';
 import sinon, { stub, spy, SinonStub, SinonSpy } from 'sinon';
-import { OutgoingEvents } from '../../../../src/twurple/types/EventsInterface';
-import { expressSocket } from '../../../../src/ws/ExpressSocket';
-import { twurpleInstance } from '../../../../src/twurple/TwurpleInstance';
-import { Vote } from '../../../../src/twurple/commands/Vote';
+import { OutgoingEvents } from '../../../../src/twurple/types/EventsInterface.js';
+import { expressSocket } from '../../../../src/ws/ExpressSocket.js';
+import { twurpleInstance } from '../../../../src/twurple/TwurpleInstance.js';
+import { Vote } from '../../../../src/twurple/commands/Vote.js';
 
 /**
  * Individual client listening on socket

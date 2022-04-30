@@ -1,7 +1,7 @@
-import { appenv } from '../../config/appenv';
-import { twurpleInstance } from '../TwurpleInstance';
-import { expressSocket } from '../../ws/ExpressSocket';
-import { OutgoingEvents } from '../types/EventsInterface';
+import { appenv } from '../../config/appenv.js';
+import { twurpleInstance } from '../TwurpleInstance.js';
+import { expressSocket } from '../../ws/ExpressSocket.js';
+import { OutgoingEvents } from '../types/EventsInterface.js';
 
 /**
  * Only implements public properties (from getter)

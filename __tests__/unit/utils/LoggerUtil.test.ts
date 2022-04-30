@@ -1,6 +1,6 @@
 import sinon, { stub, SinonStub } from 'sinon';
 import { expect } from 'chai';
-import { logError, logger } from '../../../src/utils/LoggerUtil';
+import { logError, logger } from '../../../src/utils/LoggerUtil.js';
 
 describe('LoggerUtil', function () {
     let logErrStub: SinonStub;

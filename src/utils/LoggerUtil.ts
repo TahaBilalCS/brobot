@@ -1,6 +1,6 @@
 import { transports, format, createLogger } from 'winston';
 const { combine, timestamp, ms, colorize, printf, errors, align } = format;
-import { getCurrentDateEST } from './TimeUtil';
+import { getCurrentDateEST } from './TimeUtil.js';
 
 /**
  * Setup logger with custom format

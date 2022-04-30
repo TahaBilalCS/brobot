@@ -1,5 +1,5 @@
-import { logger } from '../../utils/LoggerUtil';
-import { appenv } from '../../config/appenv';
+import { logger } from '../../utils/LoggerUtil.js';
+import { appenv } from '../../config/appenv.js';
 import { Router, Request, Response } from 'express';
 import passport from 'passport';
 

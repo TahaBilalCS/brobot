@@ -1,17 +1,17 @@
 // Import models
-import '../../../src/api/models/Twurple';
-import '../../../src/api/models/Pokemon';
+import '../../../src/api/models/Twurple.js';
+import '../../../src/api/models/Pokemon.js';
 
 import { expect } from 'chai';
 import sinon, { SinonStub, stub } from 'sinon';
 import mongoose from 'mongoose';
 import { ChatClient } from '@twurple/chat';
-import { TwurpleInterface } from '../../../src/api/models/Twurple';
+import { TwurpleInterface } from '../../../src/api/models/Twurple.js';
 
-import { twurpleInstance } from '../../../src/twurple/TwurpleInstance';
+import { twurpleInstance } from '../../../src/twurple/TwurpleInstance.js';
 
 // Init Twurple instance
-import { logger } from '../../../src/utils/LoggerUtil';
+import { logger } from '../../../src/utils/LoggerUtil.js';
 
 /**
  * Expectations for twurple pre-init
