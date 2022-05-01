@@ -113,6 +113,7 @@ class ExpressSocket {
                         break;
                     case IncomingEvents.TRAMA_CONNECTED:
                         logger.warn('Client Connection Received');
+                        logger.warn(`Clients On Socket: ${this.getListeningClientsOnSocket()}`);
                         break;
                     case IncomingEvents.PING:
                         logger.warn('Trama PING!');
@@ -136,6 +137,7 @@ class ExpressSocket {
                 twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
                 twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
                 logger.warn('Cancelling All Ongoing Events, Client WebSocket Closed');
+                logger.warn(`Clients On Socket: ${this.getListeningClientsOnSocket()}`);
             });
 
             ws.on('error', (err: Error) => {
