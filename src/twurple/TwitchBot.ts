@@ -237,6 +237,7 @@ export class TwitchBot {
                 break;
             case 'voiceban':
                 await this._voiceBan.handleMessage(username);
+                logger.warn(`Clients On Socket: ${expressSocket.getListeningClientsOnSocket()}`);
                 break;
             case 'rps':
                 await this._createRPSUrl(username);
