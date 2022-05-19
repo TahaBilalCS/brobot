@@ -80,7 +80,7 @@ export class TwitchBot {
         // Init Bot Commands
         this._pokemon = new Pokemon();
         this._chatBan = new Vote(4, OutgoingEvents.CHATBAN, `Removing ${this._channel}'s "Enter" key for 5 minutes...`);
-        this._voiceBan = new Vote(1, OutgoingEvents.VOICEBAN, `Removing ${this._channel}'s voice for 30 seconds...`);
+        this._voiceBan = new Vote(4, OutgoingEvents.VOICEBAN, `Removing ${this._channel}'s voice for 30 seconds...`);
         this._chess = new Chess();
         // Init intervals
         this._notifyChatInterval = this._setChatNotifyInterval(); // Alert chat every half an hour
