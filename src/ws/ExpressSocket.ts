@@ -2,9 +2,15 @@ import { Express } from 'express';
 import enableWs, { Instance, Options } from 'express-ws';
 import { twurpleInstance } from '../twurple/TwurpleInstance.js';
 import { appenv } from '../config/appenv.js';
-import { IncomingEvents, OutgoingEvents } from '../twurple/types/EventsInterface.js';
+import { IncomingEvents } from '../twurple/types/EventsInterface.js';
 import { HelixCreatePredictionData } from '@twurple/api';
 import { logger } from '../utils/LoggerUtil.js';
+import WebSocket from 'ws';
+
+interface ExtWebsocket extends WebSocket.WebSocket {
+    isAlive?: boolean;
+    id?: string;
+}
 
 /**
  * Express App Starter - Gives access to app ws connection
@@ -17,6 +23,12 @@ class ExpressSocket {
     public get wsInstance(): Instance {
         return this._wsInstance;
     }
+
+    /** Client connection count */
+    private countClientConnected = 0;
+
+    /** The interval responsible for pinging client connections */
+    private pingInterval?: NodeJS.Timer;
 
     /**
      * Start express websocket app (Not in class constructor to control execution flow)
@@ -63,7 +75,59 @@ class ExpressSocket {
             outcomes: ['Yes', 'No'],
             title: 'Will Trama Win This Game?'
         };
-        this._wsInstance.app.ws('/ashketchum', (ws /*, req*/) => {
+
+        this.pingInterval = setInterval(() => {
+            this._wsInstance.getWss().clients.forEach((clientWs: ExtWebsocket) => {
+                if (!clientWs.isAlive) {
+                    logger.warn(`CLIENT SOCKET NOT ALIVE, TERMINATE`);
+                    clientWs.terminate();
+                }
+                clientWs.isAlive = false;
+                clientWs.ping();
+            });
+        }, 5000);
+
+        /** This really shouldn't happen */
+        this._wsInstance.getWss().on('close', () => {
+            logger.error('Server Socket Closed');
+            this.countClientConnected = 0;
+            if (this.pingInterval) clearInterval(this.pingInterval);
+        });
+
+        /** When client connects to this route, setup the client-server events */
+        this._wsInstance.app.ws('/ashketchum', (ws: ExtWebsocket, req) => {
+            // Execute and append the following listeners when client connects
+            this.countClientConnected++;
+            ws.isAlive = true;
+            ws.id = `${this.countClientConnected} - ${JSON.stringify(req.socket.address())}`;
+            logger.warn(`Client Connection Received: ${ws.id}`);
+            logger.warn(`Clients On WSS: ${this.getListeningClientsOnSocket()}`);
+            // When server runs behind a proxy like NGINX, de-facto standard is to use the X-Forwarded-For Header to get IP
+            if (req.headers['x-forwarded-for']) {
+                try {
+                    const ipString = req.headers['x-forwarded-for'] as string;
+                    const ip = ipString.split(',')[0].trim();
+                    logger.warn(`Client Connection via Proxy: ${ip}`);
+                } catch (err) {
+                    logger.error('Error retrieving Client Proxy IP', err);
+                }
+            }
+
+            // On pong from client
+            ws.on('pong', () => {
+                ws.isAlive = true;
+            });
+
+            // When client closes connection
+            ws.on('close', () => {
+                twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
+                twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
+                const id = ws.id ? ws.id : '';
+                logger.warn(`Client WebSocket Closed: ${id}`);
+                logger.warn(`Clients On WSS: ${this.getListeningClientsOnSocket()}`);
+                // Don't clear interval on individual closed sockets
+            });
+
             // On message from client
             ws.on('message', msg => {
                 const clientMessage = String(msg); // Raw Message From Client
@@ -111,18 +175,6 @@ class ExpressSocket {
                             `${TWITCH_CHANNEL_LISTEN} is now free. All ChatBan votes have been reset.`
                         );
                         break;
-                    case IncomingEvents.TRAMA_CONNECTED:
-                        logger.warn('Client Connection Received');
-                        logger.warn(`Clients On Socket: ${this.getListeningClientsOnSocket()}`);
-                        break;
-                    case IncomingEvents.PING:
-                        logger.warn('Trama PING!');
-                        // Respond with PONG when pinged
-                        this._wsInstance.getWss().clients.forEach(localClient => {
-                            logger.warn('Sending PONG!');
-                            localClient.send(OutgoingEvents.PONG);
-                        });
-                        break;
                     case 'broke':
                         logger.info('Chat/Voice Ban Broke');
                         void twurpleInstance.botChatClient?.say(TWITCH_CHANNEL_LISTEN, `Uhoh something broke :(`);
@@ -132,16 +184,9 @@ class ExpressSocket {
                 }
             });
 
-            // When client closes connection
-            ws.on('close', () => {
-                twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
-                twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
-                logger.warn('Cancelling All Ongoing Events, Client WebSocket Closed');
-                logger.warn(`Clients On Socket: ${this.getListeningClientsOnSocket()}`);
-            });
-
+            // On error from client
             ws.on('error', (err: Error) => {
-                logger.error('Server Websocket Error');
+                logger.error('Client Websocket Error?');
                 logger.error(err);
             });
         });

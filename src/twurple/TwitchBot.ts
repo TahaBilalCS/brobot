@@ -179,7 +179,7 @@ export class TwitchBot {
                     `Remember to use the commands: "!chatban" or "!voiceban", when Trama gets too emotional. Also rock, paper, scissor: !rps. Also pokemon: https://imgur.com/a/2u62OUh` // TODO: OVERRIDDEN BY TRAMA
                 );
             }
-            logger.warn(`Clients On Socket: ${expressSocket.getListeningClientsOnSocket()}`);
+            logger.warn(`Clients On WSS: ${expressSocket.getListeningClientsOnSocket()}`);
         }, 1000 * 60 * 40); // Every 40 minutes
     }
 
@@ -237,7 +237,7 @@ export class TwitchBot {
                 break;
             case 'voiceban':
                 await this._voiceBan.handleMessage(username);
-                logger.warn(`Clients On Socket: ${expressSocket.getListeningClientsOnSocket()}`);
+                logger.warn(`Clients On WSS: ${expressSocket.getListeningClientsOnSocket()}`);
                 break;
             case 'rps':
                 await this._createRPSUrl(username);
