@@ -1,8 +1,0 @@
-# Ignore
-node_modules/
-dist/
-coverage/
-.idea/
-.env
-.eslintcache
-.DS_Store

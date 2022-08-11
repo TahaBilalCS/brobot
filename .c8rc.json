@@ -1,6 +1,0 @@
-{
-    "src": "./src",
-    "reporter": ["html", "text"],
-    "all": true,
-    "exclude": ["__tests__"]
-}
