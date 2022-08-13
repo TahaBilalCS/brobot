@@ -6,7 +6,7 @@ module.exports = {
   deploy: {
     production: {
       user: 'ubuntu',
-      host: 'ec2-18-222-26-162.us-east-2.compute.amazonaws.com',
+      host: 'ec2-3-142-186-251.us-east-2.compute.amazonaws.com',
       key: '~/.ssh/brobot-api.pem',
       ref: 'origin/nestjs-migration',
       repo: 'git@github.com:TahaBilalCS/brobot.git',
