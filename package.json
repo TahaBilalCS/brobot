@@ -1,0 +1,22 @@
+{
+  "name": "brobot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TahaBilalCS/brobot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TahaBilalCS/brobot/issues"
+  },
+  "homepage": "https://github.com/TahaBilalCS/brobot#readme",
+  "devDependencies": {
+    "express": "^4.18.1"
+  }
+}
