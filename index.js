@@ -7,7 +7,7 @@ app.get("/", (req, res) => {
   res.send("LET'S DO THIS");
 });
 
-app.ws('/ashketchum', (ws, req) => {
+app.ws('/', (ws, req) => {
   console.log("SOMEONE HERE")
   ws.on('message', (msg) => {
     console.log(msg)
