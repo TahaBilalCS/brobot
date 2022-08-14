@@ -1,7 +1,9 @@
 const express = require("express");
 
-const app = express();
-const expressWs = require('express-ws')(app)
+const appBase = express();
+const expressWs = require('express-ws')(appBase)
+
+const app = expressWs.app;
 
 app.get("/", (req, res) => {
   res.send("LET'S DO THIS");
