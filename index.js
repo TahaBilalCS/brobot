@@ -10,7 +10,7 @@ app.use(function (req, res, next) {
 
 app.get('/', function(req, res, next){
   console.log('get route', req.testing);
-  res.send('sup')
+  res.send('supp')
 });
 
 app.ws('/', function(ws, req) {
