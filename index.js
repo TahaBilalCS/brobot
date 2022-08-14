@@ -1,19 +1,23 @@
-const express = require("express");
+var express = require('express');
+var app = express();
+var expressWs = require('express-ws')(app);
 
-const appBase = express();
-const expressWs = require('express-ws')(appBase)
-
-const app = expressWs.app;
-
-app.get("/", (req, res) => {
-  res.send("LET'S DO THIS");
+app.use(function (req, res, next) {
+  console.log('middleware');
+  req.testing = 'testing';
+  return next();
 });
 
-app.ws('/', (ws, req) => {
-  console.log("SOMEONE HERE")
-  ws.on('message', (msg) => {
-    console.log(msg)
-  })
-})
+app.get('/', function(req, res, next){
+  console.log('get route', req.testing);
+  res.end();
+});
+
+app.ws('/', function(ws, req) {
+  ws.on('message', function(msg) {
+    console.log(msg);
+  });
+  console.log('socket', req.testing);
+});
 
 app.listen(3000, () => console.log("Server running on port 3000"));
