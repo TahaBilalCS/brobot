@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'brobot-api',
-      script: 'nest start',
+      script: 'npm run start:prod',
     },
   ],
   deploy: {
@@ -13,7 +13,8 @@ module.exports = {
       ref: 'origin/nestjs-migration',
       repo: 'git@github.com:TahaBilalCS/brobot.git',
       path: '/home/ubuntu/brobot',
-      'post-deploy': 'npm install && pm2 startOrRestart ecosystem.config.js',
+      'post-deploy':
+        'npm install && npm run build && pm2 startOrRestart ecosystem.config.js --env production',
     },
   },
 };
