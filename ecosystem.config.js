@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'brobot-api',
-      script: 'npm run start:prod',
+      script: 'dist/main',
     },
   ],
   deploy: {
