@@ -14,10 +14,7 @@ export class AppController {
     ) {
         console.log('DB', configService.get('DATABASE_URL'));
         console.log('TEST', configService.get('TEST_SECRET'));
-        console.log('TESTTT222', process.env.TEST_SECRET);
-        console.log('ENVVVV', configService.get('NODE_ENV'));
-        console.log('ENVVVV3\n\n', process.env.env_production);
-        console.log('ENVVVV3\n\n', process.env.env);
+        console.log('ENV', configService.get('NODE_ENV'));
     }
 
     @Get('post/:id')
