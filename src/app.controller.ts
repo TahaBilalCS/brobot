@@ -17,7 +17,7 @@ export class AppController {
 
         console.log('TEST', configService.get('TEST_SECRET'));
         console.log('SUPAH', configService.get('SUPAH'));
-        console.log('SHTEST', configService.get('SHTEST'));
+        console.log('TESTSH', configService.get('TESTSH'));
     }
 
     @Get('post/:id')
