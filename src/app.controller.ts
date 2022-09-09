@@ -16,6 +16,7 @@ export class AppController {
         console.log('TEST', configService.get('TEST_SECRET'));
         console.log('TESTTT222', process.env.TEST_SECRET);
         console.log('ENVVVV', configService.get('NODE_ENV'));
+        console.log('ENVVVV3\n\n', process.env);
     }
 
     @Get('post/:id')
