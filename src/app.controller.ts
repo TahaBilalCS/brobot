@@ -2,6 +2,7 @@ import { Controller, Get, Param, Post, Body, Put, Delete } from '@nestjs/common'
 import { UserService } from './user.service';
 import { PostService } from './post.service';
 import { User as UserModel, Post as PostModel } from '@prisma/client';
+import { Logger } from '@nestjs/common';
 
 @Controller()
 export class AppController {
@@ -17,6 +18,23 @@ export class AppController {
         return this.postService.posts({
             where: { published: true }
         });
+    }
+
+    @Get('posts')
+    async getPosts(): Promise<PostModel[]> {
+        return this.postService.posts({});
+    }
+
+    @Get('users')
+    async getUsers(): Promise<UserModel[]> {
+        return this.testS();
+        // return this.userService.users({});
+    }
+
+    async testS(): Promise<UserModel[]> {
+        const allUsers = await this.userService.testUsers();
+        console.log(allUsers);
+        return allUsers;
     }
 
     @Get('filtered-posts/:searchString')
@@ -37,6 +55,7 @@ export class AppController {
 
     @Post('post')
     async createDraft(@Body() postData: { title: string; content?: string; authorEmail: string }): Promise<PostModel> {
+        Logger.log(postData);
         const { title, content, authorEmail } = postData;
         return this.postService.createPost({
             title,
@@ -47,9 +66,11 @@ export class AppController {
         });
     }
 
-    @Post('user')
-    async signupUser(@Body() userData: { name?: string; email: string }): Promise<UserModel> {
-        return this.userService.createUser(userData);
+    @Post('user2')
+    async signupUser(@Body() userData: { name?: string; email: string }): Promise<void> {
+        Logger.log('USER4', userData);
+        return;
+        // return this.userService.createUser(userData);
     }
 
     @Put('publish/:id')
