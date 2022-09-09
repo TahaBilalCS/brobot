@@ -19,9 +19,9 @@ module.exports = {
             ref: 'origin/nestjs-migration',
             repo: 'git@github.com:TahaBilalCS/brobot.git',
             path: '/home/ubuntu/brobot',
-            // startOrRestart
+            // startOrRestart // remove npx
             'post-deploy':
-                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && pm2 restart ecosystem.config.js  --update-env --env production'
+                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && npx pm2 startOrRestart ecosystem.config.js  --update-env --env production'
         }
     }
 };
