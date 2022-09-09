@@ -13,8 +13,8 @@ export class AppController {
         private configService: ConfigService
     ) {
         console.log('DB', configService.get('DATABASE_URL'));
-        console.log('TEST', configService.get('TEST'));
-        console.log('TESTTT222', process.env.TEST);
+        console.log('TEST', configService.get('TEST_SECRET'));
+        console.log('TESTTT222', process.env.TEST_SECRET);
         console.log('ENVVVV', configService.get('NODE_ENV'));
     }
 
