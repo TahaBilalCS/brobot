@@ -7,7 +7,7 @@ import { UserService } from './user.service';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-    imports: [ConfigModule.forRoot()],
+    imports: [ConfigModule.forRoot({ ignoreEnvFile: true })],
     controllers: [AppController],
     providers: [AppService, PostService, UserService, PrismaService]
 })
