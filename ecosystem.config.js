@@ -6,10 +6,6 @@ module.exports = {
             env: {
                 NODE_ENV: 'development',
                 TEST: process.env.TEST
-            },
-            env_production: {
-                NODE_ENV: 'production',
-                TEST: process.env.TEST
             }
         }
     ],
@@ -22,7 +18,11 @@ module.exports = {
             repo: 'git@github.com:TahaBilalCS/brobot.git',
             path: '/home/ubuntu/brobot',
             'post-deploy':
-                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && pm2 startOrRestart ecosystem.config.js --env production --update-env'
+                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && pm2 startOrRestart ecosystem.config.js --env production --update-env',
+            env_production: {
+                NODE_ENV: 'production',
+                TEST: process.env.TEST
+            }
         }
     }
 };
