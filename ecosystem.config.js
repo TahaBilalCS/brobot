@@ -20,7 +20,7 @@ module.exports = {
             repo: 'git@github.com:TahaBilalCS/brobot.git',
             path: '/home/ubuntu/brobot',
             'post-deploy':
-                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && pm2 restart ecosystem.config.js --update-env --env production'
+                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && pm2 reload ecosystem.config.js --env production --update-env'
         }
     }
 };
