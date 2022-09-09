@@ -14,6 +14,7 @@ export class AppController {
     ) {
         console.log('DB', configService.get('DATABASE_URL'));
         console.log('TEST', configService.get('TEST'));
+        console.log('TESTTT222', process.env.TEST);
         console.log('ENVVVV', configService.get('NODE_ENV'));
     }
 
