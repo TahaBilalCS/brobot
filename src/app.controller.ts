@@ -67,10 +67,9 @@ export class AppController {
     }
 
     @Post('user2')
-    async signupUser(@Body() userData: { name?: string; email: string }): Promise<void> {
+    async signupUser(@Body() userData: { name?: string; email: string }): Promise<UserModel> {
         Logger.log('USER4', userData);
-        return;
-        // return this.userService.createUser(userData);
+        return this.userService.createUser(userData);
     }
 
     @Put('publish/:id')
