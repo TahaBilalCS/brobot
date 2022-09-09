@@ -13,9 +13,10 @@ export class AppController {
         private configService: ConfigService
     ) {
         console.log('DB', configService.get('DATABASE_URL'));
+        console.log('ENV', configService.get('NODE_ENV'));
+
         console.log('TEST', configService.get('TEST_SECRET'));
         console.log('SUPAH', configService.get('SUPAH'));
-        console.log('ENV', configService.get('NODE_ENV'));
     }
 
     @Get('post/:id')
