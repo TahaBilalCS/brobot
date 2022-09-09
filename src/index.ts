@@ -35,6 +35,8 @@ import { NgrokAdapter } from '@twurple/eventsub-ngrok';
 import { LogLevel } from '@d-fischer/logger';
 
 console.log('process', process.env.SUPAHTEST);
+console.log('STRM ACCESS', process.env.STREAMER_ACCESS_TOKEN);
+console.log('STRM REFRESH', process.env.STREAMER_REFRESH_TOKEN);
 /** Base Express App - Start before middlewares */
 const appBase: Express = express();
 expressSocket.setupSocket(appBase);
