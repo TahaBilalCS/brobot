@@ -21,7 +21,7 @@ module.exports = {
             path: '/home/ubuntu/brobot',
             // startOrRestart // remove npx
             'post-deploy':
-                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && npx pm2 startOrRestart ecosystem.config.js  --update-env --env production'
+                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && pm2 startOrRestart ecosystem.config.js --env production'
         }
     }
 };
