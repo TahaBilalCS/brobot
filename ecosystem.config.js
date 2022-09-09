@@ -6,6 +6,9 @@ module.exports = {
             env: {
                 NODE_ENV: 'development'
             }
+            // env_production: {
+            //     NODE_ENV: 'production'
+            // },
         }
     ],
     deploy: {
@@ -17,7 +20,7 @@ module.exports = {
             repo: 'git@github.com:TahaBilalCS/brobot.git',
             path: '/home/ubuntu/brobot',
             // startOrRestart // remove npx
-            env_production: {
+            env: {
                 NODE_ENV: 'production'
             },
             'post-deploy':
