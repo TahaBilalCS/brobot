@@ -3,10 +3,19 @@ import { UserService } from './user.service';
 import { PostService } from './post.service';
 import { User as UserModel, Post as PostModel } from '@prisma/client';
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 @Controller()
 export class AppController {
-    constructor(private readonly userService: UserService, private readonly postService: PostService) {}
+    constructor(
+        private readonly userService: UserService,
+        private readonly postService: PostService,
+        private configService: ConfigService
+    ) {
+        console.log('DB', configService.get('DATABASE_URL'));
+        console.log('TEST', configService.get('TEST'));
+        console.log('ENVVVV', configService.get('NODE_ENV'));
+    }
 
     @Get('post/:id')
     async getPostById(@Param('id') id: string): Promise<PostModel | null> {
