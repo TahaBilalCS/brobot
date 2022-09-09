@@ -4,8 +4,7 @@ module.exports = {
             name: 'brobot-api',
             script: 'dist/main.js',
             env: {
-                NODE_ENV: 'development',
-                TEST: process.env.TEST
+                NODE_ENV: 'development'
             }
         }
     ],
@@ -18,11 +17,7 @@ module.exports = {
             repo: 'git@github.com:TahaBilalCS/brobot.git',
             path: '/home/ubuntu/brobot',
             'post-deploy':
-                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && pm2 startOrRestart ecosystem.config.js --env production --update-env',
-            env: {
-                NODE_ENV: 'production',
-                TEST: process.env.TEST
-            }
+                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && pm2 startOrRestart ecosystem.config.js --env production --update-env'
         }
     }
 };
