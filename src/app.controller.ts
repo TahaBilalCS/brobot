@@ -17,7 +17,6 @@ export class AppController {
 
         console.log('TEST', configService.get('TEST_SECRET'));
         console.log('SUPAH', configService.get('SUPAH'));
-        console.log('TESTSH', process.env);
         console.log('TESTSH', process.env.TESTSH);
     }
 
