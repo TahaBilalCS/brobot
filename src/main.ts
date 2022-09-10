@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { PrismaService } from './prisma.service';
-import chokidar from 'chokidar';
+import * as chokidar from 'chokidar';
 import * as childProcess from 'child_process';
 
 const envWatch = () => {
