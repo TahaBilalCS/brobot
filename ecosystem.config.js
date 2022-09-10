@@ -7,8 +7,7 @@ module.exports = {
                 NODE_ENV: 'development'
             },
             env_production: {
-                NODE_ENV: 'production',
-                TEST: 'test'
+                NODE_ENV: 'production'
             }
         }
     ],
@@ -20,12 +19,10 @@ module.exports = {
             ref: 'origin/nestjs-migration',
             repo: 'git@github.com:TahaBilalCS/brobot.git',
             path: '/home/ubuntu/brobot',
-            // startOrRestart // remove npx
-            // env: {
-            //     NODE_ENV: 'production'
-            // },
+            // remove npx by installing as dependency instead of devDependency
+            // Need to kill daemon in order to update any changed environment variables
             'post-deploy':
-                'source /etc/environment && nvm use 16.17.0 && npm install && npm run prebuild && npm run build && npx prisma migrate deploy && pm2 kill && pm2 start ecosystem.config.js --env production --update-env'
+                'npm install && npm run prebuild && npm run build && npx prisma migrate deploy && pm2 kill && pm2 start ecosystem.config.js --env production --update-env'
         }
     }
 };
