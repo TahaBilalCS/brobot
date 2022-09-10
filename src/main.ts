@@ -7,7 +7,7 @@ import * as childProcess from 'child_process';
 
 const envWatch = () => {
     chokidar.watch('/etc/environment').on('change', (event, path) => {
-        const testSH = childProcess.execSync('source /etc/environment && echo $TESTSH');
+        const testSH = childProcess.execSync('. /etc/environment && echo $TESTSH');
         console.log('ENVWATCH', testSH);
         // console.log(event, path);
     });
