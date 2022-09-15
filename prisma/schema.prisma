@@ -7,18 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id    String  @id @default(uuid())
-  email String  @unique
-  name  String?
-  posts Post[]
+model Session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt DateTime
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  authorId  String
-  published Boolean? @default(false)
-  title     String
-  content   String?
-  author    User?    @relation(fields: [authorId], references: [id])
+model TwitchUser {
+  id              String   @id @default(uuid())
+  oauthId         String   @unique
+  displayName     String
+  accountCreated  DateTime
+  email           String
+  profileImageUrl String
 }
