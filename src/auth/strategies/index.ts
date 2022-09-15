@@ -24,7 +24,7 @@ export class TwitchBotStrategy extends PassportStrategy(Strategy, 'twitch') {
         super({
             clientID: process.env.TWITCH_CLIENT_ID,
             clientSecret: process.env.TWITCH_CLIENT_SECRET,
-            callbackURL: 'http://localhost:3000/api/auth/twitch/callback',
+            callbackURL: process.env.TWITCH_CALLBACK_URL,
             scope: ['user_read']
         });
     }
