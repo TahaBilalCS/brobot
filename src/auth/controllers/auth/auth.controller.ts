@@ -14,8 +14,11 @@ export class AuthController {
 
     @Get('callback')
     @UseGuards(TwitchAuthGuard)
-    redirect(@Res() res: Response) {
-        res.sendStatus(200);
+    redirect(@Req() req: Request, @Res() res: Response) {
+        console.log('REQ', req.headers);
+        // /api/auth/twitch/status
+        res.redirect('http://localhost:4200/');
+        // res.sendStatus(200);
     }
 
     @Get('status')

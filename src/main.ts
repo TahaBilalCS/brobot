@@ -10,6 +10,7 @@ async function bootstrap() {
     // TODO-BT Create socket from app? Probably setup socket before app.use
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
     app.setGlobalPrefix('api');
+    // todo-bt add cors config
     app.enableCors();
 
     const prismaService = app.get(PrismaService);
