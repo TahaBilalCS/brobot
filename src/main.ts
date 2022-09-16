@@ -19,7 +19,7 @@ async function bootstrap() {
     });
     app.setGlobalPrefix('api');
     // todo-bt add cors config
-    app.enableCors({ origin: 'https://tahabilalcs.github.io', credentials: true });
+    app.enableCors({ origin: 'https://admin.brobot.live', credentials: true });
 
     const prismaService = app.get(PrismaService);
     await prismaService.enableShutdownHooks(app);
