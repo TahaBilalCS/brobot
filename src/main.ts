@@ -11,7 +11,7 @@ async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
     app.setGlobalPrefix('api');
     // todo-bt add cors config
-    app.enableCors({});
+    app.enableCors({ origin: 'https://tahabilalcs.github.io/brobot-admin-ui/' });
 
     const prismaService = app.get(PrismaService);
     await prismaService.enableShutdownHooks(app);
