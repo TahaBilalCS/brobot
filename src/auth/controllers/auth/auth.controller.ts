@@ -17,7 +17,8 @@ export class AuthController {
     redirect(@Req() req: Request, @Res() res: Response) {
         console.log('REQ', req.headers);
         // /api/auth/twitch/status
-        res.redirect('http://localhost:4200/');
+        // res.redirect('http://localhost:4200/');
+        res.redirect('https://tahabilalcs.github.io/brobot-admin-ui/');
         // res.sendStatus(200);
     }
 
