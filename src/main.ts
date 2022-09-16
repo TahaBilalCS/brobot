@@ -26,7 +26,8 @@ async function bootstrap() {
     app.use(
         session({
             cookie: {
-                maxAge: 7 * 24 * 60 * 60 * 1000 // ms
+                maxAge: 7 * 24 * 60 * 60 * 1000, // ms
+                domain: '*.brobot.live'
             },
             secret: process.env.SESSION_SECRET ?? '',
             resave: true,
