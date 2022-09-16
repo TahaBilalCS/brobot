@@ -11,6 +11,7 @@ async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
     app.setGlobalPrefix('api');
     // todo-bt add cors config
+    app.enableCors({});
 
     const prismaService = app.get(PrismaService);
     await prismaService.enableShutdownHooks(app);
@@ -31,7 +32,6 @@ async function bootstrap() {
     );
     app.use(passport.initialize());
     app.use(passport.session());
-    app.enableCors({});
     await app.listen(3000);
 }
 
