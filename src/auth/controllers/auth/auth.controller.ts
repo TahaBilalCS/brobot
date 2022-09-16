@@ -17,7 +17,7 @@ export class AuthController {
     redirect(@Req() req: Request, @Res() res: Response) {
         console.log('REQ', req.headers);
         // res.redirect('https://tahabilalcs.github.io/brobot-admin-ui/');
-        res.sendStatus(200);
+        res.sendStatus(200).json({ user: req.user });
     }
 
     @Get('status')
