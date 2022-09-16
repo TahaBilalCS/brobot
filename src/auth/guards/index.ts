@@ -19,7 +19,7 @@ export class TwitchAuthGuard extends AuthGuard('twitch') {
 export class AuthenticatedGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const req = context.switchToHttp().getRequest();
-        console.log('Auth Guard', req.isAuthenticated());
+        console.log('Is Authenticated?', req.isAuthenticated());
         return req.isAuthenticated();
     }
 }
