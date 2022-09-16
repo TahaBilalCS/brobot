@@ -5,13 +5,14 @@ import { PrismaService } from 'src/database/services/prisma.service';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import * as session from 'express-session';
 import * as passport from 'passport';
+import cors from 'cors';
 
 async function bootstrap() {
     // TODO-BT Create socket from app? Probably setup socket before app.use
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
     app.setGlobalPrefix('api');
     // todo-bt add cors config
-    app.enableCors();
+    app.enableCors({});
 
     const prismaService = app.get(PrismaService);
     await prismaService.enableShutdownHooks(app);
@@ -30,6 +31,7 @@ async function bootstrap() {
             })
         })
     );
+    app.use(cors());
     app.use(passport.initialize());
     app.use(passport.session());
     await app.listen(3000);
