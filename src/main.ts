@@ -27,7 +27,7 @@ async function bootstrap() {
         session({
             cookie: {
                 maxAge: 7 * 24 * 60 * 60 * 1000, // ms
-                domain: 'admin.brobot.live'
+                domain: '.brobot.live'
             },
             secret: process.env.SESSION_SECRET ?? '',
             resave: true,
