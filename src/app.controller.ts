@@ -8,7 +8,7 @@ export class AppController {
 
     @Get('')
     getTest() {
-        return 'Hello World!';
+        return { hi: 'there' };
     }
     //
     // @Get('post/:id')
