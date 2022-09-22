@@ -10,13 +10,13 @@ import { Response } from 'express';
 async function bootstrap() {
     // TODO-BT Create socket from app? Probably setup socket before app.use
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
-    app.use(function (req: any, res: Response, next: any) {
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.header('Access-Control-Allow-Origin', req.headers.origin);
-        res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH');
-        res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
-        next();
-    });
+    // app.use(function (req: any, res: Response, next: any) {
+    //     res.header('Access-Control-Allow-Credentials', 'true');
+    //     res.header('Access-Control-Allow-Origin', req.headers.origin);
+    //     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH');
+    //     res.header('Access-Control-Allow-Headers', 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept');
+    //     next();
+    // });
     app.setGlobalPrefix('api');
     // todo-bt add cors config
     app.enableCors({ origin: 'https://admin.brobot.live', credentials: true });
@@ -27,7 +27,7 @@ async function bootstrap() {
         session({
             cookie: {
                 maxAge: 7 * 24 * 60 * 60 * 1000, // ms
-                domain: '.brobot.live'
+                domain: '.brobot.live' // todo-bt be more specific?
             },
             secret: process.env.SESSION_SECRET ?? '',
             resave: true,
