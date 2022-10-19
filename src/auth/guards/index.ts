@@ -1,15 +1,38 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-// Used to invoke passport
+// TODO: Get a better understanding of passport interaction with Auth Guards
 @Injectable()
-export class TwitchAuthGuard extends AuthGuard('twitch') {
+export class TwitchUserAuthGuard extends AuthGuard('twitch') {
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        console.log('TwitchAuthGuard');
+        console.log('TwitchUserAuthGuard');
         const activate = (await super.canActivate(context)) as boolean;
-        console.log(activate);
+        console.log('Activated', activate);
         const request = context.switchToHttp().getRequest();
-        // console.log(request);
+        await super.logIn(request);
+        return activate;
+    }
+}
+
+@Injectable()
+export class TwitchStreamerAuthGuard extends AuthGuard('twitch-streamer') {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        console.log('TwitchStreamerAuthGuard');
+        const activate = (await super.canActivate(context)) as boolean;
+        console.log('Activated', activate);
+        const request = context.switchToHttp().getRequest();
+        await super.logIn(request);
+        return activate;
+    }
+}
+
+@Injectable()
+export class TwitchBotAuthGuard extends AuthGuard('twitch-bot') {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        console.log('TwitchBotAuthGuard');
+        const activate = (await super.canActivate(context)) as boolean;
+        console.log('Activated', activate);
+        const request = context.switchToHttp().getRequest();
         await super.logIn(request);
         return activate;
     }

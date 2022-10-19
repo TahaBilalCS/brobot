@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
-import { StreamerSocket } from 'src/socket/socket';
+import { ConfigModule } from '@nestjs/config';
+import { StreamerGateway } from 'src/socket/gateways/streamer/streamer.gateway';
+
 @Module({
-    providers: [StreamerSocket]
+    imports: [ConfigModule],
+    providers: [StreamerGateway]
 })
 export class SocketModule {}

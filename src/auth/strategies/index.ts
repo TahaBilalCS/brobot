@@ -1,9 +1,19 @@
 import { Strategy } from 'passport-twitch-new';
 import { PassportStrategy } from '@nestjs/passport';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthenticationProvider } from 'src/auth/services/auth/auth';
+import { ConfigService } from '@nestjs/config';
 
-interface TwitchOAuthProfile {
+const botScope = ['user_read'];
+const streamerScope = ['user_read', 'chat:read'];
+const userScope = ['user_read'];
+
+export interface TwitchUserAuthReq {
+    oauthId: string;
+    displayName: string;
+}
+
+export interface TwitchOAuthProfile {
     id: string;
     login: string;
     display_name: string;
@@ -17,107 +27,115 @@ interface TwitchOAuthProfile {
     created_at: string;
     provider: string;
 }
-// TODO-BT Separate AUTH for bot & streamer & users
+
 @Injectable()
-export class TwitchBotStrategy extends PassportStrategy(Strategy, 'twitch') {
+export class TwitchUserStrategy extends PassportStrategy(Strategy, 'twitch') {
     constructor(@Inject('AUTH_SERVICE') private readonly authService: AuthenticationProvider) {
         super({
             clientID: process.env.TWITCH_CLIENT_ID,
             clientSecret: process.env.TWITCH_CLIENT_SECRET,
-            callbackURL: process.env.TWITCH_CALLBACK_URL,
-            scope: ['user_read']
+            callbackURL: process.env.TWITCH_CALLBACK_URL_USER,
+            scope: userScope
         });
     }
 
-    async validate(
-        accessToken: string,
-        refreshToken: string,
-        profile: TwitchOAuthProfile,
-        done: (error: any, user?: any) => void
-    ) {
-        console.log('TWITCH BOT STRATEGY', profile);
-        console.log('ACCESS TOKEN', accessToken);
-        console.log('REFRESH TOKEN', refreshToken);
-
-        const {
-            id,
-            created_at,
-            email,
-            login,
-            broadcaster_type,
-            type,
-            profile_image_url,
-            offline_image_url,
-            description,
-            display_name,
-            provider,
-            view_count
-        } = profile;
+    async validate(accessToken: string, refreshToken: string, profile: TwitchOAuthProfile): Promise<TwitchUserAuthReq> {
+        console.log('Twitch User Strategy Validate', refreshToken);
+        const { id, created_at, email, profile_image_url, display_name } = profile;
 
         const userDetails = {
             oauthId: id,
             displayName: display_name,
             accountCreated: created_at,
             email: email,
-            profileImageUrl: profile_image_url
+            profileImageUrl: profile_image_url,
+            lastUpdatedTimestamp: new Date().toISOString()
         };
 
-        return this.authService.validateTwitchUser(userDetails);
-        // done(null, user);
+        const { oauthId, displayName } = await this.authService.validateOrCreateTwitchUser(userDetails);
+        // Store these in req.user with passport in order to keep session when logging into other strategies
+        return { oauthId, displayName };
     }
 }
 
-// @Injectable()
-// export class TwitchStreamerStrategy extends PassportStrategy(Strategy, 'twitch') {
-//     constructor() {
-//         super({
-//             clientID: process.env.TWITCH_CLIENT_ID,
-//             clientSecret: process.env.TWITCH_CLIENT_SECRET,
-//             callbackURL: 'http://localhost:3000/api/auth/twitch/callback',
-//             scope: ['user_read']
-//         });
-//     }
-//
-//     async validate(accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: any) => void) {
-//         console.log('TWITCH STREAMER STRATEGY', profile);
-//
-//         const { id, displayName, emails } = profile;
-//
-//         const user = {
-//             twitchId: id,
-//             name: displayName,
-//             email: emails[0].value
-//         };
-//
-//         done(null, user);
-//     }
-// }
-//
-// @Injectable()
-// export class TwitchUserStrategy extends PassportStrategy(Strategy, 'twitch') {
-//     constructor() {
-//         super({
-//             clientID: process.env.TWITCH_CLIENT_ID,
-//             clientSecret: process.env.TWITCH_CLIENT_SECRET,
-//             callbackURL: 'http://localhost:3000/api/auth/twitch/callback',
-//             scope: ['user_read']
-//         });
-//     }
-//
-//     async validate(accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: any) => void) {
-//         console.log('TWITCH USER STRATEGY', profile);
-//
-//         const { id, displayName, emails } = profile;
-//
-//         const user = {
-//             twitchId: id,
-//             name: displayName,
-//             email: emails[0].value
-//         };
-//
-//         done(null, user);
-//     }
-// }
+@Injectable()
+export class TwitchStreamerStrategy extends PassportStrategy(Strategy, 'twitch-streamer') {
+    constructor(
+        @Inject('AUTH_SERVICE') private readonly authService: AuthenticationProvider,
+        private configService: ConfigService
+    ) {
+        console.log('Init TwitchStreamerStrategy');
+        super({
+            clientID: process.env.TWITCH_CLIENT_ID,
+            clientSecret: process.env.TWITCH_CLIENT_SECRET,
+            callbackURL: process.env.TWITCH_CALLBACK_URL_STREAMER,
+            scope: streamerScope
+        });
+    }
+
+    async validate(accessToken: string, refreshToken: string, profile: TwitchOAuthProfile): Promise<TwitchUserAuthReq> {
+        console.log('Twitch Streamer Strategy Validate', refreshToken);
+        // TODO: Better way than manual check
+        if (profile.id !== this.configService.get('TWITCH_STREAMER_OAUTH_ID')) {
+            console.log('Reject this user abuser', profile.id);
+            throw new UnauthorizedException();
+        }
+        const { id, display_name } = profile;
+
+        const streamerDetails = {
+            oauthId: id,
+            displayName: display_name,
+            accessToken,
+            refreshToken,
+            scope: streamerScope,
+            expiryInMS: 0,
+            obtainmentEpoch: 0,
+            lastUpdatedTimestamp: new Date().toISOString()
+        };
+
+        const { oauthId, displayName } = await this.authService.validateOrCreateTwitchStreamer(streamerDetails);
+        return { oauthId, displayName };
+    }
+}
+
+@Injectable()
+export class TwitchBotStrategy extends PassportStrategy(Strategy, 'twitch-bot') {
+    constructor(
+        @Inject('AUTH_SERVICE') private authService: AuthenticationProvider,
+        private configService: ConfigService
+    ) {
+        super({
+            clientID: process.env.TWITCH_CLIENT_ID,
+            clientSecret: process.env.TWITCH_CLIENT_SECRET,
+            callbackURL: process.env.TWITCH_CALLBACK_URL_BOT,
+            scope: botScope
+        });
+    }
+
+    async validate(accessToken: string, refreshToken: string, profile: TwitchOAuthProfile): Promise<TwitchUserAuthReq> {
+        console.log('Twitch Bot Strategy Validate', refreshToken);
+        if (profile.id !== this.configService.get('TWITCH_BOT_OAUTH_ID')) {
+            console.log('Reject this user abuser', profile.id);
+            throw new UnauthorizedException();
+        }
+        const { id, display_name } = profile;
+
+        const botDetails = {
+            oauthId: id,
+            displayName: display_name,
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            scope: botScope,
+            expiryInMS: 0,
+            obtainmentEpoch: 0,
+            lastUpdatedTimestamp: new Date().toISOString()
+        };
+
+        const { oauthId, displayName } = await this.authService.validateOrCreateTwitchBot(botDetails);
+        return { oauthId, displayName };
+    }
+}
+
 // scope: [
 //     'user_read',
 //     'chat:read',

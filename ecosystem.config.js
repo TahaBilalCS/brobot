@@ -13,12 +13,13 @@ module.exports = {
     ],
     deploy: {
         production: {
-            user: 'ubuntu',
-            host: '3.143.76.120',
-            key: '~/.ssh/brobot-api.pem',
+            user: process.env.AWS_USER,
+            host: process.env.AWS_PUBLIC_IP,
+            key: process.env.AWS_SSH_KEY,
+            // todo: Change this ref to main when pushing up migration
             ref: 'origin/nestjs-migration',
             repo: 'git@github.com:TahaBilalCS/brobot.git',
-            path: '/home/ubuntu/brobot',
+            path: process.env.AWS_EC2_PATH,
             // remove npx by installing as dependency instead of devDependency
             // Need to kill daemon in order to update any changed environment variables
             'post-deploy':

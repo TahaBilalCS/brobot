@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/services/prisma.service';
 import { TwitchUser, Prisma } from '@prisma/client';
 

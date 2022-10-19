@@ -15,10 +15,36 @@ model Session {
 }
 
 model TwitchUser {
-  id              String   @id @default(uuid())
-  oauthId         String   @unique
-  displayName     String
-  accountCreated  DateTime
-  email           String
-  profileImageUrl String
+  id                   String   @id @default(uuid())
+  // add scope
+  oauthId              String   @unique
+  displayName          String
+  accountCreated       DateTime
+  email                String
+  profileImageUrl      String
+  lastUpdatedTimestamp DateTime
+}
+
+model TwitchBotAuth {
+  id                   String   @id @default(uuid())
+  oauthId              String   @unique
+  displayName          String
+  accessToken          String
+  refreshToken         String
+  scope                String[]
+  expiryInMS           Int
+  obtainmentEpoch      Int
+  lastUpdatedTimestamp DateTime
+}
+
+model TwitchStreamerAuth {
+  id                   String   @id @default(uuid())
+  oauthId              String   @unique
+  displayName          String
+  accessToken          String
+  refreshToken         String
+  scope                String[]
+  expiryInMS           Int
+  obtainmentEpoch      Int
+  lastUpdatedTimestamp DateTime
 }

@@ -1,11 +1,13 @@
 import { Module } from '@nestjs/common';
 import { PrismaService } from 'src/database/services/prisma.service';
 import { TwitchUserService } from './services/twitch-user/twitch-user.service';
+import { TwitchBotAuthService } from './services/twitch-bot-auth/twitch-bot-auth.service';
+import { TwitchStreamerAuthService } from './services/twitch-streamer-auth/twitch-streamer-auth.service';
 
 @Module({
-    providers: [PrismaService, TwitchUserService],
+    providers: [PrismaService, TwitchUserService, TwitchBotAuthService, TwitchStreamerAuthService],
     controllers: [],
     imports: [],
-    exports: [TwitchUserService]
+    exports: [TwitchUserService, TwitchBotAuthService, TwitchStreamerAuthService]
 })
 export class DatabaseModule {}

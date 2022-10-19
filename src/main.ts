@@ -8,12 +8,22 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 
 async function bootstrap() {
+    console.log('Begin Bootstrap');
     // TODO-BT Create socket from app? Probably setup socket before app.use
-    const app = await NestFactory.create<NestExpressApplication>(AppModule);
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'error', 'warn'] });
+    let origin, domain;
+    if (process.env.NODE_ENV === 'production') {
+        origin = 'https://admin.brobot.live';
+        domain = '.brobot.live';
+    } else {
+        origin = 'http://localhost:4200';
+        domain = undefined;
+    }
     app.useWebSocketAdapter(new WsAdapter(app));
     app.setGlobalPrefix('api');
     // todo-bt add cors config
-    app.enableCors({ origin: 'https://admin.brobot.live', credentials: true });
+    // todo add localhost env var and admin site
+    app.enableCors({ origin: [origin], credentials: true });
 
     const prismaService = app.get(PrismaService);
     await prismaService.enableShutdownHooks(app);
@@ -21,7 +31,7 @@ async function bootstrap() {
         session({
             cookie: {
                 maxAge: 7 * 24 * 60 * 60 * 1000, // ms
-                domain: '.brobot.live' // todo-bt be more specific?
+                domain: domain // todo-bt be more specific?
             },
             secret: process.env.SESSION_SECRET ?? '',
             resave: true,
@@ -36,6 +46,7 @@ async function bootstrap() {
     app.use(passport.initialize());
     app.use(passport.session());
     await app.listen(3000);
+    console.log('Listening on port 3000');
 }
 
 void bootstrap();
