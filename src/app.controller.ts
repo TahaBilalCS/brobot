@@ -1,10 +1,8 @@
-import { Controller, Get, Param, Post, Body, Put, Delete } from '@nestjs/common';
-import { Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Controller, Get } from '@nestjs/common';
 
 @Controller()
 export class AppController {
-    constructor(private configService: ConfigService) {}
+    // constructor() {}
 
     @Get('')
     getTest() {

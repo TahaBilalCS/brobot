@@ -1,15 +1,18 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class TwitchClientService implements OnModuleInit {
+export class TwitchClientService {
     private readonly logger = new Logger(TwitchClientService.name);
     constructor(private configService: ConfigService) {
         console.log('Twitch Client Service Init');
     }
 
-    onModuleInit() {
-        console.log('Twitch Client Service Init', this.configService.get('TWITCH_CLIENT_ID'));
+    async init() {
+        this.logger.log('Twitch Client Init Async', this.configService.get('TWITCH_CLIENT_ID'));
+        return new Promise(resolve => {
+            return setTimeout(resolve, 3000);
+        }).then(() => this.logger.log('RESOLVED'));
     }
 
     /**

@@ -64,7 +64,6 @@ export class TwitchStreamerStrategy extends PassportStrategy(Strategy, 'twitch-s
         @Inject('AUTH_SERVICE') private readonly authService: AuthenticationProvider,
         private configService: ConfigService
     ) {
-        console.log('Init TwitchStreamerStrategy');
         super({
             clientID: process.env.TWITCH_CLIENT_ID,
             clientSecret: process.env.TWITCH_CLIENT_SECRET,

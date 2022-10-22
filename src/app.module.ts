@@ -7,7 +7,6 @@ import { DatabaseModule } from './database/database.module';
 import { SocketModule } from './socket/socket.module';
 import { TwitchModule } from './twitch/twitch.module';
 
-console.log('App Module Init');
 @Module({
     providers: [AppService],
     controllers: [AppController],

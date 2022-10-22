@@ -8,7 +8,6 @@ import * as session from 'express-session';
 import * as passport from 'passport';
 
 async function bootstrap() {
-    console.log('Begin Bootstrap');
     // TODO-BT Create socket from app? Probably setup socket before app.use
     const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'error', 'warn'] });
     let origin, domain;
