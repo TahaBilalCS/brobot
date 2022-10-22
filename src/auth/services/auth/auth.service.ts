@@ -11,9 +11,7 @@ export class AuthService implements AuthenticationProvider {
         private readonly twitchUserService: TwitchUserService,
         private readonly twitchStreamerAuthService: TwitchStreamerAuthService,
         private readonly twitchBotAuthService: TwitchBotAuthService
-    ) {
-        console.log('Auth Service Init');
-    }
+    ) {}
 
     async findTwitchUser(oauthId: string): Promise<TwitchUser | null> {
         return this.twitchUserService.getUniqueTwitchUser({ oauthId });
