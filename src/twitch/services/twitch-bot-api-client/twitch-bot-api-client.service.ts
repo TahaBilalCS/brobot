@@ -40,7 +40,8 @@ export class TwitchBotApiClientService implements OnModuleInit {
                 apiClient: this.botApiClient,
                 logger: { name: 'Dev', minLevel: LogLevel.ERROR },
                 adapter: new NgrokAdapter(),
-                secret: process.env.EVENT_SUB_SECRET ?? ''
+                secret: process.env.EVENT_SUB_SECRET ?? '',
+                strictHostCheck: true
             });
         }
     }
