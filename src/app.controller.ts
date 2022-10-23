@@ -1,11 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
+import { TwitchBotApiClientService } from 'src/twitch/services/twitch-bot-api-client/twitch-bot-api-client.service';
 
 @Controller()
 export class AppController {
-    // constructor() {}
+    constructor(private twitchBotApiClientService: TwitchBotApiClientService) {}
 
     @Get('')
     getTest() {
+        console.log('TEST', this.twitchBotApiClientService);
         return { hi: 'there!' };
     }
     //

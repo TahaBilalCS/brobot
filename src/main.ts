@@ -6,12 +6,16 @@ import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { WsAdapter } from '@nestjs/platform-ws';
 import * as session from 'express-session';
 import * as passport from 'passport';
+import { TwitchBotApiClientService } from 'src/twitch/services/twitch-bot-api-client/twitch-bot-api-client.service';
+import { EventSubChannelBanEvent, EventSubChannelUnbanEvent } from '@twurple/eventsub';
 
 async function bootstrap() {
     // TODO-BT Create socket from app? Probably setup socket before app.use
     const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'error', 'warn'] });
+    console.log('Create App Module');
     let origin, domain;
     if (process.env.NODE_ENV === 'production') {
+        // cookie-session
         origin = 'https://admin.brobot.live';
         domain = '.brobot.live';
     } else {
@@ -44,8 +48,15 @@ async function bootstrap() {
     );
     app.use(passport.initialize());
     app.use(passport.session());
-    await app.listen(3000);
-    console.log('Listening on port 3000');
+
+    const botApiClient = app.get(TwitchBotApiClientService);
+    if (process.env.NODE_ENV === 'production') {
+        await botApiClient.applyMiddleware(app);
+    }
+    await app.listen(3000, async () => {
+        console.log('Listening on port 3000');
+        await botApiClient.subscribeToEvents();
+    });
 }
 
 void bootstrap();
