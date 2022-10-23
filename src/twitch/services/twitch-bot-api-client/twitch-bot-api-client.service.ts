@@ -60,6 +60,7 @@ export class TwitchBotApiClientService implements OnModuleInit {
 
     public async applyMiddleware(app: any): Promise<any> {
         if (this.middleware) {
+            console.log('Applying Middleware');
             await this.middleware.apply(app);
         }
     }
