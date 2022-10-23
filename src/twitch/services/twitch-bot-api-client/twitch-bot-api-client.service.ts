@@ -33,15 +33,17 @@ export class TwitchBotApiClientService implements OnModuleInit {
                 apiClient: this.botApiClient,
                 hostName: this.configService.get('DOMAIN') || '',
                 pathPrefix: '/twitch',
-                secret: this.configService.get('EVENT_SUB_SECRET') || '' // Note: changing this secret/config requires us to delete all subscriptions
+                // Note: changing this secret/config requires us to delete all subscriptions
+                secret: this.configService.get('EVENT_SUB_SECRET') || '',
+                strictHostCheck: true
             });
         } else {
             this.devListener = new EventSubListener({
                 apiClient: this.botApiClient,
                 logger: { name: 'Dev', minLevel: LogLevel.ERROR },
                 adapter: new NgrokAdapter(),
-                secret: process.env.EVENT_SUB_SECRET ?? '',
-                strictHostCheck: true
+                secret: process.env.EVENT_SUB_SECRET ?? ''
+                // strictHostCheck: true
             });
         }
     }

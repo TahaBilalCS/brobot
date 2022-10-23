@@ -1,4 +1,3 @@
-console.log('pro', process.env);
 module.exports = {
     apps: [
         {
