@@ -7,7 +7,6 @@ export class AppController {
 
     @Get('')
     getTest() {
-        console.log('TEST', this.twitchBotApiClientService);
         return { hi: 'there!' };
     }
     //
