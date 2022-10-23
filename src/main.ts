@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { PrismaService } from 'src/database/services/prisma.service';
@@ -13,11 +13,6 @@ async function bootstrap() {
     // TODO-BT Create socket from app? Probably setup socket before app.use
     const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'error', 'warn'] });
     console.log('Create App Module');
-    const botApiClient = app.get(TwitchBotApiClientService);
-    console.log('Get Bot Api Client', botApiClient);
-    if (process.env.NODE_ENV === 'production') {
-        await botApiClient.applyMiddleware(app);
-    }
     let origin, domain;
     if (process.env.NODE_ENV === 'production') {
         // cookie-session
@@ -53,7 +48,12 @@ async function bootstrap() {
     );
     app.use(passport.initialize());
     app.use(passport.session());
-
+    const botApiClient = app.get(TwitchBotApiClientService);
+    console.log('Get Bot Api Client', botApiClient);
+    if (process.env.NODE_ENV === 'production') {
+        const expressInstance = app.get(HttpAdapterHost).httpAdapter.getInstance();
+        await botApiClient.applyMiddleware(expressInstance);
+    }
     await app.listen(3000, async () => {
         console.log('Listening on port 3000');
         await botApiClient.subscribeToEvents();
