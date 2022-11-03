@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { StreamerGateway } from './streamer.gateway';
+import { StreamerGateway } from 'src/twitch/gateways/streamer/streamer.gateway';
 
 describe('StreamerGateway', () => {
     let gateway: StreamerGateway;

@@ -1,9 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
-import { TwitchBotApiClientService } from 'src/twitch/services/twitch-bot-api-client/twitch-bot-api-client.service';
+import { BotApiService } from 'src/twitch/services/bot-api/bot-api.service';
+import { BotChatService } from 'src/twitch/services/bot-chat/bot-chat.service';
 
 @Controller()
 export class AppController {
-    constructor(private twitchBotApiClientService: TwitchBotApiClientService) {}
+    constructor(private botApiService: BotApiService, private botChatService: BotChatService) {
+        console.log('AppController Constructor', this.botApiService.client);
+        console.log('AppController Constructor 2', this.botChatService.client);
+    }
 
     @Get('')
     getTest() {

@@ -26,6 +26,7 @@
         "test:e2e": "jest --config ./test/jest-e2e.json"
     },
     "dependencies": {
+        "@nestjs/axios": "^0.1.0",
         "@nestjs/common": "^9.0.11",
         "@nestjs/config": "^2.2.0",
         "@nestjs/core": "^9.0.11",
@@ -33,6 +34,8 @@
         "@nestjs/platform-express": "^9.0.11",
         "@nestjs/platform-ws": "^9.1.1",
         "@nestjs/websockets": "^9.1.1",
+        "@pkmn/randoms": "^0.6.2",
+        "@pkmn/sim": "^0.6.2",
         "@prisma/client": "^4.4.0",
         "@quixo3/prisma-session-store": "^3.1.9",
         "@twurple/api": "^5.2.4",
@@ -40,6 +43,7 @@
         "@twurple/chat": "^5.2.4",
         "@twurple/eventsub": "^5.2.4",
         "@twurple/eventsub-ngrok": "^5.2.4",
+        "cron": "^2.1.0",
         "express-session": "^1.17.3",
         "passport": "^0.6.0",
         "passport-twitch-new": "^0.0.2",
@@ -52,6 +56,7 @@
         "@nestjs/schematics": "^9.0.3",
         "@nestjs/testing": "^9.0.11",
         "@types/cors": "^2.8.12",
+        "@types/cron": "^2.0.0",
         "@types/express": "^4.17.13",
         "@types/express-session": "^1.17.5",
         "@types/jest": "^29.0.1",

@@ -16,12 +16,12 @@ model Session {
 
 model TwitchUser {
   id                   String   @id @default(uuid())
-  // add scope
   oauthId              String   @unique
   displayName          String
   accountCreated       DateTime
   email                String
   profileImageUrl      String
+  scope                String[]
   lastUpdatedTimestamp DateTime
 }
 
@@ -32,7 +32,7 @@ model TwitchBotAuth {
   accessToken          String
   refreshToken         String
   scope                String[]
-  expiryInMS           Int
+  expiryInMS           Int // actually in seconds
   obtainmentEpoch      Int
   lastUpdatedTimestamp DateTime
 }
@@ -47,4 +47,25 @@ model TwitchStreamerAuth {
   expiryInMS           Int
   obtainmentEpoch      Int
   lastUpdatedTimestamp DateTime
+}
+
+model Pokemon {
+  id                   String   @id @default(uuid())
+  twitchOauthId        String   @unique // shouldnt be unique
+  // isStarterPokemon?
+  level                Int
+  name                 String
+  species              String
+  gender               String
+  item                 String
+  ability              String
+  evs                  Json
+  nature               String
+  ivs                  Json
+  moves                String[]
+  shiny                Boolean // make boolean?
+
+  wins                 Int
+  losses               Int
+  draws                Int
 }

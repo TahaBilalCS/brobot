@@ -4,13 +4,47 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthenticationProvider } from 'src/auth/services/auth/auth';
 import { ConfigService } from '@nestjs/config';
 
-const botScope = ['user_read'];
-const streamerScope = ['user_read', 'chat:read'];
-const userScope = ['user_read'];
+/**
+ * Event Subs Bot Api
+ * channel:moderate
+ * moderation:read
+ * channel:read:redemptions
+ * channel:manage:redemptions
+ * channel:read:polls
+ * channel:manage:polls
+ */
+// TODO Revoke scopes? https://codepen.io/Alca/full/BaLrORm
+// user_read Old scope for reading user info (email, profileImage, etc)
+// BotChatService
+// chat:read, chat:edit
+// channel:edit:commercial (commercial)
+// channel:manage:broadcast (timeout users)
+// TODO MAKE SURE SCOPE LENGTHS ARE NOT SAME FOR DESERIALIZING (ADD ROLES)
+// TODO MAKE SURE SCOPE CHANGES ARE ACTUALLY WORKING WHEN RESTARTING, SOMETHING FUNKY, IS REFRESH/APP UPDATING?
+// its possible u need to delete scope to update? or caus e no roles yet?
+
+export const botScope = ['user_read', 'chat:read', 'chat:edit', 'channel:edit:commercial', 'channel:moderate'];
+// StreamerApiService
+// channel:manage:broadcast (create marker)
+// channel:manage:predictions (predictions)
+// moderator:manage:banned_users (ban/timeout users)
+// Event subs go here?
+export const streamerScope = [
+    'user_read',
+    'chat:read',
+    'channel:manage:broadcast',
+    'channel:manage:predictions',
+    'moderator:manage:banned_users',
+    'channel:manage:polls'
+];
+
+// Regular users
+export const userScope = ['user_read'];
 
 export interface TwitchUserAuthReq {
     oauthId: string;
     displayName: string;
+    scope: string[];
 }
 
 export interface TwitchOAuthProfile {
@@ -49,12 +83,13 @@ export class TwitchUserStrategy extends PassportStrategy(Strategy, 'twitch') {
             accountCreated: created_at,
             email: email,
             profileImageUrl: profile_image_url,
+            scope: userScope,
             lastUpdatedTimestamp: new Date().toISOString()
         };
 
-        const { oauthId, displayName } = await this.authService.validateOrCreateTwitchUser(userDetails);
+        const { oauthId, displayName, scope } = await this.authService.validateOrCreateTwitchUser(userDetails);
         // Store these in req.user with passport in order to keep session when logging into other strategies
-        return { oauthId, displayName };
+        return { oauthId, displayName, scope };
     }
 }
 
@@ -92,8 +127,8 @@ export class TwitchStreamerStrategy extends PassportStrategy(Strategy, 'twitch-s
             lastUpdatedTimestamp: new Date().toISOString()
         };
 
-        const { oauthId, displayName } = await this.authService.validateOrCreateTwitchStreamer(streamerDetails);
-        return { oauthId, displayName };
+        const { oauthId, displayName, scope } = await this.authService.validateOrCreateTwitchStreamer(streamerDetails);
+        return { oauthId, displayName, scope };
     }
 }
 
@@ -130,8 +165,8 @@ export class TwitchBotStrategy extends PassportStrategy(Strategy, 'twitch-bot') 
             lastUpdatedTimestamp: new Date().toISOString()
         };
 
-        const { oauthId, displayName } = await this.authService.validateOrCreateTwitchBot(botDetails);
-        return { oauthId, displayName };
+        const { oauthId, displayName, scope } = await this.authService.validateOrCreateTwitchBot(botDetails);
+        return { oauthId, displayName, scope };
     }
 }
 

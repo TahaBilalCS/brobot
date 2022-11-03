@@ -4,13 +4,12 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
-import { SocketModule } from './socket/socket.module';
 import { TwitchModule } from './twitch/twitch.module';
 
 @Module({
     providers: [AppService],
     controllers: [AppController],
-    imports: [DatabaseModule, AuthModule, ConfigModule.forRoot(), SocketModule, TwitchModule],
+    imports: [DatabaseModule, AuthModule, ConfigModule.forRoot(), TwitchModule], // Socket Module
     exports: []
 })
 export class AppModule {}

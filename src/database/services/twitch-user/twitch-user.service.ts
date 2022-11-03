@@ -13,7 +13,26 @@ export class TwitchUserService {
             where: twitchUserWhereUniqueInput
         });
     }
+    async upsertUniqueTwitchUser(
+        where: Prisma.TwitchUserWhereUniqueInput,
+        update: Prisma.TwitchUserUpdateInput,
+        create: Prisma.TwitchUserCreateInput
+    ): Promise<TwitchUser> {
+        return this.prisma.twitchUser.upsert({
+            where,
+            update: {
+                displayName: update.displayName,
+                accountCreated: update.accountCreated,
+                email: update.email,
+                profileImageUrl: update.profileImageUrl,
+                scope: update.scope,
+                lastUpdatedTimestamp: update.lastUpdatedTimestamp
+            },
+            create: create
+        });
+    }
 
+    // todo unused?
     async createTwitchUser(data: Prisma.TwitchUserCreateInput): Promise<TwitchUser> {
         return this.prisma.twitchUser.create({
             data

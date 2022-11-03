@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AuthenticationProvider } from 'src/auth/services/auth/auth';
-import { TwitchUser } from '@prisma/client';
+import { TwitchBotAuth, TwitchStreamerAuth, TwitchUser } from '@prisma/client';
 import { TwitchUserService } from 'src/database/services/twitch-user/twitch-user.service';
 import { TwitchStreamerAuthService } from 'src/database/services/twitch-streamer-auth/twitch-streamer-auth.service';
 import { TwitchBotAuthService } from 'src/database/services/twitch-bot-auth/twitch-bot-auth.service';
@@ -17,11 +17,21 @@ export class AuthService implements AuthenticationProvider {
         return this.twitchUserService.getUniqueTwitchUser({ oauthId });
     }
 
+    async findTwitchBotAuth(oauthId: string): Promise<TwitchBotAuth | null> {
+        return this.twitchBotAuthService.getUniqueTwitchBot({ oauthId });
+    }
+
+    async findTwitchStreamerAuth(oauthId: string): Promise<TwitchStreamerAuth | null> {
+        return this.twitchStreamerAuthService.getUniqueTwitchStreamer({ oauthId });
+    }
+
     async validateOrCreateTwitchUser(userDetails: any) {
         console.log('Validate Or Create Twitch USER');
-        const user = await this.twitchUserService.getUniqueTwitchUser({ oauthId: userDetails.oauthId });
-        if (user) return user;
-        return this.createTwitchUser(userDetails);
+        return await this.twitchUserService.upsertUniqueTwitchUser(
+            { oauthId: userDetails.oauthId },
+            userDetails,
+            userDetails
+        );
     }
 
     async createTwitchUser(userDetails: any) {
@@ -31,9 +41,11 @@ export class AuthService implements AuthenticationProvider {
 
     async validateOrCreateTwitchStreamer(userDetails: any) {
         console.log('Validate Or Create Twitch STREAMER');
-        const user = await this.twitchStreamerAuthService.getUniqueTwitchStreamer({ oauthId: userDetails.oauthId });
-        if (user) return user;
-        return this.createTwitchStreamer(userDetails);
+        return await this.twitchStreamerAuthService.upsertUniqueTwitchStreamer(
+            { oauthId: userDetails.oauthId },
+            userDetails,
+            userDetails
+        );
     }
 
     async createTwitchStreamer(userDetails: any) {
@@ -43,11 +55,14 @@ export class AuthService implements AuthenticationProvider {
 
     async validateOrCreateTwitchBot(userDetails: any) {
         console.log('Validate Or Create Twitch BOT', userDetails);
-        const user = await this.twitchBotAuthService.getUniqueTwitchBot({ oauthId: userDetails.oauthId });
-        if (user) return user;
-        return this.createTwitchBot(userDetails);
+        return await this.twitchBotAuthService.upsertUniqueTwitchBot(
+            { oauthId: userDetails.oauthId },
+            userDetails,
+            userDetails
+        );
     }
 
+    // unused?
     async createTwitchBot(userDetails: any) {
         console.log('Creating Twitch Bot');
         return this.twitchBotAuthService.createTwitchBotAuth(userDetails);

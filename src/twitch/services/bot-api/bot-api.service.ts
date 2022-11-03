@@ -13,11 +13,15 @@ import {
 import { LogLevel } from '@d-fischer/logger';
 import { NgrokAdapter } from '@twurple/eventsub-ngrok';
 
+/**
+ * EventSub subscriptions will continue to be active, even after the token used to create them has expired
+ * (So don't use a Refreshing Auth Provider)
+ */
 // Event subs
 @Injectable()
-export class TwitchBotApiClientService implements OnModuleInit {
-    private readonly logger = new Logger(TwitchBotApiClientService.name);
-    public botApiClient: ApiClient;
+export class BotApiService implements OnModuleInit {
+    private readonly logger = new Logger(BotApiService.name);
+    public client: ApiClient;
     public devListener?: EventSubListener;
     public middleware?: EventSubMiddleware;
 
@@ -27,10 +31,10 @@ export class TwitchBotApiClientService implements OnModuleInit {
         const clientSecret = this.configService.get('TWITCH_CLIENT_SECRET');
         // Create app token for bot API
         const botApiAuth = new ClientCredentialsAuthProvider(clientId, clientSecret);
-        this.botApiClient = new ApiClient({ authProvider: botApiAuth });
+        this.client = new ApiClient({ authProvider: botApiAuth });
         if (this.configService.get('NODE_ENV') === 'production') {
             this.middleware = new EventSubMiddleware({
-                apiClient: this.botApiClient,
+                apiClient: this.client,
                 hostName: this.configService.get('DOMAIN') || '',
                 pathPrefix: '/twitch',
                 // Note: changing this secret/config requires us to delete all subscriptions
@@ -39,7 +43,7 @@ export class TwitchBotApiClientService implements OnModuleInit {
             });
         } else {
             this.devListener = new EventSubListener({
-                apiClient: this.botApiClient,
+                apiClient: this.client,
                 logger: { name: 'Dev', minLevel: LogLevel.ERROR },
                 adapter: new NgrokAdapter(),
                 secret: process.env.EVENT_SUB_SECRET ?? ''
@@ -51,14 +55,14 @@ export class TwitchBotApiClientService implements OnModuleInit {
     public async init() {
         console.log('Async Init Bot Api Event Subs');
         if (this.devListener) {
-            await this.botApiClient.eventSub.deleteAllSubscriptions(); // Clean up subscriptions
+            await this.client.eventSub.deleteAllSubscriptions(); // Clean up subscriptions on dev
             await this.devListener.listen();
         }
 
         // Note: Do this in prod to delete subscriptions
         // await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // Clean up subscriptions
 
-        console.log('Async Init Completed');
+        console.log('Async Init Completed Event Subs');
     }
 
     public async applyMiddleware(app: any): Promise<any> {
@@ -71,6 +75,7 @@ export class TwitchBotApiClientService implements OnModuleInit {
     // TODO FINISH UP POKEMON EVENTS
     public async subscribeToEvents() {
         const streamerAuthId = this.configService.get('TWITCH_STREAMER_OAUTH_ID');
+        // If in dev
         if (this.devListener) {
             // Subscribe to unban event
             await this.devListener.subscribeToChannelUnbanEvents(streamerAuthId, (event: EventSubChannelUnbanEvent) => {
@@ -82,8 +87,24 @@ export class TwitchBotApiClientService implements OnModuleInit {
             await this.devListener.subscribeToChannelBanEvents(streamerAuthId, (event: EventSubChannelBanEvent) => {
                 console.log(`${event.broadcasterDisplayName} just banned ${event.userDisplayName}!`);
             });
-        } else if (this.middleware) {
+
+            // Test same as prod
+            await this.devListener.subscribeToChannelRedemptionAddEvents(
+                streamerAuthId,
+                (event: EventSubChannelRedemptionAddEvent) => {
+                    const username = event.userDisplayName.trim().toLowerCase();
+                    console.info(`@${username} just redeemed ${event.rewardTitle}!`);
+                }
+            );
+            await this.devListener.subscribeToChannelRaidEventsTo(streamerAuthId, (event: EventSubChannelRaidEvent) => {
+                console.info(`${event.raidingBroadcasterName} raided ${event.raidedBroadcasterName}!`);
+            });
+        }
+        // If in prod
+        else if (this.middleware) {
+            console.log('Subscribing to eventsubs');
             await this.middleware.markAsReady();
+            console.log('Subscribing to ChannelRedemptionAddEvents');
             // Subscribe to all channel point redemption events
             await this.middleware.subscribeToChannelRedemptionAddEvents(
                 streamerAuthId,
@@ -101,6 +122,8 @@ export class TwitchBotApiClientService implements OnModuleInit {
                     // }
                 }
             );
+            console.log('Subscribing to ChannelRaidEventsTo');
+            // no auth needed
             // Subscribe to raid events
             await this.middleware.subscribeToChannelRaidEventsTo(streamerAuthId, (event: EventSubChannelRaidEvent) => {
                 // Shout out the user who raided the stream
@@ -114,6 +137,6 @@ export class TwitchBotApiClientService implements OnModuleInit {
     }
 
     onModuleInit(): any {
-        console.log('MODULE INIT TCS TEST');
+        console.log('MODULE INIT BotApiService');
     }
 }

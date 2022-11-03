@@ -6,8 +6,7 @@ import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { WsAdapter } from '@nestjs/platform-ws';
 import * as session from 'express-session';
 import * as passport from 'passport';
-import { TwitchBotApiClientService } from 'src/twitch/services/twitch-bot-api-client/twitch-bot-api-client.service';
-import { EventSubChannelBanEvent, EventSubChannelUnbanEvent } from '@twurple/eventsub';
+import { BotApiService } from 'src/twitch/services/bot-api/bot-api.service';
 
 async function bootstrap() {
     // TODO-BT Create socket from app? Probably setup socket before app.use
@@ -48,8 +47,7 @@ async function bootstrap() {
     );
     app.use(passport.initialize());
     app.use(passport.session());
-    const botApiClient = app.get(TwitchBotApiClientService);
-    console.log('Get Bot Api Client', botApiClient);
+    const botApiClient = app.get(BotApiService);
     if (process.env.NODE_ENV === 'production') {
         const expressInstance = app.get(HttpAdapterHost).httpAdapter.getInstance();
         await botApiClient.applyMiddleware(expressInstance);
