@@ -16,6 +16,7 @@ import { NgrokAdapter } from '@twurple/eventsub-ngrok';
 /**
  * EventSub subscriptions will continue to be active, even after the token used to create them has expired
  * (So don't use a Refreshing Auth Provider)
+ * Event/Pubsub doesn't require Oauth, only for the user (b_robot?)
  */
 // Event subs
 @Injectable()
