@@ -2,8 +2,8 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ApiClient } from '@twurple/api';
 import { ConfigService } from '@nestjs/config';
 import { AccessToken, RefreshingAuthProvider } from '@twurple/auth';
-import { TwitchStreamerAuth } from '@prisma/client';
 import { TwitchStreamerAuthService } from 'src/database/services/twitch-streamer-auth/twitch-streamer-auth.service';
+import { TwitchUserWithRegisteredStreamer } from 'src/database/services/twitch-user/twitch-user.service';
 
 /**
  * Stream marker & predictions
@@ -11,10 +11,14 @@ import { TwitchStreamerAuthService } from 'src/database/services/twitch-streamer
 @Injectable()
 export class StreamerApiService implements OnModuleInit {
     private readonly logger = new Logger(StreamerApiService.name);
+
+    private streamerOauthId: string;
+
     public client?: ApiClient;
 
     constructor(private configService: ConfigService, private twitchStreamerAuthService: TwitchStreamerAuthService) {
         console.log(`${StreamerApiService.name} Constructor`);
+        this.streamerOauthId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') ?? '';
     }
 
     onModuleInit(): any {
@@ -23,24 +27,32 @@ export class StreamerApiService implements OnModuleInit {
 
     async init() {
         this.logger.warn('StreamerApiService Init Async');
-        const twitchStreamerAuth = await this.getTwurpleOptions(
-            this.configService.get('TWITCH_STREAMER_OAUTH_ID') ?? ''
-        );
+        const twitchStreamerAuth = await this.getTwurpleOptions(this.streamerOauthId);
         if (!twitchStreamerAuth) {
             this.logger.error('No Streamer Auth, StreamerApiClient cannot be created');
             return;
         }
         const refreshingAuthProvider = this.createTwurpleRefreshingAuthProvider(twitchStreamerAuth);
+        if (!refreshingAuthProvider) {
+            this.logger.error('No RefreshingAuthProvider, StreamerApiClient cannot be created');
+            return;
+        }
         this.client = new ApiClient({ authProvider: refreshingAuthProvider });
     }
 
-    private createTwurpleRefreshingAuthProvider(twitchStreamerAuth: TwitchStreamerAuth): RefreshingAuthProvider {
+    private createTwurpleRefreshingAuthProvider(
+        twitchUserStreamerAuth: TwitchUserWithRegisteredStreamer
+    ): RefreshingAuthProvider | null {
+        if (!twitchUserStreamerAuth?.registeredStreamerAuth) {
+            this.logger.error('No Streamer Auth Found');
+            return null;
+        }
         const currentAccessToken: AccessToken = {
-            accessToken: twitchStreamerAuth.accessToken,
-            refreshToken: twitchStreamerAuth.refreshToken,
-            scope: twitchStreamerAuth.scope,
-            expiresIn: twitchStreamerAuth.expiryInMS,
-            obtainmentTimestamp: twitchStreamerAuth.obtainmentEpoch
+            accessToken: twitchUserStreamerAuth.registeredStreamerAuth.accessToken,
+            refreshToken: twitchUserStreamerAuth.registeredStreamerAuth.refreshToken,
+            scope: twitchUserStreamerAuth.registeredStreamerAuth.scope,
+            expiresIn: twitchUserStreamerAuth.registeredStreamerAuth.expirySeconds,
+            obtainmentTimestamp: twitchUserStreamerAuth.registeredStreamerAuth.obtainmentEpoch
         };
 
         return new RefreshingAuthProvider(
@@ -48,35 +60,48 @@ export class StreamerApiService implements OnModuleInit {
                 clientId: this.configService.get('TWITCH_CLIENT_ID') ?? '',
                 clientSecret: this.configService.get('TWITCH_CLIENT_SECRET') ?? '',
                 onRefresh: async (newTokenData: AccessToken) => {
-                    this.logger.warn(
-                        'New Streamer Access Token',
-                        newTokenData.accessToken,
-                        newTokenData.refreshToken,
-                        newTokenData.scope
-                    );
-                    this.twitchStreamerAuthService
-                        .createOrUpdateUnique({ oauthId: twitchStreamerAuth.oauthId }, newTokenData, twitchStreamerAuth)
-                        .then(updatedToken => {
-                            this.logger.warn('Success Update Twurple Options Streamer');
-                        })
-                        .catch(err => {
-                            this.logger.error('Error Update Twurple Options DB Streamer', err);
-                        });
+                    this.logger.warn('New Streamer Access Token', newTokenData.accessToken, newTokenData.scope);
+                    try {
+                        const user = await this.twitchStreamerAuthService.upsertUserStreamerAuth(
+                            twitchUserStreamerAuth.oauthId,
+                            newTokenData
+                        );
+
+                        if (!user) {
+                            this.logger.error('Could Not Update User Streamer Auth');
+                            return;
+                        }
+                        const streamerAuth = user.registeredStreamerAuth;
+                        this.logger.warn(
+                            `Success Update Twurple Options DB Bot: ${streamerAuth?.accessToken} - ${streamerAuth?.expirySeconds} - ${streamerAuth?.scope}`
+                        );
+                    } catch (err) {
+                        this.logger.error('Error Upserting User Streamer Auth', err);
+                    }
                 }
             },
             currentAccessToken
         );
     }
 
-    private async getTwurpleOptions(oauthId: string): Promise<TwitchStreamerAuth | null> {
-        let twitchStreamerAuth: TwitchStreamerAuth | null = null;
+    private async getTwurpleOptions(oauthId: string): Promise<TwitchUserWithRegisteredStreamer | null> {
         try {
-            twitchStreamerAuth = await this.twitchStreamerAuthService.getUniqueTwitchStreamer({ oauthId });
-            if (twitchStreamerAuth) return twitchStreamerAuth;
-            this.logger.error('Error Getting Streamer Options From DB, DID YOU SIGN UP BOT IN UI?');
+            const twitchUserStreamerAuth = await this.twitchStreamerAuthService.getUniqueTwitchUserWithStreamerAuth(
+                oauthId
+            );
+            if (!twitchUserStreamerAuth) {
+                this.logger.error('No User Found For Streamer Auth', twitchUserStreamerAuth);
+                return null;
+            }
+
+            if (!twitchUserStreamerAuth.registeredStreamerAuth) {
+                this.logger.error('No Registered Streamer Auth for User', oauthId);
+                return null;
+            }
+
+            return twitchUserStreamerAuth;
         } catch (err) {
-            this.logger.error('Error Getting Streamer Options From DB');
-            this.logger.error(err);
+            this.logger.error('Error Getting Streamer Options From DB', err);
         }
 
         return null;

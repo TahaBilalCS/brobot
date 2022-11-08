@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/services/prisma.service';
 import { Prisma, Pokemon } from '@prisma/client';
-import PokemonTeamCreateInput = Prisma.PokemonTeamCreateInput;
 
 interface PokemonRedeem {
-    pokemon: any;
+    pokemon: Prisma.PokemonUncheckedCreateWithoutTeamInput;
     slot: 0 | 1 | 2 | 3 | 4 | 5;
 }
 @Injectable()
@@ -26,26 +25,35 @@ export class TwitchPokemonService {
     async redeemPokemon(redemption: PokemonRedeem, authId: string): Promise<any> {
         return this.prisma.$transaction(async (tx: any) => {
             // const currentPokemonCount = await this.prisma.pokemon.count({ where: { twitchOauthId: authId } });
-
-            const team = await this.prisma.pokemonTeam.findUnique({
-                where: { twitchOauthId: authId },
-                include: { slot1: true }
-            });
-
-            if (!team) {
-                // // In case there is already a team with no pokemon
-                // const query = {
-                //     data: {
-                //         twitchOauthId: authId,
-                //         slot1: { create: redemption.pokemon }
-                //     }
-                // };
-                // const newTeam = await this.prisma.pokemonTeam.create(query);
-                // console.log('New Team === 0', newTeam);
-                // return;
-            }
+            // todo need to figure out way to create pokemon without user, and then create team without user
+            // todo Disambiguating relations
+            // whats prisma connect do
+            // just create a user when creating pokemon
+            // const test = await this.prisma.pokemon.create({ data: redemption.pokemon });
+            // const team = await this.prisma.pokemonTeam.findUnique({
+            //     where: { twitchOauthId: authId },
+            //     include: { slot: 1 }
+            // });
             //
-            // if (currentPokemonCount < 6) {
+            // if (!team) {
+            //     // In case there is already a team with no pokemon
+            //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            //
+            //     const query: Prisma.PokemonTeamCreateArgs = {
+            //         data: {
+            //             twitchOauthId: authId,
+            //             pokemon: { createMany: { data: [redemption.pokemon, null, redemption.pokemon] } }
+            //             // twitchUser: { create: {} }
+            //         }
+            //     };
+            //     const newTeam = await this.prisma.pokemonTeam.create(query);
+            //
+            //     console.log('New Team === 0', newTeam);
+            //     console.log('New Team === 0');
+            //     return;
+            // }
+            //////////////////////////////
+            // if (team.pokemon.length < 6) {
             //     const currentTeam = team.pokemon.map(({ id, teamId, ...rest }) => rest);
             //     currentTeam.unshift(redemption.pokemon);
             //

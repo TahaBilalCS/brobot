@@ -62,12 +62,17 @@ export class AuthController {
     @Get('status')
     @UseGuards(AuthenticatedGuard)
     status(@Req() req: Request) {
-        console.log('GET STATUS', req.user);
+        // console.log('GET STATUS', req.user);
         return req.user;
     }
 
+    // todo logout not working error, prisma session: An operation failed because it depends on one or more
+    // appears to happen if you logout after login as streamer/bot, seems like session gets updated but doesn't realize it changed
+    // need to create new session i believe
+    // when logging in from b_robot after logging out after Login Bot, it automatically has us logged in with bot session instead of user session
     @Get('logout')
     logout(@Req() req: Request, @Res() res: Response) {
+        console.log('LOGOUT', req.user);
         req.logout(() => noop());
         res.status(200).json({ status: 'Bye!' });
     }

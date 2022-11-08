@@ -1,7 +1,6 @@
-import { forwardRef, Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TwitchBotAuthService } from 'src/database/services/twitch-bot-auth/twitch-bot-auth.service';
-import { TwitchBotAuth } from '@prisma/client';
 import { AccessToken, RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient } from '@twurple/chat';
 import { TwitchPrivateMessage } from '@twurple/chat/lib/commands/TwitchPrivateMessage';
@@ -10,6 +9,7 @@ import { StreamerGateway } from 'src/twitch/gateways/streamer/streamer.gateway';
 import { CronJob, CronTime } from 'cron';
 import { StreamerApiService } from 'src/twitch/services/streamer-api/streamer-api.service';
 import { HelixBanUserRequest } from '@twurple/api/lib/api/helix/moderation/HelixModerationApi';
+import { TwitchUserWithRegisteredBot } from 'src/database/services/twitch-user/twitch-user.service';
 
 export interface CommandStream extends MessageStream {
     command: {
@@ -28,7 +28,9 @@ export interface MessageStream {
 @Injectable()
 export class BotChatService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(BotChatService.name);
+
     private readonly channel: string;
+    private botOauthId: string;
 
     private notifyChatInterval: NodeJS.Timer;
     private prizeRickRollCron: CronJob;
@@ -50,6 +52,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         private streamerApiService: StreamerApiService // TODO Need another chat service for banning lulu
     ) {
         this.channel = this.configService.get('TWITCH_STREAMER_CHANNEL_LISTEN') ?? '';
+        this.botOauthId = this.configService.get('TWITCH_BOT_OAUTH_ID') ?? '';
         this.notifyChatInterval = this.createChatNotifyInterval();
         this.prizeRickRollCron = this.createPrizeRickRollCron();
 
@@ -86,16 +89,22 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
     }
 
     private async initChatClient() {
-        const twitchBotAuth = await this.getTwurpleOptions(this.configService.get('TWITCH_BOT_OAUTH_ID') ?? '');
-        if (!twitchBotAuth) {
+        const twitchUserBotAuth = await this.getTwurpleOptions(this.botOauthId);
+        if (!twitchUserBotAuth) {
             this.logger.error('No Bot Auth, BotChatClient cannot be created');
             return;
         }
 
-        const refreshingAuthProvider = this.createTwurpleRefreshingAuthProvider(twitchBotAuth);
+        const refreshingAuthProvider = this.createTwurpleRefreshingAuthProvider(twitchUserBotAuth);
+        if (!refreshingAuthProvider) {
+            this.logger.error('No RefreshingAuthProvider, BotChatClient cannot be created');
+            return;
+        }
+
         this.client = await this.createChatBotClientAndWaitForConnection(refreshingAuthProvider);
         this.client.onMessage((channel, username, message, pvtMessage: TwitchPrivateMessage) => {
             this.logger.log(`@${username}: ${message}`);
+
             const formattedMsg = message.trim();
 
             if (formattedMsg.startsWith('!')) {
@@ -134,13 +143,20 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         });
     }
 
-    private createTwurpleRefreshingAuthProvider(twitchBotAuth: TwitchBotAuth): RefreshingAuthProvider {
+    private createTwurpleRefreshingAuthProvider(
+        twitchUserBotAuth: TwitchUserWithRegisteredBot
+    ): RefreshingAuthProvider | null {
+        if (!twitchUserBotAuth.registeredBotAuth) {
+            this.logger.log('No Registered Bot Auth for User', twitchUserBotAuth);
+            return null;
+        }
+
         const currentAccessToken: AccessToken = {
-            accessToken: twitchBotAuth.accessToken,
-            refreshToken: twitchBotAuth.refreshToken,
-            scope: twitchBotAuth.scope,
-            expiresIn: twitchBotAuth.expiryInMS,
-            obtainmentTimestamp: twitchBotAuth.obtainmentEpoch
+            accessToken: twitchUserBotAuth.registeredBotAuth.accessToken,
+            refreshToken: twitchUserBotAuth.registeredBotAuth.refreshToken,
+            scope: twitchUserBotAuth.registeredBotAuth.scope,
+            expiresIn: twitchUserBotAuth.registeredBotAuth.expirySeconds,
+            obtainmentTimestamp: twitchUserBotAuth.registeredBotAuth.obtainmentEpoch
         };
 
         return new RefreshingAuthProvider(
@@ -148,32 +164,43 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                 clientId: this.configService.get('TWITCH_CLIENT_ID') ?? '',
                 clientSecret: this.configService.get('TWITCH_CLIENT_SECRET') ?? '',
                 onRefresh: async (newTokenData: AccessToken) => {
-                    this.logger.warn(
-                        'New Bot Access Token',
-                        newTokenData.accessToken,
-                        newTokenData.refreshToken,
-                        newTokenData.scope
-                    );
-                    this.twitchBotAuthService
-                        .createOrUpdateUnique({ oauthId: twitchBotAuth.oauthId }, newTokenData, twitchBotAuth)
-                        .then(updatedToken => {
-                            this.logger.warn('Success Update Twurple Options DB Bot');
-                        })
-                        .catch(err => {
-                            this.logger.error('Error Update Twurple Options DB Bot', err);
-                        });
+                    this.logger.warn('New Bot Access Token', newTokenData.accessToken, newTokenData.scope);
+                    try {
+                        const user = await this.twitchBotAuthService.upsertUserBotAuth(
+                            twitchUserBotAuth.oauthId,
+                            newTokenData
+                        );
+                        if (!user) {
+                            this.logger.error('Could Not Update User Bot Auth');
+                            return;
+                        }
+                        const botAuth = user.registeredBotAuth;
+                        this.logger.warn(
+                            `Success Update Twurple Options DB Bot: ${botAuth?.accessToken} - ${botAuth?.expirySeconds} - ${botAuth?.scope}`
+                        );
+                    } catch (err) {
+                        this.logger.error('Error Upserting User Bot Auth', err);
+                    }
                 }
             },
             currentAccessToken
         );
     }
 
-    private async getTwurpleOptions(oauthId: string): Promise<TwitchBotAuth | null> {
-        let twitchBotAuth: TwitchBotAuth | null = null;
+    private async getTwurpleOptions(oauthId: string): Promise<TwitchUserWithRegisteredBot | null> {
         try {
-            twitchBotAuth = await this.twitchBotAuthService.getUniqueTwitchBot({ oauthId });
-            if (twitchBotAuth) return twitchBotAuth;
-            this.logger.error('Error Getting Bot Options From DB, DID YOU SIGN UP BOT IN UI?');
+            const twitchUserBotAuth = await this.twitchBotAuthService.getUniqueTwitchUserWithBotAuth(oauthId);
+
+            if (!twitchUserBotAuth) {
+                this.logger.error('No User Found For Bot Auth', twitchUserBotAuth);
+                return null;
+            }
+            if (!twitchUserBotAuth?.registeredBotAuth) {
+                this.logger.error('No Registered Bot Auth for User', oauthId);
+                return null;
+            }
+
+            return twitchUserBotAuth;
         } catch (err) {
             this.logger.error('Error Getting Bot Options From DB', err);
         }

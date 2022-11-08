@@ -16,71 +16,78 @@ model Session {
 }
 
 model TwitchBotAuth {
-  id                   String   @id @default(uuid())
-  oauthId              String   @unique
-  displayName          String
-  accessToken          String
-  refreshToken         String
-  scope                String[]
-  expiryInMS           Int
-  obtainmentEpoch      Int
-  lastUpdatedTimestamp DateTime
+  id              String     @id @default(uuid())
+  accessToken     String
+  refreshToken    String
+  scope           String[]
+  obtainmentEpoch Int
+  createdDate     DateTime   @default(now())
+  expirySeconds   Int
+  twitchUserId    String     @unique
+  updatedDate     DateTime   @updatedAt
+  twitchUser      TwitchUser @relation(fields: [twitchUserId], references: [id], onDelete: Cascade)
 }
 
 model TwitchStreamerAuth {
-  id                   String   @id @default(uuid())
-  oauthId              String   @unique
-  displayName          String
-  accessToken          String
-  refreshToken         String
-  scope                String[]
-  expiryInMS           Int
-  obtainmentEpoch      Int
-  lastUpdatedTimestamp DateTime
+  id              String     @id @default(uuid())
+  accessToken     String
+  refreshToken    String
+  scope           String[]
+  obtainmentEpoch Int
+  createdDate     DateTime   @default(now())
+  expirySeconds   Int
+  twitchUserId    String     @unique
+  updatedDate     DateTime   @updatedAt
+  twitchUser      TwitchUser @relation(fields: [twitchUserId], references: [id], onDelete: Cascade)
+}
+
+/// Made an account on admin.brobot.live
+model TwitchUserRegistered {
+  id              String     @id @default(uuid())
+  twitchUserId    String     @unique
+  email           String?
+  profileImageUrl String
+  scope           String[]
+  updatedDate     DateTime   @updatedAt
+  originDate      DateTime
+  registeredDate  DateTime   @default(now())
+  twitchUser      TwitchUser @relation(fields: [twitchUserId], references: [id], onDelete: Cascade)
 }
 
 model TwitchUser {
-  id                   String       @id @default(uuid())
-  oauthId              String       @unique
-  displayName          String
-  accountCreated       DateTime
-  email                String
-  profileImageUrl      String
-  lastUpdatedTimestamp DateTime
-  scope                String[]
-  pokemon              Pokemon[]
-  pokemonTeam          PokemonTeam?
+  id                     String                @id @default(uuid())
+  oauthId                String                @unique
+  displayName            String
+  createdDate            DateTime              @default(now())
+  roles                  String[]              @default(["Viewer"])
+  updatedDate            DateTime              @updatedAt
+  pokemon                Pokemon[]
+  pokemonTeam            PokemonTeam?
+  registeredBotAuth      TwitchBotAuth?
+  registeredStreamerAuth TwitchStreamerAuth?
+  registeredUser         TwitchUserRegistered?
 }
 
-/// Belongs to single user oauthId (It is possible for a User to be undefined, but the oauthId will always be defined)
 model PokemonTeam {
-  id            String      @id @default(uuid())
-  twitchOauthId String      @unique
-  slot1Id       String      @unique @default(uuid())
-  /// slot2Id String?   @unique
-  /// slot3Id       String?    @unique @default(uuid())
-  /// slot4Id       String?    @unique @default(uuid())
-  /// slot5Id       String?    @unique @default(uuid())
-  /// slot6Id       String?    @unique @default(uuid())
-  slot1         Pokemon     @relation("slot1", fields: [slot1Id], references: [id])
-  twitchUser    TwitchUser? @relation(fields: [twitchOauthId], references: [oauthId])
+  id           String     @id @default(uuid())
+  twitchUserId String     @unique
+  twitchUser   TwitchUser @relation(fields: [twitchUserId], references: [oauthId], onDelete: Cascade)
+  pokemon      Pokemon[]
 }
 
 model Pokemon {
-  id            String       @id @default(uuid())
-  twitchOauthId String
+  id           String       @id @default(uuid())
+  name         String
+  slot         Int
+  teamId       String?
+  twitchUserId String
   /// level         Int          @default(1)
   /// shiny         Boolean /// 1/8192 chance but we'll do 1/250
   /// Look into "check constraints" (in pgAdmin) to limit slot number to 0-6
-  /// slot          Int          @default(0) /// Starter in slot 1, slot 0 reserved for all pokemon not in party so 7 slots 0-6
   /// wins          Int          @default(0)
   /// losses        Int          @default(0)
   /// draws         Int          @default(0)
   /// nameId        String
-  /// Typically lowercase and remove ' from names Farfetch'd -> farfetchd Nidoran-F -> nidoranf Mr. Mime -> mrmime
-  name          String
-  /// todo ? getting removed
-  twitchUser    TwitchUser   @relation(fields: [twitchOauthId], references: [oauthId])
-  /// teamId        String?
-  slot1         PokemonTeam? @relation("slot1")
+  team         PokemonTeam? @relation(fields: [teamId], references: [id])
+  twitchUser   TwitchUser   @relation(fields: [twitchUserId], references: [id], onDelete: Cascade)
 }

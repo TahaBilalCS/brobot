@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthenticationProvider } from 'src/auth/services/auth/auth';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 
 /**
  * Event Subs Bot Api
@@ -44,7 +45,8 @@ export const userScope = ['user_read'];
 export interface TwitchUserAuthReq {
     oauthId: string;
     displayName: string;
-    scope: string[];
+    scope?: string[];
+    roles: string[];
 }
 
 export interface TwitchOAuthProfile {
@@ -57,9 +59,26 @@ export interface TwitchOAuthProfile {
     profile_image_url: string;
     offline_image_url: string;
     view_count: number;
-    email: string;
+    email?: string; // Todo Some of these fields are actually undefined
     created_at: string;
     provider: string;
+}
+
+export interface TwitchUserRegisteredIncomplete {
+    // no twitch user
+    email?: string;
+    profileImageUrl: string;
+    scope: string[];
+    originDate: string; // String date
+}
+
+export interface TwitchBotOrStreamerRegisteredIncomplete {
+    // no twitch user
+    accessToken: string;
+    refreshToken: string;
+    scope: string[];
+    obtainmentEpoch: number;
+    expirySeconds: number;
 }
 
 @Injectable()
@@ -77,19 +96,30 @@ export class TwitchUserStrategy extends PassportStrategy(Strategy, 'twitch') {
         console.log('Twitch User Strategy Validate', refreshToken);
         const { id, created_at, email, profile_image_url, display_name } = profile;
 
-        const userDetails = {
+        const userDetails: Prisma.TwitchUserCreateInput = {
             oauthId: id,
-            displayName: display_name,
-            accountCreated: created_at,
+            displayName: display_name
+        };
+
+        const registeredUserDetails: TwitchUserRegisteredIncomplete = {
             email: email,
             profileImageUrl: profile_image_url,
             scope: userScope,
-            lastUpdatedTimestamp: new Date().toISOString()
+            originDate: created_at
         };
 
-        const { oauthId, displayName, scope } = await this.authService.validateOrCreateTwitchUser(userDetails);
+        const user = await this.authService.validateOrCreateTwitchUser(userDetails, registeredUserDetails);
+
+        if (!user.registeredUser?.scope) {
+            console.error('User does not have scope', user);
+        }
         // Store these in req.user with passport in order to keep session when logging into other strategies
-        return { oauthId, displayName, scope };
+        return {
+            oauthId: user.oauthId,
+            displayName: user.displayName,
+            scope: user.registeredUser?.scope,
+            roles: user.roles
+        };
     }
 }
 
@@ -116,19 +146,34 @@ export class TwitchStreamerStrategy extends PassportStrategy(Strategy, 'twitch-s
         }
         const { id, display_name } = profile;
 
-        const streamerDetails = {
+        const userStreamerDetails: Prisma.TwitchUserCreateInput = {
             oauthId: id,
-            displayName: display_name,
-            accessToken,
-            refreshToken,
-            scope: streamerScope,
-            expiryInMS: 0,
-            obtainmentEpoch: 0,
-            lastUpdatedTimestamp: new Date().toISOString()
+            displayName: display_name
         };
 
-        const { oauthId, displayName, scope } = await this.authService.validateOrCreateTwitchStreamer(streamerDetails);
-        return { oauthId, displayName, scope };
+        const registeredUserStreamerAuthDetails: TwitchBotOrStreamerRegisteredIncomplete = {
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            scope: streamerScope,
+            obtainmentEpoch: 0,
+            expirySeconds: 0
+        };
+
+        const user = await this.authService.validateOrCreateTwitchStreamer(
+            userStreamerDetails,
+            registeredUserStreamerAuthDetails
+        );
+
+        if (!user.registeredStreamerAuth?.scope) {
+            console.error('Streamer does not have scope', user);
+        }
+
+        return {
+            oauthId: user.oauthId,
+            displayName: user.displayName,
+            scope: user.registeredStreamerAuth?.scope,
+            roles: user.roles
+        };
     }
 }
 
@@ -154,19 +199,31 @@ export class TwitchBotStrategy extends PassportStrategy(Strategy, 'twitch-bot') 
         }
         const { id, display_name } = profile;
 
-        const botDetails = {
+        const userBotDetails: Prisma.TwitchUserCreateInput = {
             oauthId: id,
-            displayName: display_name,
+            displayName: display_name
+        };
+
+        const registeredUserBotAuthDetails: TwitchBotOrStreamerRegisteredIncomplete = {
             accessToken: accessToken,
             refreshToken: refreshToken,
             scope: botScope,
-            expiryInMS: 0,
             obtainmentEpoch: 0,
-            lastUpdatedTimestamp: new Date().toISOString()
+            expirySeconds: 0
         };
 
-        const { oauthId, displayName, scope } = await this.authService.validateOrCreateTwitchBot(botDetails);
-        return { oauthId, displayName, scope };
+        const user = await this.authService.validateOrCreateTwitchBot(userBotDetails, registeredUserBotAuthDetails);
+
+        if (!user.registeredBotAuth?.scope) {
+            console.error('Bot does not have scope', user);
+        }
+
+        return {
+            oauthId: user.oauthId,
+            displayName: user.displayName,
+            scope: user.registeredBotAuth?.scope,
+            roles: user.roles
+        };
     }
 }
 

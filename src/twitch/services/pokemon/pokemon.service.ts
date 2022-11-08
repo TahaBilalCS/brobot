@@ -257,29 +257,29 @@ export class PokemonService implements OnModuleDestroy {
             return;
         }
         const isShiny = this.isShiny();
-        const userPokemon: Prisma.PokemonUncheckedCreateInput = {
-            twitchOauthId: oauthId,
-            name: randomPokemon.name
-            // nameId: randomPokemon.id,
-            //
-            // level: 1,
-            // shiny: isShiny,
-            // // slot: 0, // todo wtf we tryna do here, need to check other pokemon before adding new one?
-            // item: '',
-            // wins: 0,
-            // losses: 0,
-            // draws: 0,
-            // gender: this.determineGender(randomPokemon.name),
-            // moves: pokemonMoveset,
-            // nature: this.determineNature().name,
-            // ability: this.determineAbility(randomPokemon.name)
-        };
+        // const userPokemon: Prisma.PokemonUncheckedCreateWithoutTeamInput = {
+        //     twitchOauthId: oauthId,
+        //     name: randomPokemon.name
+        //     // nameId: randomPokemon.id,
+        //     //
+        //     // level: 1,
+        //     // shiny: isShiny,
+        //     // // slot: 0, // todo wtf we tryna do here, need to check other pokemon before adding new one?
+        //     // item: '',
+        //     // wins: 0,
+        //     // losses: 0,
+        //     // draws: 0,
+        //     // gender: this.determineGender(randomPokemon.name),
+        //     // moves: pokemonMoveset,
+        //     // nature: this.determineNature().name,
+        //     // ability: this.determineAbility(randomPokemon.name)
+        // };
 
         // cant create pokemon without a User?
         //
         // todo
-        const res = await this.pokemonDbService.redeemPokemon({ pokemon: userPokemon, slot: 0 }, oauthId);
-        console.log('RES', res);
+        // const res = await this.pokemonDbService.redeemPokemon({ pokemon: userPokemon, slot: 0 }, oauthId);
+        // console.log('RES', res);
         // https://stackoverflow.com/questions/74288790/is-there-a-way-to-limit-the-number-of-records-for-a-user-using-prisma
         // if (!res) {
         //     this.logger.error(`Failed to upsert pokemon for user: ${username}: ${randomPokemon.name}`);
