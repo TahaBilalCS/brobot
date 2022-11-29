@@ -72,8 +72,14 @@ export class AuthController {
     // when logging in from b_robot after logging out after Login Bot, it automatically has us logged in with bot session instead of user session
     @Get('logout')
     logout(@Req() req: Request, @Res() res: Response) {
-        console.log('LOGOUT', req.user);
-        req.logout(() => noop());
+        console.log('LOGOUT', req.session);
+        // res.clearCookie('connect.sid');
+        req.logout(() => {
+            // todo find out why we need to do this, if you logout from certain pages in UI, it doesn't work without this
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            delete req.session;
+        });
         res.status(200).json({ status: 'Bye!' });
     }
 }

@@ -9,34 +9,32 @@ import { Prisma } from '@prisma/client';
  * Event Subs Bot Api
  * channel:moderate
  * moderation:read
- * channel:read:redemptions
- * channel:manage:redemptions
- * channel:read:polls
- * channel:manage:polls
  */
 // TODO Revoke scopes? https://codepen.io/Alca/full/BaLrORm
-// user_read Old scope for reading user info (email, profileImage, etc)
-// BotChatService
-// chat:read, chat:edit
-// channel:edit:commercial (commercial)
-// channel:manage:broadcast (timeout users)
-// TODO MAKE SURE SCOPE LENGTHS ARE NOT SAME FOR DESERIALIZING (ADD ROLES)
-// TODO MAKE SURE SCOPE CHANGES ARE ACTUALLY WORKING WHEN RESTARTING, SOMETHING FUNKY, IS REFRESH/APP UPDATING?
-// its possible u need to delete scope to update? or caus e no roles yet?
 
-export const botScope = ['user_read', 'chat:read', 'chat:edit', 'channel:edit:commercial', 'channel:moderate'];
-// StreamerApiService
-// channel:manage:broadcast (create marker)
-// channel:manage:predictions (predictions)
-// moderator:manage:banned_users (ban/timeout users)
-// Event subs go here?
-export const streamerScope = [
-    'user_read',
+// BotChatService
+// channel:edit:commercial (commercial)
+// channel:manage:broadcast (timeout users) Now streamer Api does it
+// TODO MAKE SURE SCOPE CHANGES ARE ACTUALLY WORKING WHEN RESTARTING, SOMETHING FUNKY, IS REFRESH/APP UPDATING?
+// TODO LOGGING OUT AFTER DOUBLE LOGIN BREAKS SESSION
+export const botScope = [
+    'user_read', // Old scope for reading user info (email, profileImage, etc)
     'chat:read',
-    'channel:manage:broadcast',
-    'channel:manage:predictions',
-    'moderator:manage:banned_users',
-    'channel:manage:polls'
+    'chat:edit',
+    'channel:edit:commercial', // (commercial)
+    'channel:moderate'
+];
+// StreamerApiService
+// Event subs go here? Kinda between bot and streamer
+export const streamerScope = [
+    'user_read', // Old scope for reading user info (email, profileImage, etc)
+    'chat:read',
+    'channel:manage:broadcast', // create marker
+    'channel:manage:predictions', // predictions
+    'moderator:manage:banned_users', // ban/timeout users
+    'channel:manage:polls', // polls ('channel:read:polls' can be added later)
+    'channel:read:redemptions', // retrieve channel point rewards
+    'channel:manage:redemptions' // create/update channel point rewards
 ];
 
 // Regular users

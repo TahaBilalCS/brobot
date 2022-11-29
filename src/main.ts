@@ -7,6 +7,7 @@ import { WsAdapter } from '@nestjs/platform-ws';
 import * as session from 'express-session';
 import * as passport from 'passport';
 import { BotApiService } from 'src/twitch/services/bot-api/bot-api.service';
+import helmet from 'helmet';
 
 async function bootstrap() {
     // TODO-BT Create socket from app? Probably setup socket before app.use
@@ -26,7 +27,7 @@ async function bootstrap() {
     // todo-bt add cors config
     // todo add localhost env var and admin site
     app.enableCors({ origin: [origin], credentials: true });
-
+    app.use(helmet());
     const prismaService = app.get(PrismaService);
     await prismaService.enableShutdownHooks(app);
     app.use(
@@ -50,11 +51,17 @@ async function bootstrap() {
     const botApiClient = app.get(BotApiService);
     if (process.env.NODE_ENV === 'production') {
         const expressInstance = app.get(HttpAdapterHost).httpAdapter.getInstance();
+        console.log('Apply Middleware From Event Subs');
         await botApiClient.applyMiddleware(expressInstance);
+        console.log('Middleware Applied');
     }
     await app.listen(3000, async () => {
         console.log('Listening on port 3000');
-        await botApiClient.subscribeToEvents();
+        try {
+            await botApiClient.subscribeToEvents();
+        } catch (err) {
+            console.error('Error Subscribing To Event Subs', err);
+        }
     });
 }
 

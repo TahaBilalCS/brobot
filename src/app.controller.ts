@@ -1,93 +1,135 @@
-import { Controller, Get } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    ForbiddenException,
+    Get,
+    HttpException,
+    HttpStatus,
+    InternalServerErrorException,
+    NotFoundException,
+    Post,
+    Query,
+    Req,
+    UseGuards
+} from '@nestjs/common';
 import { BotApiService } from 'src/twitch/services/bot-api/bot-api.service';
 import { BotChatService } from 'src/twitch/services/bot-chat/bot-chat.service';
+import {
+    PokemonTeamWithPokemon,
+    TwitchPokemonService
+} from 'src/database/services/twitch-pokemon/twitch-pokemon.service';
+import { StreamerApiService } from 'src/twitch/services/streamer-api/streamer-api.service';
+import { PokemonTeam } from '@prisma/client';
+import {
+    TwitchUserService,
+    TwitchUserWithOnlyNameAndPokemonTeam
+} from 'src/database/services/twitch-user/twitch-user.service';
+import { PokemonService } from 'src/twitch/services/pokemon/pokemon.service';
+import { AuthenticatedGuard, TwitchStreamerAuthGuard } from 'src/auth/guards';
+import { Request } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @Controller()
 export class AppController {
-    constructor(private botApiService: BotApiService, private botChatService: BotChatService) {
-        console.log('AppController Constructor', this.botApiService.client);
-        console.log('AppController Constructor 2', this.botChatService.client);
+    private readonly streamerAuthId: string;
+    constructor(
+        private botApiService: BotApiService,
+        private twitchUserService: TwitchUserService,
+        private streamerApiService: StreamerApiService,
+        private botChatService: BotChatService,
+        private pokemonDbService: TwitchPokemonService,
+        private configService: ConfigService,
+        private pokemonService: PokemonService
+    ) {
+        console.log('AppController Constructor');
+        this.streamerAuthId = this.configService.get<string>('TWITCH_STREAMER_OAUTH_ID') || '00000000';
     }
 
     @Get('')
     getTest() {
         return { hi: 'there!' };
     }
-    //
-    // @Get('post/:id')
-    // async getPostById(@Param('id') id: string): Promise<PostModel | null> {
-    //     return this.postService.post({ id: Number(id) });
-    // }
-    //
-    // @Get('feed')
-    // async getPublishedPosts(): Promise<PostModel[]> {
-    //     return this.postService.posts({
-    //         where: { published: true }
-    //     });
-    // }
-    //
-    // @Get('posts')
-    // async getPosts(): Promise<PostModel[]> {
-    //     return this.postService.posts({});
-    // }
-    //
-    // @Get('users')
-    // async getUsers(): Promise<UserModel[]> {
-    //     return this.testS();
-    //     // return this.userService.users({});
-    // }
-    //
-    // async testS(): Promise<UserModel[]> {
-    //     const allUsers = await this.userService.testUsers();
-    //     console.log(allUsers);
-    //     return allUsers;
-    // }
-    //
-    // @Get('filtered-posts/:searchString')
-    // async getFilteredPosts(@Param('searchString') searchString: string): Promise<PostModel[]> {
-    //     return this.postService.posts({
-    //         where: {
-    //             OR: [
-    //                 {
-    //                     title: { contains: searchString }
-    //                 },
-    //                 {
-    //                     content: { contains: searchString }
-    //                 }
-    //             ]
-    //         }
-    //     });
-    // }
-    //
-    // @Post('post')
-    // async createDraft(@Body() postData: { title: string; content?: string; authorEmail: string }): Promise<PostModel> {
-    //     Logger.log(postData);
-    //     const { title, content, authorEmail } = postData;
-    //     return this.postService.createPost({
-    //         title,
-    //         content,
-    //         author: {
-    //             connect: { email: authorEmail }
-    //         }
-    //     });
-    // }
-    //
-    // @Post('user2')
-    // async signupUser(@Body() userData: { name?: string; email: string }): Promise<UserModel> {
-    //     Logger.log('USER4', userData);
-    //     return this.userService.createUser(userData);
-    // }
-    //
-    // @Put('publish/:id')
-    // async publishPost(@Param('id') id: string): Promise<PostModel> {
-    //     return this.postService.updatePost({
-    //         where: { id: Number(id) },
-    //         data: { published: true }
-    //     });
-    // }
-    //
-    // @Delete('post/:id')
-    // async deletePost(@Param('id') id: string): Promise<PostModel> {
-    //     return this.postService.deletePost({ id: Number(id) });
-    // }
+
+    @Get('pokemonbattle')
+    async getPokemonBattleOutcome() {
+        const outcome = await this.pokemonDbService.getBattleOutcome();
+        return outcome?.outcome;
+    }
+
+    @Get('pokemonteambattle')
+    async getPokemonTeamBattleOutcome() {
+        const outcome = await this.pokemonDbService.getTeamBattleOutcome();
+        return outcome?.outcome;
+    }
+
+    @Get('leaderboard')
+    async getTopPokemonPlayers() {
+        return await this.pokemonDbService.getTopPokemonLeaderboard();
+    }
+
+    @Get('/pokemonTeams')
+    async findPokemonTeam(@Query('teamName') query: string): Promise<TwitchUserWithOnlyNameAndPokemonTeam> {
+        console.log('findPokemonTeam', query);
+        let team;
+        try {
+            team = await this.twitchUserService.getTwitchUserWithOnlyNameAndPokemonTeamByName(query);
+        } catch (err) {
+            console.error('Error finding team', err);
+            throw new InternalServerErrorException('Error Finding Team');
+        }
+        if (!team) throw new NotFoundException('Team not found');
+        return team;
+    }
+
+    // todo
+    @Post('updateRewardsStatus')
+    @UseGuards(AuthenticatedGuard)
+    async updateRewardsStatus(@Req() req: Request, @Body() body: { isPaused: boolean }) {
+        console.log('updateRewardsStatus', body);
+        const user = req.user as any;
+        const userOauthId = user?.oauthId;
+        if (body.isPaused !== true && body.isPaused !== false) {
+            throw new InternalServerErrorException('Incorrect body params');
+        }
+        if (userOauthId && userOauthId === this.streamerAuthId) {
+            try {
+                await this.streamerApiService.updateCustomRewards(body.isPaused);
+                return { success: true };
+            } catch (err) {
+                throw new InternalServerErrorException('Error updating channel point redeems');
+            }
+        } else {
+            throw new ForbiddenException('You are not the streamer');
+        }
+    }
+    // todo - also why no use streamerauth guard?
+    @Post('createChannelPointRedeems')
+    @UseGuards(AuthenticatedGuard)
+    async createChannelPointRedeems(@Req() req: Request) {
+        const user = req.user as any;
+        const userOauthId = user?.oauthId;
+        if (userOauthId && userOauthId === this.streamerAuthId) {
+            try {
+                await this.streamerApiService.createChannelPointRedeems();
+                return { success: true };
+            } catch (err) {
+                throw new InternalServerErrorException('Error creating channel point redeems');
+            }
+        } else {
+            throw new ForbiddenException('You are not the streamer');
+        }
+    }
+
+    @Post('disableQuack')
+    @UseGuards(AuthenticatedGuard)
+    disableQuack(@Req() req: Request) {
+        const user = req.user as any;
+        const userOauthId = user?.oauthId;
+        if (userOauthId && userOauthId === this.streamerAuthId) {
+            this.botChatService.disableQuack();
+            return { success: true };
+        } else {
+            throw new ForbiddenException('You are not the streamer');
+        }
+    }
 }

@@ -9,13 +9,14 @@ import {
     WebSocketServer,
     WsResponse
 } from '@nestjs/websockets';
-import { forwardRef, Inject, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { VoteService } from 'src/twitch/services/vote/vote.service';
 import { IncomingEvents } from 'src/twitch/gateways/streamer/IEvents';
 import { BotChatService } from 'src/twitch/services/bot-chat/bot-chat.service';
 import { StreamerApiService } from 'src/twitch/services/streamer-api/streamer-api.service';
 import { HelixCreatePredictionData } from '@twurple/api';
+import { PokemonService } from 'src/twitch/services/pokemon/pokemon.service';
 
 interface ExtendedSocket {
     isAlive?: boolean;
@@ -33,7 +34,7 @@ interface ExtendedSocket {
         origin: '*'
     }
 })
-export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
+export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, OnModuleDestroy {
     private readonly logger = new Logger(StreamerGateway.name);
     private totalCreatedConnections = 0;
     private pingInterval?: NodeJS.Timer;
@@ -86,15 +87,6 @@ export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect
         client.on('close', () => {
             this.logger.warn('CLOSED / HANDLE DISCONNECT');
         });
-        // // Init Consts (TODO DOESNT GO HERE)
-        // const TWITCH_CHANNEL_LISTEN = appenv.TWITCH_CHANNEL_LISTEN;
-        // const authId = appenv.STREAMER_AUTH_ID;
-        // const streamerAuthId = parseInt(authId);
-        // const helixPrediction: HelixCreatePredictionData = {
-        //     autoLockAfter: 90,
-        //     outcomes: ['Yes', 'No'],
-        //     title: 'Will Trama Win This Game?'
-        // };
 
         this.totalCreatedConnections++;
         client.isAlive = true;
@@ -174,12 +166,6 @@ export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect
         this.voiceBanVote.resetUniqueVotedUsers();
     }
 
-    @SubscribeMessage(IncomingEvents.POKEMON_ROAR_COMPLETE)
-    handlePokemonRoar(client: any, data: any): void {
-        this.logger.log('Pokemon Roar Complete');
-        if (data) this.botChatService.clientSay(`Uhoh, something broke :(`);
-    }
-
     @SubscribeMessage(IncomingEvents.CREATE_MARKER)
     handleCreateMarker(client: any, data: any): void {
         this.logger.log('Create Marker', data);
@@ -208,6 +194,14 @@ export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect
         // })
         this.botChatService.client?.runCommercial(this.TWITCH_STREAMER_CHANNEL_LISTEN, 30).catch(err => {
             this.logger.error('Error playing ad', err);
+        });
+    }
+
+    async onModuleDestroy(): Promise<void> {
+        console.log('StreamerGateway MODULE DESTROY');
+        this.server.clients.forEach((client: any) => {
+            console.log('Terminating Streamer Client', client?.id);
+            client.terminate();
         });
     }
 }

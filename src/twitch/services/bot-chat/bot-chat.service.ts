@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TwitchBotAuthService } from 'src/database/services/twitch-bot-auth/twitch-bot-auth.service';
 import { AccessToken, RefreshingAuthProvider } from '@twurple/auth';
@@ -10,6 +10,8 @@ import { CronJob, CronTime } from 'cron';
 import { StreamerApiService } from 'src/twitch/services/streamer-api/streamer-api.service';
 import { HelixBanUserRequest } from '@twurple/api/lib/api/helix/moderation/HelixModerationApi';
 import { TwitchUserWithRegisteredBot } from 'src/database/services/twitch-user/twitch-user.service';
+import { AdminUiGateway } from 'src/twitch/gateways/ui/admin-ui.gateway';
+import { EventSubChannelRedemptionAddEvent } from '@twurple/eventsub';
 
 export interface CommandStream extends MessageStream {
     command: {
@@ -49,7 +51,10 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         private twitchBotAuthService: TwitchBotAuthService,
         // @Inject(forwardRef(() => StreamerGateway))
         private streamerGateway: StreamerGateway,
-        private streamerApiService: StreamerApiService // TODO Need another chat service for banning lulu
+        private streamerApiService: StreamerApiService, // TODO Need another chat service for banning lulu
+        // @Inject(forwardRef(() => AdminUiGateway))
+
+        private adminUiGateway: AdminUiGateway
     ) {
         this.channel = this.configService.get('TWITCH_STREAMER_CHANNEL_LISTEN') ?? '';
         this.botOauthId = this.configService.get('TWITCH_BOT_OAUTH_ID') ?? '';
@@ -156,7 +161,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
             refreshToken: twitchUserBotAuth.registeredBotAuth.refreshToken,
             scope: twitchUserBotAuth.registeredBotAuth.scope,
             expiresIn: twitchUserBotAuth.registeredBotAuth.expirySeconds,
-            obtainmentTimestamp: twitchUserBotAuth.registeredBotAuth.obtainmentEpoch
+            obtainmentTimestamp: Number(twitchUserBotAuth.registeredBotAuth.obtainmentEpoch)
         };
 
         return new RefreshingAuthProvider(
@@ -217,6 +222,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         return Math.floor(Math.random() * (max - min + 1) + min);
     }
 
+    // todo is this working right?
     private createPrizeRickRollCron(): CronJob {
         // https://crontab.cronhub.io/ second minute hour day of month, months, day of week
         // At 11pm every 2 days, after which, becomes random time
@@ -248,6 +254,51 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
             }
         }, 1000 * 60 * 40); // Every 40 minutes
     }
+
+    public async redeemTimeoutUser(event: EventSubChannelRedemptionAddEvent): Promise<void> {
+        try {
+            const userToBan = event.input.trim().toLowerCase();
+            if (userToBan === 'tramadc') {
+                event.updateStatus('CANCELED');
+                this.clientSay(`/me Nice try... You have been refunded`);
+                return;
+            }
+            const userAPI = await this.streamerApiService.client?.users.getUserByName(userToBan);
+            if (!userAPI) {
+                event.updateStatus('CANCELED');
+                this.clientSay(
+                    `/me Could not find user, ${userToBan}. @${event.userDisplayName
+                        .trim()
+                        .toLowerCase()}, you have been refunded`
+                );
+                return;
+            }
+
+            const userId = userAPI.id;
+            // name = event.userDisplayName.trim().toLowerCase();
+            const broadcasterId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') || '';
+            const moderatorId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') || '';
+            const helixBan: HelixBanUserRequest = {
+                duration: 180,
+                reason: 'The rich have power',
+                userId: userId
+            };
+            this.streamerApiService.client?.moderation
+                .banUser(broadcasterId, moderatorId, helixBan)
+                .then(() => {
+                    this.clientSay(`/me See you in 3 minutes, @${userToBan}`);
+                })
+                .catch(err => {
+                    event.updateStatus('CANCELED');
+                    this.clientSay(`/me Error Timing Out User :thinking:. You have been refunded`);
+                    this.logger.error('Error Timing Out User 1', err);
+                });
+        } catch (err) {
+            event.updateStatus('CANCELED');
+            this.clientSay(`/me Error Timing Out User :thinking:. You have been refunded`);
+            this.logger.error('Error Timing Out User ', err);
+        }
+    }
     /**
      * Create and send a Rock, Paper, Scissor url for viewers
      * @param username
@@ -260,7 +311,19 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         );
     }
 
+    canQuack = true;
+    enableQuack(): void {
+        this.canQuack = true;
+    }
+    public disableQuack(): void {
+        this.canQuack = false;
+    }
     private async handleCommand(stream: CommandStream) {
+        if (stream.command.msg?.includes('quack')) {
+            if (this.canQuack) {
+                this.adminUiGateway.quack();
+            }
+        }
         switch (stream.command.msg) {
             case 'ping':
                 this.clientSay('pong');
@@ -289,9 +352,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                     this.luluCount++;
                     break;
                 case 2:
-                    this.clientSay(`/me Look what you've done, @${stream.username}`);
                     try {
-                        // Need to use another way to ban from streamer
                         const broadcasterId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') || '';
                         const moderatorId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') || '';
                         const helixBan: HelixBanUserRequest = {
@@ -301,7 +362,11 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                         };
                         this.streamerApiService.client?.moderation
                             .banUser(broadcasterId, moderatorId, helixBan)
+                            .then(() => {
+                                this.clientSay(`/me Look what you've done, @${stream.username}`);
+                            })
                             .catch(err => {
+                                this.clientSay(`/me Error Timing Out User :thinking:`);
                                 this.logger.error('Error banning user', err);
                             });
                         // this.client
@@ -313,8 +378,8 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                         //         this.logger.error('Error Lulu Ban', err);
                         //     });
                     } catch (err) {
-                        this.logger.error('Error Timing Out (Possibly Modded) User');
-                        this.logger.error(err);
+                        this.clientSay(`/me Error Timing Out User :thinking:`);
+                        this.logger.error('Error Timing Out User', err);
                     }
                     this.luluCount = 0;
                     break;

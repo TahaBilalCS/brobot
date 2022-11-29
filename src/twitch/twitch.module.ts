@@ -12,28 +12,41 @@ import { ChessService } from './services/chess/chess.service';
 import { HttpModule } from '@nestjs/axios';
 import { OutgoingEvents } from 'src/twitch/gateways/streamer/IEvents';
 import { PokemonService } from './services/pokemon/pokemon.service';
+import { AdminUiGateway } from './gateways/ui/admin-ui.gateway';
 
 const AsyncBotChatServiceProvider = {
-    inject: [ConfigService, TwitchBotAuthService, StreamerGateway, StreamerApiService],
+    inject: [ConfigService, TwitchBotAuthService, StreamerGateway, StreamerApiService, AdminUiGateway],
     provide: BotChatService,
     useFactory: async (
         configService: ConfigService,
         twitchBotAuthService: TwitchBotAuthService,
         streamerGateway: StreamerGateway,
-        streamerApiService: StreamerApiService
+        streamerApiService: StreamerApiService,
+        adminUiGateway: AdminUiGateway
     ) => {
         console.log('BotChatService Factory');
-        const tcs = new BotChatService(configService, twitchBotAuthService, streamerGateway, streamerApiService);
+        const tcs = new BotChatService(
+            configService,
+            twitchBotAuthService,
+            streamerGateway,
+            streamerApiService,
+            adminUiGateway
+        );
         await tcs.init();
         return tcs;
     }
 };
 const AsyncBotApiServiceProvider = {
-    inject: [ConfigService],
+    inject: [ConfigService, PokemonService, AdminUiGateway, BotChatService],
     provide: BotApiService,
-    useFactory: async (configService: ConfigService) => {
+    useFactory: async (
+        configService: ConfigService,
+        pokemonService: PokemonService,
+        adminUiGateway: AdminUiGateway,
+        botChatService: BotChatService
+    ) => {
         console.log('BotApiService Factory');
-        const tcs = new BotApiService(configService);
+        const tcs = new BotApiService(configService, pokemonService, adminUiGateway, botChatService);
         await tcs.init();
         return tcs;
     }
@@ -80,6 +93,7 @@ const AsyncVoiceBanVoteServiceProvider = {
 @Module({
     imports: [ConfigModule, DatabaseModule, HttpModule],
     providers: [
+        AdminUiGateway,
         AsyncStreamerApiServiceProvider,
         AsyncBotApiServiceProvider,
         AsyncBotChatServiceProvider,
@@ -90,6 +104,7 @@ const AsyncVoiceBanVoteServiceProvider = {
         PokemonService
     ],
     exports: [
+        AdminUiGateway,
         AsyncStreamerApiServiceProvider,
         AsyncBotApiServiceProvider,
         AsyncBotChatServiceProvider,
