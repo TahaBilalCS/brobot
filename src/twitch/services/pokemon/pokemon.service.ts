@@ -496,6 +496,7 @@ export class PokemonService implements OnModuleDestroy {
             const pokemon = await this.pokemonDbService.levelUpStarter(userOauthId);
             if (pokemon) {
                 await this.botChatService.clientSay(`@${username}'s ${pokemon.name} leveled up to ${pokemon.level}!`);
+                await event.updateStatus('FULFILLED');
             } else {
                 await this.botChatService.clientSay(
                     `@${username}, something went wrong leveling up your pokemon. You will be automatically refunded`

@@ -79,7 +79,7 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
             pokemonLevelUp = await this.client?.channelPoints.createCustomReward(this.streamerOauthId, {
                 title: 'Pokemon Level Up',
                 cost: 1250,
-                prompt: 'Choose a pokemon to level up by inputting a slot number between 1-6. Failed level ups will be automatically refunded',
+                prompt: 'Level up your starter pokemon in slot 1 (If you want to level up another pokemon, make sure to swap it to slot 1 before leveling up) Failed level ups will be automatically refunded. NO REFUNDS FOR SUCCESSFUL LEVEL UPS',
                 isEnabled: true,
                 backgroundColor: '#911b00',
                 userInputRequired: true

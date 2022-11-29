@@ -157,10 +157,9 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                 streamerAuthId,
                 (event: EventSubChannelRaidEvent) => {
                     // Shout out the user who raided the stream
-                    // void twurpleInstance?.botChatClient.say(
-                    //     appenv.TWITCH_CHANNEL_LISTEN,
-                    //     `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
-                    // );
+                    this.botChatService.clientSay(
+                        `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
+                    );
                     console.info(`${event.raidingBroadcasterName} raided ${event.raidedBroadcasterName}!`);
                 }
             );
