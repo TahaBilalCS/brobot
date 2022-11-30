@@ -130,22 +130,22 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
             // Subscribe to all channel point redemption events
             await this.middleware.subscribeToChannelRedemptionAddEvents(
                 streamerAuthId,
-                async (event: EventSubChannelRedemptionAddEvent) => {
+                (event: EventSubChannelRedemptionAddEvent) => {
                     // const username = event.userDisplayName.trim().toLowerCase();
                     console.info(`@${event.userDisplayName} just redeemed ${event.rewardTitle}!`);
                     // Handle redemptions tied to Pokemon
                     if (event.rewardTitle === 'Pokemon Roar') {
-                        await this.pokemonService.redeemPokemonRoar(event);
+                        this.pokemonService.redeemPokemonRoar(event);
                     } else if (event.rewardTitle === 'Pokemon Level Up') {
-                        await this.pokemonService.redeemLevelUp(event);
+                        this.pokemonService.redeemLevelUp(event);
                     } else if (event.rewardTitle === 'Pokemon Create') {
-                        await this.pokemonService.redeemPokemonCreate(event);
+                        this.pokemonService.redeemPokemonCreate(event);
                     } else if (event.rewardTitle === 'DEBS Alert') {
-                        await this.adminUiGateway.sendDebsAlert(event);
+                        this.adminUiGateway.sendDebsAlert(event);
                     } else if (event.rewardTitle === 'Timeout User') {
-                        await this.botChatService.redeemTimeoutUser(event);
+                        this.botChatService.redeemTimeoutUser(event);
                     } else if (event.rewardTitle === 'Enable Quacks') {
-                        await this.botChatService.enableQuacks(event);
+                        this.botChatService.enableQuacks(event);
                     }
                 }
             );
