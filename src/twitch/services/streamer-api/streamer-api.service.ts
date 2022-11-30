@@ -152,10 +152,14 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
 
     public async deleteChannelPointRewards() {
         try {
-            this.channelPointRewards.forEach(reward => {
-                console.log(`Deleting ${reward.title}`);
-                this.client?.channelPoints.deleteCustomReward(this.streamerOauthId, reward.id);
-            });
+            for (let i = this.channelPointRewards.length - 1; i >= 0; i--) {
+                console.log(`Deleting ${this.channelPointRewards[i].title}`);
+                await this.client?.channelPoints.deleteCustomReward(
+                    this.streamerOauthId,
+                    this.channelPointRewards[i].id
+                );
+                this.channelPointRewards.splice(i, 1);
+            }
         } catch (err) {
             this.logger.error('Error deleting channel point rewards', err);
             throw new Error('Error deleting channel point rewards');

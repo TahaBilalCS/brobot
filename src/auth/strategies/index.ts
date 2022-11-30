@@ -36,7 +36,7 @@ export const streamerScope = [
     'channel:read:redemptions', // retrieve channel point rewards
     'channel:manage:redemptions', // create/update channel point rewards
     'moderation:read', // Check who is mod
-    'channel:manage:moderators'
+    'channel:manage:moderators' // Mod someone back
 ];
 
 // Regular users
