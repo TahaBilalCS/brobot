@@ -135,17 +135,17 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                     console.info(`@${event.userDisplayName} just redeemed ${event.rewardTitle}!`);
                     // Handle redemptions tied to Pokemon
                     if (event.rewardTitle === 'Pokemon Roar') {
-                        this.pokemonService.redeemPokemonRoar(event);
+                        await this.pokemonService.redeemPokemonRoar(event);
                     } else if (event.rewardTitle === 'Pokemon Level Up') {
-                        this.pokemonService.redeemLevelUp(event);
+                        await this.pokemonService.redeemLevelUp(event);
                     } else if (event.rewardTitle === 'Pokemon Create') {
-                        this.pokemonService.redeemPokemonCreate(event);
+                        await this.pokemonService.redeemPokemonCreate(event);
                     } else if (event.rewardTitle === 'DEBS Alert') {
-                        this.adminUiGateway.sendDebsAlert(event);
+                        await this.adminUiGateway.sendDebsAlert(event);
                     } else if (event.rewardTitle === 'Timeout User') {
-                        this.botChatService.redeemTimeoutUser(event);
+                        await this.botChatService.redeemTimeoutUser(event);
                     } else if (event.rewardTitle === 'Enable Quacks') {
-                        await this.botChatService.enableQuacks(event);
+                        // await this.botChatService.enableQuacks(event);
                         console.log('Done Quacks');
                         return;
                     }
