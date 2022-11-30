@@ -13,7 +13,6 @@ import { Logger } from '@nestjs/common';
 async function bootstrap() {
     const logger = new Logger('Main');
 
-    console.log(process.env.TWITCH_BOT_USERNAME);
     // TODO-BT Create socket from app?  Probably setup socket before app.use
     const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'error', 'warn'] });
     const origin = process.env.UI_URL || '';

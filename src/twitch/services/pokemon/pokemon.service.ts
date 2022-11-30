@@ -218,6 +218,11 @@ export class PokemonService implements OnModuleDestroy {
             if (commandStream.command.msg === 'pokemon') {
                 const userOauthId = commandStream.pvtMessage.userInfo.userId;
                 if (!userOauthId) this.logger.error('No userOauthId', commandStream.username, commandStream.message);
+                if (commandStream.command.args.length === 0) {
+                    const commandsUrl = `${process.env.UI_URL}/commands`;
+                    await this.botChatService.clientSay(`Pokemon Commands: ${commandsUrl}`);
+                    return;
+                }
                 switch (commandStream.command.args[0].toLowerCase()) {
                     case 'team':
                         this.logger.log(`Pokemon Team Command`);
