@@ -56,7 +56,9 @@ async function bootstrap() {
     await app.listen(3000, async () => {
         logger.log('Listening on port 3000');
         try {
+            logger.log('Subscribe to Events Main');
             await botApiClient.subscribeToEvents();
+            logger.log('Done Subscribe to Events Main');
         } catch (err) {
             logger.error('Error Subscribing To Event Subs', err);
         }

@@ -76,7 +76,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
 
         this.logger.log('Async Init Completed Event Subs');
         // TODO-Note: Do this in prod to delete subscriptions
-        // await twurpleInstance.botApiClient.eventSub.deleteAllSubscriptions(); // Clean up subscriptions
+        // await this.client.eventSub.deleteAllSubscriptions(); // Clean up subscriptions
     }
 
     public async applyMiddleware(app: any): Promise<any> {
@@ -96,7 +96,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
         const streamerAuthId = this.configService.get('TWITCH_STREAMER_OAUTH_ID');
         // If in dev
         if (this.devListener) {
-            this.logger.warn('Subscribing to dev event subs');
+            this.logger.warn('Subscribing to Dev Events');
             // Subscribe to unban event
             await this.devListener.subscribeToChannelUnbanEvents(streamerAuthId, (event: EventSubChannelUnbanEvent) => {
                 // void twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username, event.userId);
@@ -124,6 +124,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
             // todo NOW
             // this.middleware.onRevoke()
             // this.middleware.onVerify()
+            this.logger.warn('Mark as Ready');
             await this.middleware.markAsReady();
             this.logger.warn('Subscribing to ChannelRedemptionAddEvents');
             // Subscribe to all channel point redemption events

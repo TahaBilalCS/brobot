@@ -349,7 +349,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         }
         switch (stream.command.msg) {
             case 'ping':
-                this.clientSay('pong');
+                this.clientSay('pong!');
                 break;
             case 'dice': {
                 const diceRoll = Math.floor(Math.random() * 6) + 1;
