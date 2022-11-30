@@ -143,6 +143,7 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
             return;
         }
         this.server.clients.forEach((client: any) => {
+            console.log('Sending Debs Alert', name, msg);
             const wsEvent = JSON.stringify({ event: `${OutgoingEvents.DEBS_ALERT}`, data: { msg, name } });
             this.map[name] = event;
             client.send(wsEvent);
@@ -168,6 +169,7 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
             gender: pokemon.gender,
             dexNum: pokemon.dexNum
         };
+        this.logger.log('Start Pokemon Roar Gateway');
         if (this.getCurrentClientsOnSocket <= 0) {
             this.logger.warn('Streamer Not Connected While Roaring');
             if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');

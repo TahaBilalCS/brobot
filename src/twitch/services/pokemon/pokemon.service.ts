@@ -343,62 +343,62 @@ export class PokemonService implements OnModuleDestroy {
                     //     await this.redeemPokemonCreate(event);
                     //     break;
                     // }
-                    case 'test':
-                        {
-                            if (commandStream.username === 'lebrotherbill') {
-                                // fix json todo also remove
-                                // https://codebeautify.org/json-fixer
-                                const test = fs.readFileSync('pokemon.json', 'utf8');
-                                const obj = JSON.parse(test);
-                                let i;
-                                const failedUsers = [];
-                                for (i = 0; i < obj.length; i++) {
-                                    // console.log(obj[i]);
-                                    const user = await this.botChatService.checkUser(obj[i]);
-                                    if (!user) {
-                                        console.error('No user found', obj[i].twitchName, obj[i].uid);
-                                        // todo store in list for rama
-                                        failedUsers.push(obj);
-                                        continue;
-                                    }
-
-                                    if (user.id !== obj[i].uid) {
-                                        // critical should not happen ever
-                                        console.error("UIDs don't match", obj[i].uid, user.id);
-                                        console.error('MISMATCH', obj[i].twitchName, user.displayName, user.name);
-                                        failedUsers.push(user);
-                                        continue;
-                                    }
-
-                                    if (!obj[i].pokemonLevel) {
-                                        console.error('No pokemon level', obj[i].twitchName, obj[i].uid);
-                                        failedUsers.push(user);
-                                        continue;
-                                    }
-
-                                    // Dont care about this, just use username from streamer api service
-                                    if (user.displayName.toLowerCase() !== obj[i].twitchName.toLowerCase()) {
-                                        console.error(
-                                            `Usernames Dont Match: ${user.displayName} --- ${user.name} ||| ${obj[i].twitchName}`
-                                        );
-                                    }
-
-                                    // todo enable this when ready
-                                    const event: TODOREMOVE = {
-                                        username: user.name, // user.displayName can have special characters
-                                        oauthId: user.id,
-                                        slot: 1,
-                                        pokemonLevel: obj[i].pokemonLevel,
-                                        pokemonName: obj[i].pokemonName
-                                    };
-                                    await this.redeemPokemonCreateFIXTODOREMOVE(event);
-                                }
-                                console.log('done', i);
-                                console.log('failed', failedUsers.length);
-                                // await this.redeemPokemonRoar({ username: commandStream.username, oauthId: userOauthId });
-                            }
-                        }
-                        break;
+                    // case 'test':
+                    //     {
+                    //         if (commandStream.username === 'lebrotherbill') {
+                    //             // fix json todo also remove
+                    //             // https://codebeautify.org/json-fixer
+                    //             const test = fs.readFileSync('pokemon.json', 'utf8');
+                    //             const obj = JSON.parse(test);
+                    //             let i;
+                    //             const failedUsers = [];
+                    //             for (i = 0; i < obj.length; i++) {
+                    //                 // console.log(obj[i]);
+                    //                 const user = await this.botChatService.checkUser(obj[i]);
+                    //                 if (!user) {
+                    //                     console.error('No user found', obj[i].twitchName, obj[i].uid);
+                    //                     // todo store in list for rama
+                    //                     failedUsers.push(obj);
+                    //                     continue;
+                    //                 }
+                    //
+                    //                 if (user.id !== obj[i].uid) {
+                    //                     // critical should not happen ever
+                    //                     console.error("UIDs don't match", obj[i].uid, user.id);
+                    //                     console.error('MISMATCH', obj[i].twitchName, user.displayName, user.name);
+                    //                     failedUsers.push(user);
+                    //                     continue;
+                    //                 }
+                    //
+                    //                 if (!obj[i].pokemonLevel) {
+                    //                     console.error('No pokemon level', obj[i].twitchName, obj[i].uid);
+                    //                     failedUsers.push(user);
+                    //                     continue;
+                    //                 }
+                    //
+                    //                 // Dont care about this, just use username from streamer api service
+                    //                 if (user.displayName.toLowerCase() !== obj[i].twitchName.toLowerCase()) {
+                    //                     console.error(
+                    //                         `Usernames Dont Match: ${user.displayName} --- ${user.name} ||| ${obj[i].twitchName}`
+                    //                     );
+                    //                 }
+                    //
+                    //                 // todo enable this when ready
+                    //                 const event: TODOREMOVE = {
+                    //                     username: user.name, // user.displayName can have special characters
+                    //                     oauthId: user.id,
+                    //                     slot: 1,
+                    //                     pokemonLevel: obj[i].pokemonLevel,
+                    //                     pokemonName: obj[i].pokemonName
+                    //                 };
+                    //                 await this.redeemPokemonCreateFIXTODOREMOVE(event);
+                    //             }
+                    //             console.log('done', i);
+                    //             console.log('failed', failedUsers.length);
+                    //             // await this.redeemPokemonRoar({ username: commandStream.username, oauthId: userOauthId });
+                    //         }
+                    //     }
+                    //     break;
                     default:
                         const commandsUrl = `${process.env.UI_URL}/commands`;
                         await this.botChatService.clientSay(`Pokemon Commands: ${commandsUrl}`);
