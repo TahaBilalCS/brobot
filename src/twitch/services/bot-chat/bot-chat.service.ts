@@ -268,7 +268,8 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
             if (this.canQuack) {
                 // await event.updateStatus('CANCELED');
                 this.logger.log('Quack 2');
-                await this.clientSay(`/me @${event.userName}, quacks are already enabled. You have been refunded`);
+                const username = event.userName;
+                await this.clientSay(`/me @${username}, quacks are already enabled. You have been refunded`);
                 return;
             }
             this.logger.log('Quack 3');
