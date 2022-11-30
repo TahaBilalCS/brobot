@@ -16,7 +16,6 @@ async function bootstrap() {
     // TODO-BT Create socket from app?  Probably setup socket before app.use
     const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'error', 'warn'] });
     const origin = process.env.UI_URL || '';
-    // todo NOW using subdomain - also env variable DOMAIN can use
     const domain = process.env.NODE_ENV === 'production' ? '.brobot.live' : undefined;
 
     app.useWebSocketAdapter(new WsAdapter(app));

@@ -263,22 +263,30 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
     }
 
     public async enableQuacks(event: EventSubChannelRedemptionAddEvent): Promise<void> {
-        if (this.canQuack) {
-            await event.updateStatus('CANCELED');
-            await this.clientSay(`/me @${event.userName}, quacks are already enabled. You have been refunded`);
-            return;
-        }
+        try {
+            this.logger.log('Quack 1');
+            if (this.canQuack) {
+                await event.updateStatus('CANCELED');
+                this.logger.log('Quack 2');
+                await this.clientSay(`/me @${event.userName}, quacks are already enabled. You have been refunded`);
+                return;
+            }
+            this.logger.log('Quack 3');
 
-        if (this.adminUiGateway.getCurrentClientsOnSocket <= 0) {
-            await event.updateStatus('CANCELED');
-            await this.clientSay(
-                `/me Trama is not connected to browser source, so quacks won't work. You have been refunded`
-            );
-            return;
-        }
+            if (this.adminUiGateway.getCurrentClientsOnSocket <= 0) {
+                this.logger.log('Quack 4');
+                await event.updateStatus('CANCELED');
+                await this.clientSay(
+                    `/me Trama is not connected to browser source, so quacks won't work. You have been refunded`
+                );
+                return;
+            }
 
-        this.enableQuack();
-        await this.clientSay(`/me The command "!quack" has been enabled. Go get em`);
+            this.enableQuack();
+            await this.clientSay(`/me The command "!quack" has been enabled. Go get em`);
+        } catch (err) {
+            this.logger.error('Error Quack Redeem');
+        }
     }
     public async redeemTimeoutUser(event: EventSubChannelRedemptionAddEvent): Promise<void> {
         try {

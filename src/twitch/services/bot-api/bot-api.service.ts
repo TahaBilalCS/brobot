@@ -135,8 +135,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                     console.info(`@${event.userDisplayName} just redeemed ${event.rewardTitle}!`);
                     // Handle redemptions tied to Pokemon
                     if (event.rewardTitle === 'Pokemon Roar') {
-                        // todo shoudl await? stream is not readable
-                        this.pokemonService.redeemPokemonRoar(event);
+                        await this.pokemonService.redeemPokemonRoar(event);
                     } else if (event.rewardTitle === 'Pokemon Level Up') {
                         await this.pokemonService.redeemLevelUp(event);
                     } else if (event.rewardTitle === 'Pokemon Create') {
