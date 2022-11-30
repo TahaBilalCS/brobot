@@ -314,18 +314,23 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
             }
 
             const userId = userAPI.id;
-            // name = event.userDisplayName.trim().toLowerCase();
-            const broadcasterId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') || '';
-            const moderatorId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') || '';
+            const isMod = await this.streamerApiService.client?.moderation.checkUserMod(this.streamerAuthId, userId);
+
             const helixBan: HelixBanUserRequest = {
                 duration: 180,
                 reason: 'The rich have power',
                 userId: userId
             };
+
             this.streamerApiService.client?.moderation
-                .banUser(broadcasterId, moderatorId, helixBan)
+                .banUser(this.streamerAuthId, this.streamerAuthId, helixBan)
                 .then(() => {
                     this.clientSay(`/me See you in 3 minutes, @${userToBan}`);
+                    if (isMod) {
+                        setTimeout(() => {
+                            this.streamerApiService.client?.moderation.addModerator(this.streamerAuthId, userId);
+                        }, 185000);
+                    }
                 })
                 .catch(err => {
                     this.cancelRedemption(event);
@@ -397,17 +402,29 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                     break;
                 case 2:
                     try {
-                        const broadcasterId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') || '';
-                        const moderatorId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') || '';
+                        const userId = stream.pvtMessage.userInfo.userId;
+                        const isMod = await this.streamerApiService.client?.moderation.checkUserMod(
+                            this.streamerAuthId,
+                            userId
+                        );
+
                         const helixBan: HelixBanUserRequest = {
                             duration: 30,
                             reason: 'lulu',
-                            userId: stream.pvtMessage.userInfo.userId
+                            userId: userId
                         };
                         this.streamerApiService.client?.moderation
-                            .banUser(broadcasterId, moderatorId, helixBan)
+                            .banUser(this.streamerAuthId, this.streamerAuthId, helixBan)
                             .then(() => {
                                 this.clientSay(`/me Look what you've done, @${stream.username}`);
+                                if (isMod) {
+                                    setTimeout(() => {
+                                        this.streamerApiService.client?.moderation.addModerator(
+                                            this.streamerAuthId,
+                                            userId
+                                        );
+                                    }, 30000);
+                                }
                             })
                             .catch(err => {
                                 this.clientSay(`/me Error Timing Out User :thinking:`);
