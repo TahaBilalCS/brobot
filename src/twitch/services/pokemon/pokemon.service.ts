@@ -32,6 +32,7 @@ import { AdminUiGateway, PokemonRoarChatEvent } from 'src/twitch/gateways/ui/adm
 
 interface TODOREMOVE extends PokemonCreateChatEvent {
     pokemonLevel: number;
+    pokemonName: string;
 }
 interface PokemonCreateChatEvent {
     username: string;
@@ -166,10 +167,10 @@ export class PokemonService implements OnModuleDestroy {
             'America/New_York'
         );
 
-        // Every 15 seconds */15 * * * * *
+        // Every 20 seconds */20 * * * * *
         // 9th minute every 2nd hour '0 9 */2 * * *'
         const pokemonChatDropCron = new CronJob(
-            '*/20 * * * * *',
+            '0 9 */2 * * *',
             async () => {
                 const pokemonDrop = await this.generatePokemonDrop();
                 this.logger.warn(`Creating New Drop: ${pokemonDrop.name}`, new Date().toISOString());
@@ -192,8 +193,7 @@ export class PokemonService implements OnModuleDestroy {
                             userAttemptsMap: new Map()
                         };
                     }
-                }, 1000 * 15);
-                // todo change back to 60 ^
+                }, 1000 * 60);
                 this.pokemonChatDrop = {
                     active: true,
                     interval: dropInterval,
@@ -340,55 +340,58 @@ export class PokemonService implements OnModuleDestroy {
                     // }
                     case 'test':
                         {
-                            // fix json todo also remove
-                            // https://codebeautify.org/json-fixer
-                            const test = fs.readFileSync('pokemon.json', 'utf8');
-                            const obj = JSON.parse(test);
-                            let i;
-                            const failedUsers = [];
-                            for (i = 0; i < obj.length; i++) {
-                                // console.log(obj[i]);
-                                const user = await this.botChatService.checkUser(obj[i]);
-                                if (!user) {
-                                    console.error('No user found', obj[i].twitchName, obj[i].uid);
-                                    // todo store in list for rama
-                                    failedUsers.push(obj);
-                                    continue;
-                                }
+                            if (commandStream.username === 'lebrotherbill') {
+                                // fix json todo also remove
+                                // https://codebeautify.org/json-fixer
+                                const test = fs.readFileSync('pokemon.json', 'utf8');
+                                const obj = JSON.parse(test);
+                                let i;
+                                const failedUsers = [];
+                                for (i = 0; i < obj.length; i++) {
+                                    // console.log(obj[i]);
+                                    const user = await this.botChatService.checkUser(obj[i]);
+                                    if (!user) {
+                                        console.error('No user found', obj[i].twitchName, obj[i].uid);
+                                        // todo store in list for rama
+                                        failedUsers.push(obj);
+                                        continue;
+                                    }
 
-                                if (user.id !== obj[i].uid) {
-                                    // critical should not happen ever
-                                    console.error("UIDs don't match", obj[i].uid, user.id);
-                                    console.error('MISMATCH', obj[i].twitchName, user.displayName, user.name);
-                                    failedUsers.push(user);
-                                    continue;
-                                }
+                                    if (user.id !== obj[i].uid) {
+                                        // critical should not happen ever
+                                        console.error("UIDs don't match", obj[i].uid, user.id);
+                                        console.error('MISMATCH', obj[i].twitchName, user.displayName, user.name);
+                                        failedUsers.push(user);
+                                        continue;
+                                    }
 
-                                if (!obj[i].pokemonLevel) {
-                                    console.error('No pokemon level', obj[i].twitchName, obj[i].uid);
-                                    failedUsers.push(user);
-                                    continue;
-                                }
+                                    if (!obj[i].pokemonLevel) {
+                                        console.error('No pokemon level', obj[i].twitchName, obj[i].uid);
+                                        failedUsers.push(user);
+                                        continue;
+                                    }
 
-                                // Dont care about this, just use username from streamer api service
-                                if (user.displayName.toLowerCase() !== obj[i].twitchName.toLowerCase()) {
-                                    console.error(
-                                        `Usernames Dont Match: ${user.displayName} --- ${user.name} ||| ${obj[i].twitchName}`
-                                    );
-                                }
+                                    // Dont care about this, just use username from streamer api service
+                                    if (user.displayName.toLowerCase() !== obj[i].twitchName.toLowerCase()) {
+                                        console.error(
+                                            `Usernames Dont Match: ${user.displayName} --- ${user.name} ||| ${obj[i].twitchName}`
+                                        );
+                                    }
 
-                                // todo enable this when ready
-                                // const event: TODOREMOVE = {
-                                //     username: user.name, // user.displayName can have special characters
-                                //     oauthId: user.id,
-                                //     slot: 1,
-                                //     pokemonLevel: obj[i].pokemonLevel
-                                // };
-                                // await this.redeemPokemonCreateFIXTODOREMOVE(event);
+                                    // todo enable this when ready
+                                    const event: TODOREMOVE = {
+                                        username: user.name, // user.displayName can have special characters
+                                        oauthId: user.id,
+                                        slot: 1,
+                                        pokemonLevel: obj[i].pokemonLevel,
+                                        pokemonName: obj[i].pokemonName
+                                    };
+                                    await this.redeemPokemonCreateFIXTODOREMOVE(event);
+                                }
+                                console.log('done', i);
+                                console.log('failed', failedUsers.length);
+                                // await this.redeemPokemonRoar({ username: commandStream.username, oauthId: userOauthId });
                             }
-                            console.log('done', i);
-                            console.log('failed', failedUsers.length);
-                            // await this.redeemPokemonRoar({ username: commandStream.username, oauthId: userOauthId });
                         }
                         break;
                     default:
@@ -1294,6 +1297,7 @@ export class PokemonService implements OnModuleDestroy {
         const oauthId = event.oauthId;
         const slot = event.slot;
         const pokemonLevel = event.pokemonLevel;
+        const pokemonName = event.pokemonName;
 
         if (!oauthId) {
             this.logger.error('No oauthId found while creating random pokemon', username);
@@ -1302,7 +1306,7 @@ export class PokemonService implements OnModuleDestroy {
             return;
         }
 
-        const randomPokemon = this.getRandomGen4Pokemon();
+        const randomPokemon = this.getGen4PokemonByName(pokemonName);
         const pokemonMoveset = await this.determinePokemonMoveset(randomPokemon.name);
 
         if (pokemonMoveset.length === 0) {
@@ -1313,7 +1317,7 @@ export class PokemonService implements OnModuleDestroy {
             if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
             return;
         }
-        const isShiny = this.isShiny();
+        const isShiny = true;
 
         const currentDateUTC = new Date();
         const userPokemon: PokemonDefault = {
@@ -1328,7 +1332,7 @@ export class PokemonService implements OnModuleDestroy {
             moves: pokemonMoveset,
             nature: this.determineNature().name,
             ability: this.determineAbility(randomPokemon.name),
-            level: 1,
+            level: pokemonLevel,
             wins: 0,
             losses: 0,
             draws: 0,
@@ -1376,7 +1380,7 @@ export class PokemonService implements OnModuleDestroy {
 
         const randomRoar = this.pickRandomRoar();
         await this.botChatService.clientSay(
-            `/me @${username}'s Level 1 ${isShiny ? 'PogChamp ****SHINY**** PogChamp' : ''} ${
+            `/me @${username}'s Level ${pokemonLevel} ${isShiny ? 'PogChamp ****SHINY**** PogChamp' : ''} ${
                 randomPokemon.name
             } roared ${randomRoar}`
         );

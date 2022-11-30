@@ -64,7 +64,7 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
             throw new Error('Cannot create channel point rewards, rewards already exist');
         }
 
-        let pokemonRoar, pokemonLevelUp, pokemonCreate, debsAlert, timeoutUser;
+        let pokemonRoar, pokemonLevelUp, pokemonCreate, debsAlert, timeoutUser, enableQuack;
         try {
             pokemonRoar = await this.client?.channelPoints.createCustomReward(this.streamerOauthId, {
                 title: 'Pokemon Roar',
@@ -109,17 +109,25 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
                 backgroundColor: '#0e0801',
                 userInputRequired: true
             });
+
+            enableQuack = await this.client?.channelPoints.createCustomReward(this.streamerOauthId, {
+                title: 'Enable Quacks',
+                cost: 7500,
+                prompt: 'Enables the command: "!quack" for everyone to spam. This is difficult to disable...',
+                isEnabled: true,
+                backgroundColor: '#e5d406'
+            });
         } catch (err) {
             this.logger.error('Error Creating Rewards', err);
             throw new Error('Error Creating Rewards');
         }
 
-        if (!pokemonRoar || !pokemonLevelUp || !pokemonCreate || !debsAlert || !timeoutUser) {
+        if (!pokemonRoar || !pokemonLevelUp || !pokemonCreate || !debsAlert || !timeoutUser || !enableQuack) {
             this.logger.error('Error creating channel point rewards');
             throw new Error('Error creating channel point rewards');
         }
         // Create the rewards
-        this.channelPointRewards.push(pokemonRoar, pokemonLevelUp, pokemonCreate, debsAlert, timeoutUser);
+        this.channelPointRewards.push(pokemonRoar, pokemonLevelUp, pokemonCreate, debsAlert, timeoutUser, enableQuack);
     }
 
     private async getChannelPointRewards(): Promise<void> {
