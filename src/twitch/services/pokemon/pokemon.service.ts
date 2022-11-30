@@ -29,6 +29,7 @@ import { BattleStream } from '@pkmn/sim/build/sim/battle-stream';
 import { CronJob, CronTime } from 'cron';
 import { EventSubChannelRedemptionAddEvent } from '@twurple/eventsub';
 import { AdminUiGateway, PokemonRoarChatEvent } from 'src/twitch/gateways/ui/admin-ui.gateway';
+import { StreamerApiService } from 'src/twitch/services/streamer-api/streamer-api.service';
 
 interface TODOREMOVE extends PokemonCreateChatEvent {
     pokemonLevel: number;
@@ -145,6 +146,7 @@ export class PokemonService implements OnModuleDestroy {
      * @private
      */
     private pokeRoarActionList: string[] = pokeRoarActions;
+    private streamerAuthId: string;
 
     constructor(
         private configService: ConfigService,
@@ -153,8 +155,11 @@ export class PokemonService implements OnModuleDestroy {
         // @Inject(forwardRef(() => StreamerGateway))
         private streamerGateway: StreamerGateway,
         private adminUiGateway: AdminUiGateway,
-        private pokemonDbService: TwitchPokemonService
+        private pokemonDbService: TwitchPokemonService,
+        private streamerApiService: StreamerApiService
     ) {
+        this.streamerAuthId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') ?? '';
+
         // At Midnight EST
         const slaughterResetJob = new CronJob(
             '0 0 0 * * *',
@@ -407,6 +412,24 @@ export class PokemonService implements OnModuleDestroy {
         });
     }
 
+    private async cancelRedemption(event: EventSubChannelRedemptionAddEvent) {
+        await this.streamerApiService.client?.channelPoints.updateRedemptionStatusByIds(
+            this.streamerAuthId,
+            event.rewardId,
+            [event.id],
+            'CANCELED'
+        );
+    }
+
+    private async fulfillRedemption(event: EventSubChannelRedemptionAddEvent) {
+        await this.streamerApiService.client?.channelPoints.updateRedemptionStatusByIds(
+            this.streamerAuthId,
+            event.rewardId,
+            [event.id],
+            'FULFILLED'
+        );
+    }
+
     private determineGender(pokemonName: string): 'M' | 'F' | 'N' {
         const pokemon = this.getGen4PokemonByName(pokemonName);
 
@@ -547,25 +570,25 @@ export class PokemonService implements OnModuleDestroy {
             const pokemon = await this.pokemonDbService.levelUpStarter(userOauthId);
             if (pokemon) {
                 await this.botChatService.clientSay(`@${username}'s ${pokemon.name} leveled up to ${pokemon.level}!`);
-                await event.updateStatus('FULFILLED');
+                await this.fulfillRedemption(event);
             } else {
                 await this.botChatService.clientSay(
                     `@${username}, something went wrong leveling up your pokemon. You will be automatically refunded`
                 );
-                await event.updateStatus('CANCELED');
+                await this.cancelRedemption(event);
             }
         } catch (err) {
             if (err instanceof PokemonLevelException) {
                 this.logger.error('Exception Leveling Up', err);
                 await this.botChatService.clientSay(`@${username}, ${err.message}. You will be automatically refunded`);
-                await event.updateStatus('CANCELED');
+                await this.cancelRedemption(event);
                 return;
             }
             this.logger.error('Unhandled Error Leveling Up', err);
             await this.botChatService.clientSay(
                 `@${username}, something went wrong leveling up your pokemon. You will be automatically refunded`
             );
-            await event.updateStatus('CANCELED');
+            await this.cancelRedemption(event);
         }
     }
 
@@ -1275,7 +1298,8 @@ export class PokemonService implements OnModuleDestroy {
         if (!oauthId) {
             this.logger.error('No oauthId found while roaring random pokemon', username);
             await this.botChatService.clientSay(`@${username} failed to roar. You have been refunded`);
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
             return;
         }
 
@@ -1286,7 +1310,8 @@ export class PokemonService implements OnModuleDestroy {
             this.logger.log('Roar Get Pokemon Done');
             if (!userStarterPokemon) {
                 await this.botChatService.clientSay(`@${username} you have no starter pokemon. You have been refunded`);
-                if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+                if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
                 return;
             }
             await this.adminUiGateway.pokemonRoar(userStarterPokemon, event);
@@ -1295,7 +1320,8 @@ export class PokemonService implements OnModuleDestroy {
             await this.botChatService.clientSay(
                 `@${username}: Unable to find a pokemon in Slot 1. You have been refunded`
             );
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
             return;
         }
     }
@@ -1310,7 +1336,8 @@ export class PokemonService implements OnModuleDestroy {
         if (!oauthId) {
             this.logger.error('No oauthId found while creating random pokemon', username);
             await this.botChatService.clientSay(`@${username} failed to change pokemon. You have been refunded`);
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
             return;
         }
 
@@ -1322,7 +1349,8 @@ export class PokemonService implements OnModuleDestroy {
             await this.botChatService.clientSay(
                 `@${username}, your pokemon ${randomPokemon.name} has no moves. You have been refunded`
             );
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
             return;
         }
         const isShiny = true;
@@ -1361,7 +1389,8 @@ export class PokemonService implements OnModuleDestroy {
             if (err instanceof PokemonRedeemException) {
                 this.logger.error(err);
                 await this.botChatService.clientSay(`${err.message}. You have been refunded`);
-                if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+                if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
                 return;
             }
             this.logger.error(
@@ -1371,7 +1400,8 @@ export class PokemonService implements OnModuleDestroy {
             await this.botChatService.clientSay(
                 `@${username} failed to update/create pokemon in slot ${slot}. You have been refunded`
             );
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
             return;
         }
         if (!team) {
@@ -1381,7 +1411,7 @@ export class PokemonService implements OnModuleDestroy {
             await this.botChatService.clientSay(
                 `@${username} failed to update/create pokemon in slot ${slot}. You have been refunded`
             );
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
 
             return;
         }
@@ -1404,7 +1434,8 @@ export class PokemonService implements OnModuleDestroy {
                 this.botChatService.clientSay(
                     `@${username}, please enter a slot number between 1 and 6. You have been refunded`
                 );
-                await event.updateStatus('CANCELED');
+                await this.cancelRedemption(event);
+
                 return;
             }
             oauthId = event.userId;
@@ -1418,7 +1449,8 @@ export class PokemonService implements OnModuleDestroy {
         if (!oauthId) {
             this.logger.error('No oauthId found while creating random pokemon', username);
             await this.botChatService.clientSay(`@${username} failed to change pokemon. You have been refunded`);
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
             return;
         }
 
@@ -1430,7 +1462,8 @@ export class PokemonService implements OnModuleDestroy {
             await this.botChatService.clientSay(
                 `@${username}, your pokemon ${randomPokemon.name} has no moves. You have been refunded`
             );
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
             return;
         }
         const isShiny = this.isShiny();
@@ -1469,7 +1502,8 @@ export class PokemonService implements OnModuleDestroy {
             if (err instanceof PokemonRedeemException) {
                 this.logger.error(err);
                 await this.botChatService.clientSay(`${err.message}. You have been refunded`);
-                if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+                if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
                 return;
             }
             this.logger.error(
@@ -1479,7 +1513,8 @@ export class PokemonService implements OnModuleDestroy {
             await this.botChatService.clientSay(
                 `@${username} failed to update/create pokemon in slot ${slot}. You have been refunded`
             );
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+
             return;
         }
         if (!team) {
@@ -1489,7 +1524,7 @@ export class PokemonService implements OnModuleDestroy {
             await this.botChatService.clientSay(
                 `@${username} failed to update/create pokemon in slot ${slot}. You have been refunded`
             );
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
 
             return;
         }

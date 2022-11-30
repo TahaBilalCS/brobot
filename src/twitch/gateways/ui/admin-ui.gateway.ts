@@ -11,6 +11,8 @@ import { forwardRef, Inject, Logger, OnModuleDestroy } from '@nestjs/common';
 import { EventSubChannelRedemptionAddEvent } from '@twurple/eventsub';
 import { IncomingEvents, OutgoingEvents } from 'src/twitch/gateways/streamer/IEvents';
 import { BotChatService } from 'src/twitch/services/bot-chat/bot-chat.service';
+import { ConfigService } from '@nestjs/config';
+import { StreamerApiService } from 'src/twitch/services/streamer-api/streamer-api.service';
 export interface PokemonRoarChatEvent {
     username: string;
     oauthId: string;
@@ -41,14 +43,29 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
     private readonly logger = new Logger(AdminUiGateway.name);
     private totalCreatedConnections = 0;
     private pingInterval?: NodeJS.Timer;
+    private streamerAuthId: string;
 
     @WebSocketServer()
     public server: any;
 
     constructor(
         @Inject(forwardRef(() => BotChatService))
-        private botChatService: BotChatService
-    ) {}
+        private botChatService: BotChatService,
+        @Inject(forwardRef(() => StreamerApiService))
+        private streamerApiService: StreamerApiService,
+        private configService: ConfigService
+    ) {
+        this.streamerAuthId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') ?? '';
+    }
+
+    private async cancelRedemption(event: EventSubChannelRedemptionAddEvent) {
+        await this.streamerApiService.client?.channelPoints.updateRedemptionStatusByIds(
+            this.streamerAuthId,
+            event.rewardId,
+            [event.id],
+            'CANCELED'
+        );
+    }
 
     public get getCurrentClientsOnSocket(): number {
         if (!this.server) {
@@ -138,7 +155,7 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
         }
         if (this.getCurrentClientsOnSocket <= 0) {
             this.logger.warn('Streamer Not Connected While Debs Alert');
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
             await this.botChatService.clientSay('Streamer not connected to browser source. You will be refunded');
             return;
         }
@@ -172,7 +189,7 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
         this.logger.log('Start Pokemon Roar Gateway');
         if (this.getCurrentClientsOnSocket <= 0) {
             this.logger.warn('Streamer Not Connected While Roaring');
-            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
             await this.botChatService.clientSay('Streamer not connected to browser source. You will be refunded');
             return;
         }

@@ -46,6 +46,8 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
 
     public client?: ChatClient;
 
+    private streamerAuthId: string;
+
     constructor(
         private configService: ConfigService,
         private twitchBotAuthService: TwitchBotAuthService,
@@ -58,6 +60,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
     ) {
         this.channel = this.configService.get('TWITCH_STREAMER_CHANNEL_LISTEN') ?? '';
         this.botOauthId = this.configService.get('TWITCH_BOT_OAUTH_ID') ?? '';
+        this.streamerAuthId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') ?? '';
         this.notifyChatInterval = this.createChatNotifyInterval();
         this.prizeRickRollCron = this.createPrizeRickRollCron();
 
@@ -262,27 +265,25 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         }, 1000 * 60 * 40); // Every 40 minutes
     }
 
-    public async enableQuacks(event: EventSubChannelRedemptionAddEvent, streamerAuthId: string): Promise<void> {
+    private async cancelRedemption(event: EventSubChannelRedemptionAddEvent) {
+        await this.streamerApiService.client?.channelPoints.updateRedemptionStatusByIds(
+            this.streamerAuthId,
+            event.rewardId,
+            [event.id],
+            'CANCELED'
+        );
+    }
+    public async enableQuacks(event: EventSubChannelRedemptionAddEvent): Promise<void> {
         try {
-            this.logger.log('Quack 1');
             if (this.canQuack) {
-                await this.streamerApiService.client?.channelPoints.updateRedemptionStatusByIds(
-                    streamerAuthId,
-                    event.rewardId,
-                    [event.id],
-                    'CANCELED'
-                );
-                // await event.updateStatus('CANCELED');
-                this.logger.log('Quack 2');
+                await this.cancelRedemption(event);
                 const username = event.userName;
                 await this.clientSay(`/me @${username}, quacks are already enabled. You have been refunded`);
                 return;
             }
-            this.logger.log('Quack 3');
 
             if (this.adminUiGateway.getCurrentClientsOnSocket <= 0) {
-                this.logger.log('Quack 4');
-                await event.updateStatus('CANCELED');
+                await this.cancelRedemption(event);
                 await this.clientSay(
                     `/me Trama is not connected to browser source, so quacks won't work. You have been refunded`
                 );
@@ -299,13 +300,13 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         try {
             const userToBan = event.input.trim().toLowerCase();
             if (userToBan === 'tramadc') {
-                event.updateStatus('CANCELED');
+                await this.cancelRedemption(event);
                 this.clientSay(`/me Nice try... You have been refunded`);
                 return;
             }
             const userAPI = await this.streamerApiService.client?.users.getUserByName(userToBan);
             if (!userAPI) {
-                event.updateStatus('CANCELED');
+                await this.cancelRedemption(event);
                 this.clientSay(
                     `/me Could not find user, ${userToBan}. @${event.userDisplayName
                         .trim()
@@ -329,12 +330,12 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                     this.clientSay(`/me See you in 3 minutes, @${userToBan}`);
                 })
                 .catch(err => {
-                    event.updateStatus('CANCELED');
+                    this.cancelRedemption(event);
                     this.clientSay(`/me Error Timing Out User :thinking:. You have been refunded`);
                     this.logger.error('Error Timing Out User 1', err);
                 });
         } catch (err) {
-            event.updateStatus('CANCELED');
+            await this.cancelRedemption(event);
             this.clientSay(`/me Error Timing Out User :thinking:. You have been refunded`);
             this.logger.error('Error Timing Out User ', err);
         }
