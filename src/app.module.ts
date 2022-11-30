@@ -15,6 +15,9 @@ import { JsonBodyParserMiddleware } from 'src/JsonBodyParser.middleware';
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(JsonBodyParserMiddleware).forRoutes({ path: '*', method: RequestMethod.POST });
+        // todo need a better way to configure routes
+        consumer
+            .apply(JsonBodyParserMiddleware)
+            .forRoutes({ path: '/updateRewardsStatus', method: RequestMethod.POST });
     }
 }
