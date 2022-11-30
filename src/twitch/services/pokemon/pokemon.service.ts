@@ -1264,6 +1264,7 @@ export class PokemonService implements OnModuleDestroy {
     public async redeemPokemonRoar(event: EventSubChannelRedemptionAddEvent | PokemonRoarChatEvent): Promise<void> {
         let username, oauthId;
         if (event instanceof EventSubChannelRedemptionAddEvent) {
+            console.log('Redeem Pokemon Roar Event', event);
             username = event.userDisplayName.trim().toLowerCase();
             oauthId = event.userId;
         } else {
@@ -1280,7 +1281,9 @@ export class PokemonService implements OnModuleDestroy {
 
         let userStarterPokemon;
         try {
+            this.logger.log('Roar Get Pokemon');
             userStarterPokemon = await this.pokemonDbService.findStarterPokemon(oauthId);
+            this.logger.log('Roar Get Pokemon Done');
             if (!userStarterPokemon) {
                 await this.botChatService.clientSay(`@${username} you have no starter pokemon. You have been refunded`);
                 if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
