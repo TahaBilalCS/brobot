@@ -79,8 +79,7 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
                 cost: 1250,
                 prompt: 'Level up your pokemon in slot 1. Failed level ups will be automatically refunded. NO REFUNDS FOR SUCCESSFUL LEVEL UPS',
                 isEnabled: true,
-                backgroundColor: '#911b00',
-                userInputRequired: true
+                backgroundColor: '#911b00'
             });
 
             pokemonCreate = await this.client?.channelPoints.createCustomReward(this.streamerOauthId, {
@@ -142,10 +141,10 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
                 return;
             }
             this.channelPointRewards = channelPointRewards;
-            // this.channelPointRewards.forEach(reward => {
-            //     console.log('Deleting');
-            //     this.client?.channelPoints.deleteCustomReward(this.streamerOauthId, reward.id);
-            // });
+            this.channelPointRewards.forEach(reward => {
+                console.log('Deleting');
+                this.client?.channelPoints.deleteCustomReward(this.streamerOauthId, reward.id);
+            });
             this.logger.log('Retrieved Channel Point Rewards', this.channelPointRewards.length);
         } catch (err) {
             // This will typically error out if streamer did not authorize scopes or is not affiliate

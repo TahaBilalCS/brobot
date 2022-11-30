@@ -175,6 +175,7 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
             return;
         }
         this.server.clients.forEach((client: any) => {
+            this.logger.log('SENDING POKEMON ROAR');
             const wsEvent = JSON.stringify({ event: `${OutgoingEvents.POKEMON_ROAR}`, data: pokemonData });
             client.send(wsEvent);
         });
