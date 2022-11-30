@@ -128,6 +128,24 @@ export class AppController {
         }
     }
 
+    // todo - also why no use streamerauth guard?
+    @Post('deleteChannelPointRedeems')
+    @UseGuards(AuthenticatedGuard)
+    async deleteChannelPointRedeems(@Req() req: Request) {
+        const user = req.user as any;
+        const userOauthId = user?.oauthId;
+        if (userOauthId && userOauthId === this.streamerAuthId) {
+            try {
+                await this.streamerApiService.deleteChannelPointRewards();
+                return { success: true };
+            } catch (err) {
+                throw new InternalServerErrorException('Error deleting channel point redeems');
+            }
+        } else {
+            throw new ForbiddenException('You are not the streamer');
+        }
+    }
+
     @Post('disableQuack')
     @UseGuards(AuthenticatedGuard)
     disableQuack(@Req() req: Request) {
