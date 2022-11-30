@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { BotChatService, CommandStream } from 'src/twitch/services/bot-chat/bot-chat.service';
 import { StreamerGateway } from 'src/twitch/gateways/streamer/streamer.gateway';
-import * as fs from 'fs';
+// import * as fs from 'fs';
 
 import {
     pokeSlaughterApproachList,
