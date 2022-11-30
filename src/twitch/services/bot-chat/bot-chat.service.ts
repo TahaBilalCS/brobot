@@ -86,9 +86,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
             this.logger.error('Client Not Initialized For Chat', msg);
             return;
         }
-        // TODO NOW BRING BACK
-        console.log('Saying', msg);
-        // await this.client.say(this.channel, msg);
+        await this.client.say(this.channel, msg);
     }
 
     // todo remove

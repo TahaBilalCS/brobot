@@ -160,7 +160,6 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
             return;
         }
         this.server.clients.forEach((client: any) => {
-            console.log('Sending Debs Alert', name, msg);
             const wsEvent = JSON.stringify({ event: `${OutgoingEvents.DEBS_ALERT}`, data: { msg, name } });
             this.map[name] = event;
             client.send(wsEvent);
