@@ -142,6 +142,10 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
                 return;
             }
             this.channelPointRewards = channelPointRewards;
+            this.channelPointRewards.forEach(reward => {
+                console.log('Deleting');
+                this.client?.channelPoints.deleteCustomReward(this.streamerOauthId, reward.id);
+            });
             this.logger.log('Retrieved Channel Point Rewards', this.channelPointRewards.length);
         } catch (err) {
             // This will typically error out if streamer did not authorize scopes or is not affiliate
