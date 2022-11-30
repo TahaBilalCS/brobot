@@ -124,7 +124,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
             // todo NOW
             // this.middleware.onRevoke()
             // this.middleware.onVerify()
-            this.logger.warn('Mark as Ready');
+            this.logger.warn('Mark as Ready', streamerAuthId);
             await this.middleware.markAsReady();
             this.logger.warn('Subscribing to ChannelRedemptionAddEvents');
             // Subscribe to all channel point redemption events
@@ -132,23 +132,21 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                 streamerAuthId,
                 async (event: EventSubChannelRedemptionAddEvent) => {
                     //// const username = event.userDisplayName.trim().toLowerCase();
-                    // console.info(`@${event.userDisplayName} just redeemed ${event.rewardTitle}!`);
+                    console.info(`@${event.userDisplayName} just redeemed ${event.rewardTitle}!`);
                     // Handle redemptions tied to Pokemon
-                    // if (event.rewardTitle === 'Pokemon Roar') {
-                    //     await this.pokemonService.redeemPokemonRoar(event);
-                    // } else if (event.rewardTitle === 'Pokemon Level Up') {
-                    //     await this.pokemonService.redeemLevelUp(event);
-                    // } else if (event.rewardTitle === 'Pokemon Create') {
-                    //     await this.pokemonService.redeemPokemonCreate(event);
-                    // } else if (event.rewardTitle === 'DEBS Alert') {
-                    //     await this.adminUiGateway.sendDebsAlert(event);
-                    // } else if (event.rewardTitle === 'Timeout User') {
-                    //     await this.botChatService.redeemTimeoutUser(event);
-                    // } else if (event.rewardTitle === 'Enable Quacks') {
-                    //     // await this.botChatService.enableQuacks(event);
-                    //     console.log('Done Quacks');
-                    //     return;
-                    // }
+                    if (event.rewardTitle === 'Pokemon Roar') {
+                        await this.pokemonService.redeemPokemonRoar(event);
+                    } else if (event.rewardTitle === 'Pokemon Level Up') {
+                        await this.pokemonService.redeemLevelUp(event);
+                    } else if (event.rewardTitle === 'Pokemon Create') {
+                        await this.pokemonService.redeemPokemonCreate(event);
+                    } else if (event.rewardTitle === 'DEBS Alert') {
+                        await this.adminUiGateway.sendDebsAlert(event);
+                    } else if (event.rewardTitle === 'Timeout User') {
+                        await this.botChatService.redeemTimeoutUser(event);
+                    } else if (event.rewardTitle === 'Enable Quacks') {
+                        await this.botChatService.enableQuacks(event);
+                    }
                 }
             );
             // no auth needed
