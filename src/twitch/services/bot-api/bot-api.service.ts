@@ -130,7 +130,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
             // Subscribe to all channel point redemption events
             await this.middleware.subscribeToChannelRedemptionAddEvents(
                 streamerAuthId,
-                (event: EventSubChannelRedemptionAddEvent) => {
+                async (event: EventSubChannelRedemptionAddEvent) => {
                     // const username = event.userDisplayName.trim().toLowerCase();
                     console.info(`@${event.userDisplayName} just redeemed ${event.rewardTitle}!`);
                     // Handle redemptions tied to Pokemon
@@ -145,7 +145,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                     } else if (event.rewardTitle === 'Timeout User') {
                         this.botChatService.redeemTimeoutUser(event);
                     } else if (event.rewardTitle === 'Enable Quacks') {
-                        this.botChatService.enableQuacks(event);
+                        await this.botChatService.enableQuacks(event);
                         console.log('Done Quacks');
                     }
                 }
