@@ -423,7 +423,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                                             this.streamerAuthId,
                                             userId
                                         );
-                                    }, 30000);
+                                    }, 33000);
                                 }
                             })
                             .catch(err => {
