@@ -93,6 +93,7 @@ export class TwitchUserStrategy extends PassportStrategy(Strategy, 'twitch') {
     }
 
     async validate(accessToken: string, refreshToken: string, profile: TwitchOAuthProfile): Promise<TwitchUserAuthReq> {
+        this.logger.log('Login User');
         const { id, created_at, email, profile_image_url, display_name } = profile;
 
         const userDetails: Prisma.TwitchUserCreateInput = {
@@ -139,6 +140,7 @@ export class TwitchStreamerStrategy extends PassportStrategy(Strategy, 'twitch-s
     }
 
     async validate(accessToken: string, refreshToken: string, profile: TwitchOAuthProfile): Promise<TwitchUserAuthReq> {
+        this.logger.log('Login Streamer');
         // TODO: Better way than manual check
         if (profile.id !== this.configService.get('TWITCH_STREAMER_OAUTH_ID')) {
             this.logger.error('Reject this user abuser', profile.id);
@@ -194,6 +196,7 @@ export class TwitchBotStrategy extends PassportStrategy(Strategy, 'twitch-bot') 
     }
 
     async validate(accessToken: string, refreshToken: string, profile: TwitchOAuthProfile): Promise<TwitchUserAuthReq> {
+        this.logger.log('Login Bot');
         if (profile.id !== this.configService.get('TWITCH_BOT_OAUTH_ID')) {
             this.logger.error('Reject this user abuser', profile.id);
             throw new UnauthorizedException();
