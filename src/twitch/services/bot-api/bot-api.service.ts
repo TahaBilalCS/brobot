@@ -132,7 +132,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                 streamerAuthId,
                 async (event: EventSubChannelRedemptionAddEvent) => {
                     //// const username = event.userDisplayName.trim().toLowerCase();
-                    console.info(`@${event.userDisplayName} just redeemed ${event.rewardTitle}!`);
+                    this.logger.log(`@${event.userDisplayName} just redeemed ${event.rewardTitle}!`);
                     // Handle redemptions tied to Pokemon
                     if (event.rewardTitle === 'Pokemon Roar') {
                         await this.pokemonService.redeemPokemonRoar(event);
