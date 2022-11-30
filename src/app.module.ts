@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { TwitchModule } from './twitch/twitch.module';
+import { JsonBodyParserMiddleware } from 'src/JsonBodyParser.middleware';
 
 @Module({
     providers: [AppService],
@@ -12,4 +13,8 @@ import { TwitchModule } from './twitch/twitch.module';
     imports: [DatabaseModule, AuthModule, ConfigModule.forRoot(), TwitchModule], // Socket Module
     exports: []
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(JsonBodyParserMiddleware).forRoutes({ path: '*', method: RequestMethod.POST });
+    }
+}
