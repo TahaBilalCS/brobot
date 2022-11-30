@@ -14,7 +14,10 @@ async function bootstrap() {
     const logger = new Logger('Main');
 
     // TODO-BT Create socket from app?  Probably setup socket before app.use
-    const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'error', 'warn'] });
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+        logger: ['log', 'error', 'warn'],
+        bodyParser: false
+    });
     const origin = process.env.UI_URL || '';
     const domain = process.env.NODE_ENV === 'production' ? '.brobot.live' : undefined;
 
