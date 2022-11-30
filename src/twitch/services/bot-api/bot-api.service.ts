@@ -145,7 +145,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                     } else if (event.rewardTitle === 'Timeout User') {
                         await this.botChatService.redeemTimeoutUser(event);
                     } else if (event.rewardTitle === 'Enable Quacks') {
-                        await this.botChatService.enableQuacks(event);
+                        await this.botChatService.enableQuacks(event, streamerAuthId);
                     }
                 }
             );

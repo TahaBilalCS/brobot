@@ -262,11 +262,17 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         }, 1000 * 60 * 40); // Every 40 minutes
     }
 
-    public async enableQuacks(event: EventSubChannelRedemptionAddEvent): Promise<void> {
+    public async enableQuacks(event: EventSubChannelRedemptionAddEvent, streamerAuthId: string): Promise<void> {
         try {
             this.logger.log('Quack 1');
             if (this.canQuack) {
-                await event.updateStatus('CANCELED');
+                await this.streamerApiService.client?.channelPoints.updateRedemptionStatusByIds(
+                    streamerAuthId,
+                    event.rewardId,
+                    [event.id],
+                    'CANCELED'
+                );
+                // await event.updateStatus('CANCELED');
                 this.logger.log('Quack 2');
                 const username = event.userName;
                 await this.clientSay(`/me @${username}, quacks are already enabled. You have been refunded`);
