@@ -41,7 +41,7 @@ model TwitchStreamerAuth {
   twitchUser      TwitchUser @relation(fields: [userOauthId], references: [oauthId], onDelete: Cascade)
 }
 
-/// Made an account on admin.brobot.live
+/// Made an account on brobot.live
 model TwitchUserRegistered {
   id              String     @id @default(uuid())
   userOauthId     String     @unique

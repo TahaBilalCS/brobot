@@ -13,11 +13,3 @@ import { TwitchModule } from './twitch/twitch.module';
     exports: []
 })
 export class AppModule {}
-
-@Module({
-    providers: [],
-    controllers: [],
-    imports: [], // Socket Module
-    exports: []
-})
-export class TestAppModule {}

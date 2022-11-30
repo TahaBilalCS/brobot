@@ -67,6 +67,7 @@ export class AppController {
     @Get('/pokemonTeams')
     async findPokemonTeam(@Query('teamName') query: string): Promise<TwitchUserWithOnlyNameAndPokemonTeam> {
         let user;
+        this.logger.log('Find Pokemon Team Used', query);
         try {
             const username = query.toString().toLowerCase();
             user = await this.streamerApiService.client?.users.getUserByName(username);
