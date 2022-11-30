@@ -9,9 +9,7 @@ import { AccessToken } from '@twurple/auth';
 export class TwitchBotAuthService {
     private readonly logger = new Logger(TwitchBotAuthService.name);
 
-    constructor(private readonly prisma: PrismaService) {
-        console.log('TwitchBotAuthService Constructor');
-    }
+    constructor(private readonly prisma: PrismaService) {}
 
     // for authenticating passport
     public async upsertUserAndRegisteredBot(

@@ -1,22 +1,23 @@
-import { PassportSerializer } from '@nestjs/passport';
-import { Inject, Injectable } from '@nestjs/common';
+import { PassportSerializer, PassportStrategy } from '@nestjs/passport';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { TwitchUserAuthReq } from 'src/auth/strategies';
 import { AuthService } from 'src/auth/services/auth/auth.service';
 
 @Injectable()
 export class TwitchSessionSerializer extends PassportSerializer {
+    private readonly logger = new Logger(PassportSerializer.name);
+
     constructor(@Inject('AUTH_SERVICE') private readonly authService: AuthService) {
         super();
     }
 
     serializeUser(user: TwitchUserAuthReq, done: (err: Error | null, user: TwitchUserAuthReq) => void) {
-        console.log('SERIALIZE USER', user.displayName, user.scope?.length);
+        // todo figure this all out
         done(null, user);
     }
 
     // Determine which scope a user is logged in with
     async deserializeUser(user: TwitchUserAuthReq, done: (err: Error | null, user: any | null) => void): Promise<any> {
-        console.log('DESERIALIZE USER INIT', user.displayName, user.scope?.length);
         let userDB;
         let scope;
         if (user.roles.includes('StreamerAuth')) {
@@ -29,7 +30,7 @@ export class TwitchSessionSerializer extends PassportSerializer {
             userDB = await this.authService.findTwitchUserWithRegistered(user.oauthId);
             scope = userDB?.registeredUser?.scope;
         } else {
-            console.error('Unknown Role', user);
+            this.logger.error('Unknown Role', user);
         }
 
         return userDB

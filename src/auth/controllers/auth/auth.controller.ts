@@ -8,61 +8,42 @@ export class AuthController {
     @Get('login3')
     @UseGuards(TwitchBotAuthGuard)
     login3(@Req() req: Request) {
-        console.log('BOT LOGIN', req.user);
         return req.user;
     }
 
     @Get('callback3')
     @UseGuards(TwitchBotAuthGuard)
     redirect3(@Req() req: Request, @Res() res: Response) {
-        console.log('BOT CALLBACK', req.user);
-        if (process.env.NODE_ENV === 'production') {
-            res.redirect('https://admin.brobot.live');
-        } else {
-            res.redirect('http://localhost:4200/');
-        }
+        res.redirect(process.env.UI_URL || '');
     }
 
     @Get('login2')
     @UseGuards(TwitchStreamerAuthGuard)
     login2(@Req() req: Request) {
-        console.log('STREAMER LOGIN', req.user);
         return req.user;
     }
 
     @Get('callback2')
     @UseGuards(TwitchStreamerAuthGuard)
     redirect2(@Req() req: Request, @Res() res: Response) {
-        console.log('STREAMER CALLBACK');
-        if (process.env.NODE_ENV === 'production') {
-            res.redirect('https://admin.brobot.live');
-        } else {
-            res.redirect('http://localhost:4200/');
-        }
+        res.redirect(process.env.UI_URL || '');
     }
 
     @Get('login')
     @UseGuards(TwitchUserAuthGuard)
     login(@Req() req: Request) {
-        console.log('USER LOGIN');
         return req.user;
     }
 
     @Get('callback')
     @UseGuards(TwitchUserAuthGuard)
     redirect(@Req() req: Request, @Res() res: Response) {
-        console.log('USER CALLBACK');
-        if (process.env.NODE_ENV === 'production') {
-            res.redirect('https://admin.brobot.live');
-        } else {
-            res.redirect('http://localhost:4200/');
-        }
+        res.redirect(process.env.UI_URL || '');
     }
 
     @Get('status')
     @UseGuards(AuthenticatedGuard)
     status(@Req() req: Request) {
-        // console.log('GET STATUS', req.user);
         return req.user;
     }
 
@@ -72,7 +53,6 @@ export class AuthController {
     // when logging in from b_robot after logging out after Login Bot, it automatically has us logged in with bot session instead of user session
     @Get('logout')
     logout(@Req() req: Request, @Res() res: Response) {
-        console.log('LOGOUT', req.session);
         // res.clearCookie('connect.sid');
         req.logout(() => {
             // todo find out why we need to do this, if you logout from certain pages in UI, it doesn't work without this

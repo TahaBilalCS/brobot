@@ -68,11 +68,11 @@ export type TwitchUserWithOnlyNameAndPokemonTeam = Prisma.TwitchUserGetPayload<
 @Injectable()
 export class TwitchUserService {
     constructor(private readonly prisma: PrismaService) {}
-    public async getTwitchUserWithOnlyNameAndPokemonTeamByName(
-        name: string
+    public async getTwitchUserWithOnlyNameAndPokemonTeamByOauthID(
+        oauthId: string
     ): Promise<TwitchUserWithOnlyNameAndPokemonTeam | null> {
         const query: TwitchUserGetPayload<any> = {
-            where: { displayName: name },
+            where: { oauthId: oauthId },
             select: { displayName: true, pokemonTeam: { select: { pokemon: { select: excludedIdsPokemon } } } }
         };
         return (await this.prisma.twitchUser.findFirst(query)) as TwitchUserWithOnlyNameAndPokemonTeam | null;

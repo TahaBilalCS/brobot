@@ -19,16 +19,14 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
     private channelPointRewards: HelixCustomReward[] = [];
 
     constructor(private configService: ConfigService, private twitchStreamerAuthService: TwitchStreamerAuthService) {
-        console.log(`${StreamerApiService.name} Constructor`);
         this.streamerOauthId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') ?? '';
     }
 
     onModuleInit(): any {
-        console.log('MODULE INIT StreamerApiService');
+        //
     }
 
     async onModuleDestroy(): Promise<void> {
-        console.log('StreamerApiService MODULE DESTROY');
         // use a for loop to loop through all pokemon rewards+
         try {
             await this.updateCustomRewards(true);
@@ -47,7 +45,7 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
         }
         for (let i = 0; i < this.channelPointRewards.length; i++) {
             const reward = this.channelPointRewards[i];
-            console.log(`${isPaused ? 'Pausing' : 'Resuming'} ${reward.title}`);
+            this.logger.warn(`${isPaused ? 'Pausing' : 'Resuming'} ${reward.title}`);
             try {
                 await this.client?.channelPoints.updateCustomReward(this.streamerOauthId, reward.id, { isPaused });
             } catch (err) {

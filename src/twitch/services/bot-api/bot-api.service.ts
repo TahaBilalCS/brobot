@@ -38,7 +38,6 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
         private adminUiGateway: AdminUiGateway,
         private botChatService: BotChatService
     ) {
-        console.log('Twitch Bot API Client Service Constructor');
         this.streamerAuthId = this.configService.get<string>('TWITCH_STREAMER_OAUTH_ID') || '';
         const clientId = this.configService.get('TWITCH_CLIENT_ID');
         const clientSecret = this.configService.get('TWITCH_CLIENT_SECRET');
@@ -66,7 +65,6 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
     }
 
     public async init() {
-        console.log('Async Init Bot Api Event Subs');
         try {
             if (this.devListener) {
                 await this.client.eventSub.deleteAllSubscriptions(); // Clean up subscriptions on dev
@@ -85,7 +83,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
         try {
             // Used in prod
             if (this.middleware) {
-                console.log('Applying Middleware');
+                this.logger.warn('Applying Middleware');
                 await this.middleware.apply(app);
             }
         } catch (err) {
@@ -98,15 +96,15 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
         const streamerAuthId = this.configService.get('TWITCH_STREAMER_OAUTH_ID');
         // If in dev
         if (this.devListener) {
-            console.log('Subscribing to dev event subs');
+            this.logger.warn('Subscribing to dev event subs');
             // Subscribe to unban event
             await this.devListener.subscribeToChannelUnbanEvents(streamerAuthId, (event: EventSubChannelUnbanEvent) => {
                 // void twurpleInstance.twitchBot?.pokemon.roarUserPokemon(username, event.userId);
-                console.log(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
+                this.logger.warn(`${event.broadcasterDisplayName} just unbanned ${event.userDisplayName}!`);
             });
             // Subscribe to ban event
             await this.devListener.subscribeToChannelBanEvents(streamerAuthId, (event: EventSubChannelBanEvent) => {
-                console.log(`${event.broadcasterDisplayName} just banned ${event.userDisplayName}!`);
+                this.logger.warn(`${event.broadcasterDisplayName} just banned ${event.userDisplayName}!`);
             });
 
             // Test same as prod
@@ -114,22 +112,20 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                 streamerAuthId,
                 (event: EventSubChannelRedemptionAddEvent) => {
                     const username = event.userDisplayName.trim().toLowerCase();
-                    console.info(`@${username} just redeemed ${event.rewardTitle}!`);
+                    this.logger.warn(`@${username} just redeemed ${event.rewardTitle}!`);
                 }
             );
             await this.devListener.subscribeToChannelRaidEventsTo(streamerAuthId, (event: EventSubChannelRaidEvent) => {
-                console.info(`${event.raidingBroadcasterName} raided ${event.raidedBroadcasterName}!`);
+                this.logger.warn(`${event.raidingBroadcasterName} raided ${event.raidedBroadcasterName}!`);
             });
-            console.log('Finished subscribe to event subs');
         }
         // If in prod
         else if (this.middleware) {
             // todo NOW
             // this.middleware.onRevoke()
             // this.middleware.onVerify()
-            console.log('Subscribing to prod eventsubs');
             await this.middleware.markAsReady();
-            console.log('Subscribing to ChannelRedemptionAddEvents');
+            this.logger.warn('Subscribing to ChannelRedemptionAddEvents');
             // Subscribe to all channel point redemption events
             await this.middleware.subscribeToChannelRedemptionAddEvents(
                 streamerAuthId,
@@ -150,7 +146,6 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                     }
                 }
             );
-            console.log('Subscribing to ChannelRaidEventsTo');
             // no auth needed
             // Subscribe to raid events
             const channelRaid = await this.middleware.subscribeToChannelRaidEventsTo(
@@ -167,10 +162,10 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
     }
 
     onModuleInit(): any {
-        console.log('MODULE INIT BotApiService');
+        //
     }
 
     async onModuleDestroy(): Promise<void> {
-        console.log('BotApiService MODULE DESTROY');
+        //
     }
 }

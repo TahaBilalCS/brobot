@@ -3,9 +3,8 @@ import {
     Controller,
     ForbiddenException,
     Get,
-    HttpException,
-    HttpStatus,
     InternalServerErrorException,
+    Logger,
     NotFoundException,
     Post,
     Query,
@@ -14,23 +13,21 @@ import {
 } from '@nestjs/common';
 import { BotApiService } from 'src/twitch/services/bot-api/bot-api.service';
 import { BotChatService } from 'src/twitch/services/bot-chat/bot-chat.service';
-import {
-    PokemonTeamWithPokemon,
-    TwitchPokemonService
-} from 'src/database/services/twitch-pokemon/twitch-pokemon.service';
+import { TwitchPokemonService } from 'src/database/services/twitch-pokemon/twitch-pokemon.service';
 import { StreamerApiService } from 'src/twitch/services/streamer-api/streamer-api.service';
-import { PokemonTeam } from '@prisma/client';
 import {
     TwitchUserService,
     TwitchUserWithOnlyNameAndPokemonTeam
 } from 'src/database/services/twitch-user/twitch-user.service';
 import { PokemonService } from 'src/twitch/services/pokemon/pokemon.service';
-import { AuthenticatedGuard, TwitchStreamerAuthGuard } from 'src/auth/guards';
+import { AuthenticatedGuard } from 'src/auth/guards';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 
 @Controller()
 export class AppController {
+    private readonly logger = new Logger(AppController.name);
+
     private readonly streamerAuthId: string;
     constructor(
         private botApiService: BotApiService,
@@ -41,7 +38,6 @@ export class AppController {
         private configService: ConfigService,
         private pokemonService: PokemonService
     ) {
-        console.log('AppController Constructor');
         this.streamerAuthId = this.configService.get<string>('TWITCH_STREAMER_OAUTH_ID') || '00000000';
     }
 
@@ -67,25 +63,36 @@ export class AppController {
         return await this.pokemonDbService.getTopPokemonLeaderboard();
     }
 
+    // TODO NOW need to throttle this endpoint since we are using api service
     @Get('/pokemonTeams')
     async findPokemonTeam(@Query('teamName') query: string): Promise<TwitchUserWithOnlyNameAndPokemonTeam> {
-        console.log('findPokemonTeam', query);
+        let user;
+        try {
+            const username = query.toString().toLowerCase();
+            user = await this.streamerApiService.client?.users.getUserByName(username);
+        } catch (err) {
+            this.logger.error('Finding User errored found for team', err);
+            throw new NotFoundException('Finding user did not succeed');
+        }
+
+        if (!user || !user.id) {
+            this.logger.error('No user or OauthID', user);
+            throw new NotFoundException('User not found');
+        }
         let team;
         try {
-            team = await this.twitchUserService.getTwitchUserWithOnlyNameAndPokemonTeamByName(query);
+            team = await this.twitchUserService.getTwitchUserWithOnlyNameAndPokemonTeamByOauthID(user.id);
         } catch (err) {
-            console.error('Error finding team', err);
+            this.logger.error('Team Errored for user', err, team);
             throw new InternalServerErrorException('Error Finding Team');
         }
         if (!team) throw new NotFoundException('Team not found');
         return team;
     }
 
-    // todo
     @Post('updateRewardsStatus')
     @UseGuards(AuthenticatedGuard)
     async updateRewardsStatus(@Req() req: Request, @Body() body: { isPaused: boolean }) {
-        console.log('updateRewardsStatus', body);
         const user = req.user as any;
         const userOauthId = user?.oauthId;
         if (body.isPaused !== true && body.isPaused !== false) {

@@ -35,7 +35,6 @@ export class AuthService implements AuthenticationProvider {
         userDetails: Prisma.TwitchUserCreateInput,
         registeredUserDetails: TwitchUserRegisteredIncomplete
     ) {
-        console.log('Validate Or Create Twitch USER');
         return this.twitchUserService.upsertUserAndRegisteredUser(userDetails, registeredUserDetails);
     }
 
@@ -43,7 +42,6 @@ export class AuthService implements AuthenticationProvider {
         userDetails: Prisma.TwitchUserCreateInput,
         registeredStreamerDetails: TwitchBotOrStreamerRegisteredIncomplete
     ) {
-        console.log('Validate Or Create Twitch STREAMER');
         return this.twitchStreamerAuthService.upsertUserAndRegisteredStreamer(userDetails, registeredStreamerDetails);
     }
 
@@ -51,7 +49,6 @@ export class AuthService implements AuthenticationProvider {
         userDetails: Prisma.TwitchUserCreateInput,
         registeredBotDetails: TwitchBotOrStreamerRegisteredIncomplete
     ) {
-        console.log('Validate Or Create Twitch BOT', userDetails);
         return this.twitchBotAuthService.upsertUserAndRegisteredBot(userDetails, registeredBotDetails);
     }
 }

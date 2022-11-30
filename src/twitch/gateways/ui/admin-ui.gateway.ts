@@ -25,16 +25,16 @@ export interface DebsAlertEvent {
     path: '/api/admin-ui',
     verifyClient: (info: any, done: any) => {
         const headers = info.req.headers;
-        console.log('UI Socket Headers Connection', headers);
-        console.log('UI Socket Headers Connection', headers.origin);
-        console.log('UI Socket Headers Connection', headers['user-agent']);
+        console.warn('UI Socket Headers Connection', headers);
+        console.warn('UI Socket Headers Connection', headers.origin);
+        console.warn('UI Socket Headers Connection', headers['user-agent']);
         return done(true);
         // if (!token) return done(false, 401, 'Unauthorized');
         // if (token === process.env.WS_SECRET) return done(true);
         // return done(false, 401, 'Unauthorized');
     },
     cors: {
-        origin: process.env.NODE_ENV === 'production' ? 'https://admin.brobot.live' : 'http://localhost:4200'
+        origin: process.env.UI_URL
     }
 })
 export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, OnModuleDestroy {
@@ -48,9 +48,7 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
     constructor(
         @Inject(forwardRef(() => BotChatService))
         private botChatService: BotChatService
-    ) {
-        this.logger.log('AdminUiGateway Constructor');
-    }
+    ) {}
 
     public get getCurrentClientsOnSocket(): number {
         if (!this.server) {
@@ -61,7 +59,7 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
     }
 
     afterInit(server: any): any {
-        this.logger.log('UI Socket Initialized');
+        this.logger.warn('UI Socket Initialized');
         server.on('error', (err: any) => {
             this.logger.error('Server WS Error', err);
         });
@@ -73,7 +71,6 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
 
         this.pingInterval = setInterval(() => {
             server.clients.forEach((client: any) => {
-                console.log('Pinging UI Client', client.id);
                 if (!client.isAlive) {
                     this.logger.warn(`UI CLIENT SOCKET NOT ALIVE, TERMINATE`);
                     client.terminate();
@@ -87,7 +84,6 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
     handleConnection(client: any, ...args: any[]): any {
         const req = args[0];
         client.on('pong', () => {
-            console.log('Received Pong From UI');
             client.isAlive = true;
         });
 
@@ -115,7 +111,6 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
     }
 
     handleDisconnect(client: any): any {
-        this.logger.log('UI Client Disconnected');
         // twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
         // twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
         const id = client.id ? client.id : '';
@@ -124,16 +119,14 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
     }
 
     async onModuleDestroy(): Promise<void> {
-        console.log('AdminUIGateway MODULE DESTROY');
         this.server.clients.forEach((client: any) => {
-            console.log('Terminating UI Clients', client?.id);
+            this.logger.warn('Terminating UI Clients', client?.id);
             client.terminate();
         });
     }
 
     map: any = {};
     public async sendDebsAlert(event: EventSubChannelRedemptionAddEvent | DebsAlertEvent) {
-        console.log('DEBS Alert', event);
         let msg = '',
             name = '';
         if (event instanceof EventSubChannelRedemptionAddEvent) {
@@ -150,7 +143,6 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
             return;
         }
         this.server.clients.forEach((client: any) => {
-            console.log('DEBS Client', client?.id);
             const wsEvent = JSON.stringify({ event: `${OutgoingEvents.DEBS_ALERT}`, data: { msg, name } });
             this.map[name] = event;
             client.send(wsEvent);
@@ -167,8 +159,6 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
         pokemon: any,
         event: EventSubChannelRedemptionAddEvent | PokemonRoarChatEvent
     ): Promise<void> {
-        console.log('Pokemon Roar Socket', pokemon, event);
-
         const pokemonData = {
             name: pokemon.name,
             color: pokemon.color,
@@ -185,23 +175,10 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
             return;
         }
         this.server.clients.forEach((client: any) => {
-            console.log('Pokemon Roar Client', client?.id);
             const wsEvent = JSON.stringify({ event: `${OutgoingEvents.POKEMON_ROAR}`, data: pokemonData });
             client.send(wsEvent);
         });
     }
-
-    @SubscribeMessage('message')
-    handleMessage(client: any, data: any): WsResponse<any> {
-        console.log('New Message UI', data);
-        return { event: 'message', data: 'Hello world!' };
-    }
-
-    // @SubscribeMessage(IncomingEvents.POKEMON_ROAR_COMPLETE)
-    // handlePokemonRoar(client: any, data: any): void {
-    //     this.logger.log('Pokemon Roar Complete');
-    //     if (data) this.botChatService.clientSay(`Uhoh, something broke :(`);
-    // }
 
     @SubscribeMessage(IncomingEvents.DEBS_ALERT_COMPLETE)
     async handleDebsAlert(client: any, data: string): Promise<void> {

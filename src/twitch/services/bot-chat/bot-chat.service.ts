@@ -67,11 +67,10 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         this.messageSubscription = this.msgStream.subscribe(async (stream: MessageStream) => {
             await this.handleMessage(stream);
         });
-        console.log('BotChatService Constructor');
     }
 
     onModuleInit(): any {
-        console.log('MODULE INIT BotChatService');
+        //
     }
 
     onModuleDestroy(): any {
@@ -81,16 +80,19 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
 
     public async clientSay(msg: string) {
         if (!this.client) {
-            this.logger.error('Client Not Initialized', msg);
+            this.logger.error('Client Not Initialized For Chat', msg);
             return;
         }
         await this.client.say(this.channel, msg);
     }
 
+    // todo remove
+    public async checkUser(obj: { pokemonLevel: number; pokemonName: string; twitchName: string; uid: string }) {
+        return this.streamerApiService.client?.users.getUserById(obj.uid);
+    }
+
     async init() {
-        this.logger.log('BotChatService Async Init');
         await this.initChatClient();
-        this.logger.log('BotChatService Done Init');
     }
 
     private async initChatClient() {
@@ -108,7 +110,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
 
         this.client = await this.createChatBotClientAndWaitForConnection(refreshingAuthProvider);
         this.client.onMessage((channel, username, message, pvtMessage: TwitchPrivateMessage) => {
-            this.logger.log(`@${username}: ${message}`);
+            // this.logger.log(`@${username}: ${message}`);
 
             const formattedMsg = message.trim();
 
@@ -246,10 +248,13 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
     }
 
     private createChatNotifyInterval(): NodeJS.Timer {
+        const uiUrl = process.env.UI_URL || '';
+        const commandsUrl = `${uiUrl}/commands`;
+
         return setInterval(() => {
             if (this.streamerGateway.getCurrentClientsOnSocket > 0) {
                 this.clientSay(
-                    `Remember to use the commands: "!chatban" or "!voiceban", when ${this.channel} gets too emotional. Also rock, paper, scissor: !rps. Also pokemon: https://imgur.com/a/2u62OUh`
+                    `Remember to use the commands: "!chatban" or "!voiceban", when ${this.channel} gets too emotional. Other commands can be found here: ${commandsUrl}`
                 );
             }
         }, 1000 * 60 * 40); // Every 40 minutes
@@ -372,7 +377,6 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                         // this.client
                         //     ?.timeout(this.channel, stream.username, 30, 'Lulu')
                         //     .then(sum => {
-                        //         console.log('LULU BAN', sum);
                         //     })
                         //     .catch(err => {
                         //         this.logger.error('Error Lulu Ban', err);

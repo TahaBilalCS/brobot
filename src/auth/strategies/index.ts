@@ -1,6 +1,6 @@
 import { Strategy } from 'passport-twitch-new';
 import { PassportStrategy } from '@nestjs/passport';
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { AuthenticationProvider } from 'src/auth/services/auth/auth';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
@@ -81,6 +81,8 @@ export interface TwitchBotOrStreamerRegisteredIncomplete {
 
 @Injectable()
 export class TwitchUserStrategy extends PassportStrategy(Strategy, 'twitch') {
+    private readonly logger = new Logger(PassportStrategy.name);
+
     constructor(@Inject('AUTH_SERVICE') private readonly authService: AuthenticationProvider) {
         super({
             clientID: process.env.TWITCH_CLIENT_ID,
@@ -91,7 +93,6 @@ export class TwitchUserStrategy extends PassportStrategy(Strategy, 'twitch') {
     }
 
     async validate(accessToken: string, refreshToken: string, profile: TwitchOAuthProfile): Promise<TwitchUserAuthReq> {
-        console.log('Twitch User Strategy Validate', refreshToken);
         const { id, created_at, email, profile_image_url, display_name } = profile;
 
         const userDetails: Prisma.TwitchUserCreateInput = {
@@ -109,7 +110,7 @@ export class TwitchUserStrategy extends PassportStrategy(Strategy, 'twitch') {
         const user = await this.authService.validateOrCreateTwitchUser(userDetails, registeredUserDetails);
 
         if (!user.registeredUser?.scope) {
-            console.error('User does not have scope', user);
+            this.logger.error('User does not have scope', user);
         }
         // Store these in req.user with passport in order to keep session when logging into other strategies
         return {
@@ -123,6 +124,8 @@ export class TwitchUserStrategy extends PassportStrategy(Strategy, 'twitch') {
 
 @Injectable()
 export class TwitchStreamerStrategy extends PassportStrategy(Strategy, 'twitch-streamer') {
+    private readonly logger = new Logger(PassportStrategy.name);
+
     constructor(
         @Inject('AUTH_SERVICE') private readonly authService: AuthenticationProvider,
         private configService: ConfigService
@@ -136,10 +139,9 @@ export class TwitchStreamerStrategy extends PassportStrategy(Strategy, 'twitch-s
     }
 
     async validate(accessToken: string, refreshToken: string, profile: TwitchOAuthProfile): Promise<TwitchUserAuthReq> {
-        console.log('Twitch Streamer Strategy Validate', refreshToken);
         // TODO: Better way than manual check
         if (profile.id !== this.configService.get('TWITCH_STREAMER_OAUTH_ID')) {
-            console.log('Reject this user abuser', profile.id);
+            this.logger.error('Reject this user abuser', profile.id);
             throw new UnauthorizedException();
         }
         const { id, display_name } = profile;
@@ -163,7 +165,7 @@ export class TwitchStreamerStrategy extends PassportStrategy(Strategy, 'twitch-s
         );
 
         if (!user.registeredStreamerAuth?.scope) {
-            console.error('Streamer does not have scope', user);
+            this.logger.error('Streamer does not have scope', user);
         }
 
         return {
@@ -177,6 +179,8 @@ export class TwitchStreamerStrategy extends PassportStrategy(Strategy, 'twitch-s
 
 @Injectable()
 export class TwitchBotStrategy extends PassportStrategy(Strategy, 'twitch-bot') {
+    private readonly logger = new Logger(PassportStrategy.name);
+
     constructor(
         @Inject('AUTH_SERVICE') private authService: AuthenticationProvider,
         private configService: ConfigService
@@ -190,9 +194,8 @@ export class TwitchBotStrategy extends PassportStrategy(Strategy, 'twitch-bot') 
     }
 
     async validate(accessToken: string, refreshToken: string, profile: TwitchOAuthProfile): Promise<TwitchUserAuthReq> {
-        console.log('Twitch Bot Strategy Validate', refreshToken);
         if (profile.id !== this.configService.get('TWITCH_BOT_OAUTH_ID')) {
-            console.log('Reject this user abuser', profile.id);
+            this.logger.error('Reject this user abuser', profile.id);
             throw new UnauthorizedException();
         }
         const { id, display_name } = profile;
@@ -213,7 +216,7 @@ export class TwitchBotStrategy extends PassportStrategy(Strategy, 'twitch-bot') 
         const user = await this.authService.validateOrCreateTwitchBot(userBotDetails, registeredUserBotAuthDetails);
 
         if (!user.registeredBotAuth?.scope) {
-            console.error('Bot does not have scope', user);
+            this.logger.error('Bot does not have scope', user);
         }
 
         return {

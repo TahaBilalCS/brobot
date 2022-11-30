@@ -249,7 +249,7 @@ export class TwitchPokemonService {
                     };
                     // Create user with pokemon team
                     user = (await tx.twitchUser.create(query)) as UserWithPokemonTeam;
-                    console.log('No User Found, Created User with Pokemon Team');
+                    this.logger.log('No User Found, Created User with Pokemon Team');
                     return user.pokemonTeam;
                 }
 
@@ -267,7 +267,7 @@ export class TwitchPokemonService {
                         }
                     };
                     const team = (await tx.pokemonTeam.create(query)) as PokemonTeamWithPokemon;
-                    console.log('Created New Team For Exiting User');
+                    this.logger.log('Created New Team For Exiting User');
                     return team;
                 }
 
@@ -279,7 +279,7 @@ export class TwitchPokemonService {
                         data: { pokemon: { create: { ...redemption, userOauthId: oauthId } } }
                     };
                     const team = (await tx.pokemonTeam.update(query)) as PokemonTeamWithPokemon;
-                    console.log('Created New Pokemon Team Since No Pokemon In Team');
+                    this.logger.log('Created New Pokemon Team Since No Pokemon In Team');
                     return team;
                 }
 
@@ -310,7 +310,7 @@ export class TwitchPokemonService {
                             data: { pokemon: { deleteMany: {}, createMany: { data: newPokemonListCopy } } }
                         };
                         const team = (await tx.pokemonTeam.update(query)) as PokemonTeamWithPokemon;
-                        console.log('Removed Duplicate Slots from Team', team);
+                        this.logger.log('Removed Duplicate Slots from Team', team);
                         return team;
                     } else if (slotCount === 1) {
                         // find index of matching slot counts
@@ -324,7 +324,7 @@ export class TwitchPokemonService {
                             data: { pokemon: { deleteMany: {}, createMany: { data: pokemonListCopy } } }
                         };
                         const team = (await tx.pokemonTeam.update(query)) as PokemonTeamWithPokemon;
-                        console.log('Updated Team and Swapped Slots', oauthId);
+                        this.logger.log('Updated Team and Swapped Slots', oauthId);
                         return team;
                     } else if (slotCount === 0) {
                         // Update pokemon team by adding new pokemon with user
@@ -338,7 +338,7 @@ export class TwitchPokemonService {
                             }
                         };
                         const team = (await tx.pokemonTeam.update(query)) as PokemonTeamWithPokemon;
-                        console.log('Updated Team and Added Pokemon Directly', oauthId);
+                        this.logger.log('Updated Team and Added Pokemon Directly', oauthId);
                         return team;
                     }
                 }
@@ -367,7 +367,7 @@ export class TwitchPokemonService {
                 };
                 // Create user with pokemon team
                 const createdUser = (await tx.twitchUser.create(query)) as UserWithPokemonTeam;
-                console.log('No User Found Catching Pokemon, Created User with Pokemon Team', oauthId);
+                this.logger.log('No User Found Catching Pokemon, Created User with Pokemon Team', oauthId);
                 return createdUser.pokemonTeam;
             }
 
@@ -380,7 +380,7 @@ export class TwitchPokemonService {
                     }
                 };
                 const team = (await tx.pokemonTeam.create(query)) as PokemonTeamWithPokemon;
-                console.log('Created New Team To Catch Pokemon For Existing User', oauthId);
+                this.logger.log('Created New Team To Catch Pokemon For Existing User', oauthId);
                 return team;
             }
 
@@ -391,7 +391,7 @@ export class TwitchPokemonService {
                     data: { pokemon: { create: { ...pokemonDrop, slot: 1, userOauthId: oauthId } } }
                 };
                 const team = (await tx.pokemonTeam.update(query)) as PokemonTeamWithPokemon;
-                console.log('Created New Pokemon Team Since No Pokemon In Team Catching Pokemon', oauthId);
+                this.logger.log('Created New Pokemon Team Since No Pokemon In Team Catching Pokemon', oauthId);
                 return team;
             }
 
@@ -413,7 +413,7 @@ export class TwitchPokemonService {
                         }
                     };
                     const team = (await tx.pokemonTeam.update(query)) as PokemonTeamWithPokemon;
-                    console.log('Updated Team and Added Pokemon Directly To Starter When Caught', oauthId);
+                    this.logger.log('Updated Team and Added Pokemon Directly To Starter When Caught', oauthId);
                     return team;
                 }
                 // check the lowest available slot for pokemon on team that can be added
@@ -432,7 +432,7 @@ export class TwitchPokemonService {
                     }
                 };
                 const team = (await tx.pokemonTeam.update(query)) as PokemonTeamWithPokemon;
-                console.log('Updated Team and Added Pokemon Directly When Caught', oauthId);
+                this.logger.log('Updated Team and Added Pokemon Directly When Caught', oauthId);
                 return team;
             }
         });

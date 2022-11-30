@@ -39,7 +39,6 @@ export class VoteService implements OnModuleDestroy {
         private voteType: string,
         private activateVoteThreshold: number
     ) {
-        console.log('VoteService constructor');
         this.currentVoteCount = 0;
         this.uniqueVoters = new Set();
         this.isOn = true;

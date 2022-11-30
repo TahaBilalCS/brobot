@@ -4,6 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { BotChatService, CommandStream } from 'src/twitch/services/bot-chat/bot-chat.service';
 import { StreamerGateway } from 'src/twitch/gateways/streamer/streamer.gateway';
+import * as fs from 'fs';
+
 import {
     pokeSlaughterApproachList,
     pokeSlaughterActionList,
@@ -28,6 +30,9 @@ import { CronJob, CronTime } from 'cron';
 import { EventSubChannelRedemptionAddEvent } from '@twurple/eventsub';
 import { AdminUiGateway, PokemonRoarChatEvent } from 'src/twitch/gateways/ui/admin-ui.gateway';
 
+interface TODOREMOVE extends PokemonCreateChatEvent {
+    pokemonLevel: number;
+}
 interface PokemonCreateChatEvent {
     username: string;
     oauthId: string;
@@ -177,7 +182,6 @@ export class PokemonService implements OnModuleDestroy {
                                 `Ending encounter. ${this.pokemonChatDrop.totalCaught} ${peopleString} caught ${this.pokemonChatDrop?.pokemonDrop?.name}`
                             );
                         }
-                        console.log('clearing interval');
                         clearInterval(this.pokemonChatDrop.interval);
                         this.pokemonChatDrop = {
                             active: false,
@@ -223,10 +227,9 @@ export class PokemonService implements OnModuleDestroy {
                                 await this.botChatService.clientSay(`You have no pokemon in your team`);
                                 return;
                             }
-                            const battleOutcomeUrl =
-                                this.configService.get('NODE_ENV') === 'production'
-                                    ? `https://admin.brobot.live/pokemon/team?username=${commandStream.username.toLowerCase()}`
-                                    : `http://localhost:4200/pokemon/team?username=${commandStream.username.toLowerCase()}`;
+                            const battleOutcomeUrl = `${
+                                process.env.UI_URL
+                            }/pokemon/team?username=${commandStream.username.toLowerCase()}`;
                             await this.botChatService.clientSay(`Check out your team here: ${battleOutcomeUrl}`);
                         } else {
                             await this.botChatService.clientSay(`You have no pokemon team`);
@@ -271,12 +274,8 @@ export class PokemonService implements OnModuleDestroy {
                             );
                         await this.catchPokemon(this.pokemonChatDrop.pokemonDrop, userOauthId, commandStream.username);
                         break;
-                    case 'roar':
-                        break;
-                    case 'seduce':
-                        break;
-                    case 'slaughter':
-                    case 'kill':
+                    // case 'seduce':
+                    //     break;
                     case 'remove':
                     case 'delete':
                         {
@@ -322,34 +321,78 @@ export class PokemonService implements OnModuleDestroy {
                             );
                         }
                         break;
-                    case 'create': {
-                        const pokemonSlotString = commandStream.command.args[1];
-                        const pokemonSlotNum = parseInt(pokemonSlotString);
-                        if (isNaN(pokemonSlotNum) || pokemonSlotNum < 1 || pokemonSlotNum > 6) {
-                            this.botChatService.clientSay(
-                                `@${commandStream.username}, please enter a slot number between 1 and 6`
-                            );
-                            return;
-                        }
-                        const event: PokemonCreateChatEvent = {
-                            username: commandStream.username,
-                            oauthId: userOauthId,
-                            slot: pokemonSlotNum
-                        };
-                        await this.redeemPokemonCreate(event);
-                        break;
-                    }
+                    // case 'create': {
+                    //     const pokemonSlotString = commandStream.command.args[1];
+                    //     const pokemonSlotNum = parseInt(pokemonSlotString);
+                    //     if (isNaN(pokemonSlotNum) || pokemonSlotNum < 1 || pokemonSlotNum > 6) {
+                    //         this.botChatService.clientSay(
+                    //             `@${commandStream.username}, please enter a slot number between 1 and 6`
+                    //         );
+                    //         return;
+                    //     }
+                    //     const event: PokemonCreateChatEvent = {
+                    //         username: commandStream.username,
+                    //         oauthId: userOauthId,
+                    //         slot: pokemonSlotNum
+                    //     };
+                    //     await this.redeemPokemonCreate(event);
+                    //     break;
+                    // }
                     case 'test':
                         {
-                            await this.redeemPokemonRoar({ username: commandStream.username, oauthId: userOauthId });
+                            // fix json todo also remove
+                            // https://codebeautify.org/json-fixer
+                            const test = fs.readFileSync('pokemon.json', 'utf8');
+                            const obj = JSON.parse(test);
+                            let i;
+                            const failedUsers = [];
+                            for (i = 0; i < obj.length; i++) {
+                                // console.log(obj[i]);
+                                const user = await this.botChatService.checkUser(obj[i]);
+                                if (!user) {
+                                    console.error('No user found', obj[i].twitchName, obj[i].uid);
+                                    // todo store in list for rama
+                                    failedUsers.push(obj);
+                                    continue;
+                                }
+
+                                if (user.id !== obj[i].uid) {
+                                    // critical should not happen ever
+                                    console.error("UIDs don't match", obj[i].uid, user.id);
+                                    console.error('MISMATCH', obj[i].twitchName, user.displayName, user.name);
+                                    failedUsers.push(user);
+                                    continue;
+                                }
+
+                                if (!obj[i].pokemonLevel) {
+                                    console.error('No pokemon level', obj[i].twitchName, obj[i].uid);
+                                    failedUsers.push(user);
+                                    continue;
+                                }
+
+                                // Dont care about this, just use username from streamer api service
+                                if (user.displayName.toLowerCase() !== obj[i].twitchName.toLowerCase()) {
+                                    console.error(
+                                        `Usernames Dont Match: ${user.displayName} --- ${user.name} ||| ${obj[i].twitchName}`
+                                    );
+                                }
+
+                                // todo enable this when ready
+                                // const event: TODOREMOVE = {
+                                //     username: user.name, // user.displayName can have special characters
+                                //     oauthId: user.id,
+                                //     slot: 1,
+                                //     pokemonLevel: obj[i].pokemonLevel
+                                // };
+                                // await this.redeemPokemonCreateFIXTODOREMOVE(event);
+                            }
+                            console.log('done', i);
+                            console.log('failed', failedUsers.length);
+                            // await this.redeemPokemonRoar({ username: commandStream.username, oauthId: userOauthId });
                         }
                         break;
                     default:
-                        // TODO Update this
-                        const commandsUrl =
-                            this.configService.get('NODE_ENV') === 'production'
-                                ? `https://admin.brobot.live/commands`
-                                : `http://localhost:4200/commands`;
+                        const commandsUrl = `${process.env.UI_URL}/commands`;
                         await this.botChatService.clientSay(`Pokemon Commands: ${commandsUrl}`);
                 }
             }
@@ -704,10 +747,7 @@ export class PokemonService implements OnModuleDestroy {
                     }
                 }
 
-                const battleOutcomeUrl =
-                    this.configService.get('NODE_ENV') === 'production'
-                        ? 'https://admin.brobot.live/pokemon/battleoutcome'
-                        : 'http://localhost:4200/pokemon/battleoutcome';
+                const battleOutcomeUrl = `${process.env.UI_URL}/pokemon/battleoutcome`;
                 const battleOutcomeString = `Details: ${battleOutcomeUrl}`;
                 await this.pokemonDbService.saveBattleOutcome(battleOutcome);
 
@@ -895,10 +935,7 @@ export class PokemonService implements OnModuleDestroy {
                     }
                 }
 
-                const battleOutcomeUrl =
-                    this.configService.get('NODE_ENV') === 'production'
-                        ? 'https://admin.brobot.live/pokemon/battleoutcome'
-                        : 'http://localhost:4200/pokemon/battleoutcome';
+                const battleOutcomeUrl = `${process.env.UI_URL}/pokemon/battleoutcome`;
                 const battleOutcomeString = `Details: ${battleOutcomeUrl}`;
                 await this.pokemonDbService.saveTeamBattleOutcome(teamBattleOutcome);
 
@@ -1010,7 +1047,6 @@ export class PokemonService implements OnModuleDestroy {
         const indexOfWinningMove = turnChunk.lastIndexOf('|move|');
         // If winning move found
         if (indexOfWinningMove !== -1) {
-            console.log('TURN CHUNK', turnChunk);
             const moveUnparsed = turnChunk.substring(indexOfWinningMove);
             const move = moveUnparsed.split('\n')[0];
             const winnerMove = move.split('|');
@@ -1252,6 +1288,100 @@ export class PokemonService implements OnModuleDestroy {
             return;
         }
     }
+
+    public async redeemPokemonCreateFIXTODOREMOVE(event: TODOREMOVE): Promise<void> {
+        const username = event.username;
+        const oauthId = event.oauthId;
+        const slot = event.slot;
+        const pokemonLevel = event.pokemonLevel;
+
+        if (!oauthId) {
+            this.logger.error('No oauthId found while creating random pokemon', username);
+            await this.botChatService.clientSay(`@${username} failed to change pokemon. You have been refunded`);
+            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            return;
+        }
+
+        const randomPokemon = this.getRandomGen4Pokemon();
+        const pokemonMoveset = await this.determinePokemonMoveset(randomPokemon.name);
+
+        if (pokemonMoveset.length === 0) {
+            this.logger.error(`Pokemon found with no moves: ${randomPokemon.name}`);
+            await this.botChatService.clientSay(
+                `@${username}, your pokemon ${randomPokemon.name} has no moves. You have been refunded`
+            );
+            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            return;
+        }
+        const isShiny = this.isShiny();
+
+        const currentDateUTC = new Date();
+        const userPokemon: PokemonDefault = {
+            name: randomPokemon.name,
+            color: randomPokemon.color,
+            dexNum: randomPokemon.num,
+            types: randomPokemon.types,
+            slot: slot,
+            nameId: randomPokemon.id,
+            shiny: isShiny,
+            gender: this.determineGender(randomPokemon.name),
+            moves: pokemonMoveset,
+            nature: this.determineNature().name,
+            ability: this.determineAbility(randomPokemon.name),
+            level: 1,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            item: '',
+            updatedDate: currentDateUTC,
+            createdDate: currentDateUTC
+        };
+
+        // Can't create pokemon with user
+        const userCreateDTO = {
+            oauthId,
+            displayName: username
+        };
+        let team;
+        try {
+            team = await this.pokemonDbService.redeemPokemon(userPokemon, userCreateDTO);
+        } catch (err) {
+            if (err instanceof PokemonRedeemException) {
+                this.logger.error(err);
+                await this.botChatService.clientSay(`${err.message}. You have been refunded`);
+                if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+                return;
+            }
+            this.logger.error(
+                `1: Failed to upsert pokemon for user: ${username}: ${randomPokemon.name} at slot: ${slot}`,
+                err
+            );
+            await this.botChatService.clientSay(
+                `@${username} failed to update/create pokemon in slot ${slot}. You have been refunded`
+            );
+            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+            return;
+        }
+        if (!team) {
+            this.logger.error(
+                `2: Failed to upsert pokemon for user: ${username}: ${randomPokemon.name} at slot: ${slot}`
+            );
+            await this.botChatService.clientSay(
+                `@${username} failed to update/create pokemon in slot ${slot}. You have been refunded`
+            );
+            if (event instanceof EventSubChannelRedemptionAddEvent) await event.updateStatus('CANCELED');
+
+            return;
+        }
+
+        const randomRoar = this.pickRandomRoar();
+        await this.botChatService.clientSay(
+            `/me @${username}'s Level 1 ${isShiny ? 'PogChamp ****SHINY**** PogChamp' : ''} ${
+                randomPokemon.name
+            } roared ${randomRoar}`
+        );
+    }
+
     // Changes starter pokemon
     public async redeemPokemonCreate(event: EventSubChannelRedemptionAddEvent | PokemonCreateChatEvent): Promise<void> {
         let username, oauthId, slot;

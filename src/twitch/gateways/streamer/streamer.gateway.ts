@@ -67,7 +67,6 @@ export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect
             outcomes: ['Yes', 'No'],
             title: 'Will Trama Win This Game?'
         };
-        console.log('Streamer Gateway Constructor');
     }
 
     public get getCurrentClientsOnSocket(): number {
@@ -85,7 +84,7 @@ export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect
         });
 
         client.on('close', () => {
-            this.logger.warn('CLOSED / HANDLE DISCONNECT');
+            this.logger.warn('Streamer Closed Socket Connection');
         });
 
         this.totalCreatedConnections++;
@@ -108,9 +107,8 @@ export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     handleDisconnect(client: any): any {
-        this.logger.log('Client Disconnected');
-        // twurpleInstance.twitchBot?.chatBan.resetUniqueVotedUsers();
-        // twurpleInstance.twitchBot?.voiceBan.resetUniqueVotedUsers();
+        this.chatBanVote.resetUniqueVotedUsers();
+        this.voiceBanVote.resetUniqueVotedUsers();
         const id = client.id ? client.id : '';
         this.logger.warn(`Client WebSocket Closed: ${id}`);
         this.logger.warn(`Clients On WSS: ${this.getCurrentClientsOnSocket}`);
@@ -137,13 +135,6 @@ export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect
                 client.ping();
             });
         }, 5000);
-    }
-
-    @SubscribeMessage('message')
-    handleEvent(client: any, data: any): WsResponse<any> {
-        console.log('New message', data);
-        // console.log('Client', client);
-        return { event: 'message', data: 'Hello world!' };
     }
 
     @SubscribeMessage(IncomingEvents.CHATBAN_COMPLETE)
@@ -198,9 +189,8 @@ export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
 
     async onModuleDestroy(): Promise<void> {
-        console.log('StreamerGateway MODULE DESTROY');
         this.server.clients.forEach((client: any) => {
-            console.log('Terminating Streamer Client', client?.id);
+            this.logger.log('Terminating Streamer Client', client?.id);
             client.terminate();
         });
     }

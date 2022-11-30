@@ -24,7 +24,6 @@ const AsyncBotChatServiceProvider = {
         streamerApiService: StreamerApiService,
         adminUiGateway: AdminUiGateway
     ) => {
-        console.log('BotChatService Factory');
         const tcs = new BotChatService(
             configService,
             twitchBotAuthService,
@@ -45,7 +44,6 @@ const AsyncBotApiServiceProvider = {
         adminUiGateway: AdminUiGateway,
         botChatService: BotChatService
     ) => {
-        console.log('BotApiService Factory');
         const tcs = new BotApiService(configService, pokemonService, adminUiGateway, botChatService);
         await tcs.init();
         return tcs;
@@ -55,7 +53,6 @@ const AsyncStreamerApiServiceProvider = {
     inject: [ConfigService, TwitchStreamerAuthService],
     provide: StreamerApiService,
     useFactory: async (configService: ConfigService, twitchStreamerAuthService: TwitchStreamerAuthService) => {
-        console.log('StreamerApiService Factory');
         const tcs = new StreamerApiService(configService, twitchStreamerAuthService);
         await tcs.init();
         return tcs;
@@ -69,7 +66,6 @@ const AsyncChatBanVoteServiceProvider = {
         botChatService: BotChatService,
         streamerGateway: StreamerGateway
     ) => {
-        console.log('ChatBanVote Service Factory');
         const activateVoteThreshold = 1;
         const voteType = OutgoingEvents.CHATBAN;
         return new VoteService(configService, botChatService, streamerGateway, voteType, activateVoteThreshold);
@@ -84,7 +80,6 @@ const AsyncVoiceBanVoteServiceProvider = {
         botChatService: BotChatService,
         streamerGateway: StreamerGateway
     ) => {
-        console.log('VoiceBanVote Service Factory');
         const activateVoteThreshold = 1;
         const voteType = OutgoingEvents.VOICEBAN;
         return new VoteService(configService, botChatService, streamerGateway, voteType, activateVoteThreshold);

@@ -5,9 +5,7 @@ import { AuthGuard } from '@nestjs/passport';
 @Injectable()
 export class TwitchUserAuthGuard extends AuthGuard('twitch') {
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        console.log('TwitchUserAuthGuard');
         const activate = (await super.canActivate(context)) as boolean;
-        console.log('Activated', activate);
         const request = context.switchToHttp().getRequest();
         await super.logIn(request);
         return activate;
@@ -17,9 +15,7 @@ export class TwitchUserAuthGuard extends AuthGuard('twitch') {
 @Injectable()
 export class TwitchStreamerAuthGuard extends AuthGuard('twitch-streamer') {
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        console.log('TwitchStreamerAuthGuard');
         const activate = (await super.canActivate(context)) as boolean;
-        console.log('Activated', activate);
         const request = context.switchToHttp().getRequest();
         await super.logIn(request);
         return activate;
@@ -29,9 +25,7 @@ export class TwitchStreamerAuthGuard extends AuthGuard('twitch-streamer') {
 @Injectable()
 export class TwitchBotAuthGuard extends AuthGuard('twitch-bot') {
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        console.log('TwitchBotAuthGuard');
         const activate = (await super.canActivate(context)) as boolean;
-        console.log('Activated', activate);
         const request = context.switchToHttp().getRequest();
         await super.logIn(request);
         return activate;
@@ -42,7 +36,6 @@ export class TwitchBotAuthGuard extends AuthGuard('twitch-bot') {
 export class AuthenticatedGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const req = context.switchToHttp().getRequest();
-        console.log('Is Authenticated?', req.isAuthenticated());
         return req.isAuthenticated();
     }
 }
