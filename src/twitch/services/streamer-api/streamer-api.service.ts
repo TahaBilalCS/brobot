@@ -141,6 +141,8 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
                 return;
             }
             this.channelPointRewards = channelPointRewards;
+            await this.updateCustomRewards(false);
+
             // this.channelPointRewards.forEach(reward => {
             //     console.log('Deleting');
             //     this.client?.channelPoints.deleteCustomReward(this.streamerOauthId, reward.id);
