@@ -34,7 +34,8 @@ export const streamerScope = [
     'moderator:manage:banned_users', // ban/timeout users
     'channel:manage:polls', // polls ('channel:read:polls' can be added later)
     'channel:read:redemptions', // retrieve channel point rewards
-    'channel:manage:redemptions' // create/update channel point rewards
+    'channel:manage:redemptions', // create/update channel point rewards
+    'moderation:read' // Check who is mod
 ];
 
 // Regular users
