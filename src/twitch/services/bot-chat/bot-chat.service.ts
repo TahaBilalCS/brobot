@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TwitchBotAuthService } from 'src/database/services/twitch-bot-auth/twitch-bot-auth.service';
 import { AccessToken, RefreshingAuthProvider } from '@twurple/auth';
@@ -297,7 +297,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
     public async redeemTimeoutUser(event: EventSubChannelRedemptionAddEvent): Promise<void> {
         try {
             const userToBan = event.input.trim().toLowerCase();
-            if (userToBan === 'tramadc') {
+            if (userToBan === 'tramadc' || userToBan === 'bro_____bot') {
                 await this.cancelRedemption(event);
                 this.clientSay(`/me Nice try... You have been refunded`);
                 return;
