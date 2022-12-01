@@ -66,7 +66,7 @@ const AsyncChatBanVoteServiceProvider = {
         botChatService: BotChatService,
         streamerGateway: StreamerGateway
     ) => {
-        const activateVoteThreshold = 1;
+        const activateVoteThreshold = 4;
         const voteType = OutgoingEvents.CHATBAN;
         return new VoteService(configService, botChatService, streamerGateway, voteType, activateVoteThreshold);
     }
@@ -80,7 +80,7 @@ const AsyncVoiceBanVoteServiceProvider = {
         botChatService: BotChatService,
         streamerGateway: StreamerGateway
     ) => {
-        const activateVoteThreshold = 1;
+        const activateVoteThreshold = 4;
         const voteType = OutgoingEvents.VOICEBAN;
         return new VoteService(configService, botChatService, streamerGateway, voteType, activateVoteThreshold);
     }
