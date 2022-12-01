@@ -260,7 +260,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                     `Remember to use the commands: "!chatban" or "!voiceban", when ${this.channel} gets too emotional. Other commands can be found here: ${commandsUrl}`
                 );
             }
-        }, 1000 * 60 * 40); // Every 40 minutes
+        }, 1000 * 60 * 30); // Every 30 minutes
     }
 
     private async cancelRedemption(event: EventSubChannelRedemptionAddEvent) {

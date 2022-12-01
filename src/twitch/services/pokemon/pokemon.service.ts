@@ -175,7 +175,7 @@ export class PokemonService implements OnModuleDestroy {
         // Every 20 seconds */20 * * * * *
         // 9th minute every 2nd hour '0 9 */2 * * *'
         const pokemonChatDropCron = new CronJob(
-            '0 9 */2 * * *',
+            '0 9 */1 * * *',
             async () => {
                 const pokemonDrop = await this.generatePokemonDrop();
                 this.logger.warn(`Creating New Drop: ${pokemonDrop.name}`, new Date().toISOString());

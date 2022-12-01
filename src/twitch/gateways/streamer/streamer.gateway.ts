@@ -150,7 +150,7 @@ export class StreamerGateway implements OnGatewayConnection, OnGatewayDisconnect
     @SubscribeMessage(IncomingEvents.VOICEBAN_COMPLETE)
     handleVoiceBan(client: any, data: any): void {
         this.logger.log('Reset VoiceBan', data);
-        if (!data) this.botChatService.clientSay(`Uhoh, something broke :(`);
+        if (data) this.botChatService.clientSay(`Uhoh, something broke :(`);
         this.botChatService.clientSay(
             `${this.TWITCH_STREAMER_CHANNEL_LISTEN} is now free. All VoiceBan votes have been reset.`
         );

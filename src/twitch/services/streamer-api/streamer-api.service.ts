@@ -93,7 +93,7 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
 
             debsAlert = await this.client?.channelPoints.createCustomReward(this.streamerOauthId, {
                 title: 'DEBS Alert',
-                cost: 2500,
+                cost: 500,
                 prompt: 'A message of your choosing will appear on stream like a news alert',
                 isEnabled: true,
                 backgroundColor: '#e87800',
@@ -111,7 +111,7 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
 
             enableQuack = await this.client?.channelPoints.createCustomReward(this.streamerOauthId, {
                 title: 'Enable Quacks',
-                cost: 5000,
+                cost: 500,
                 prompt: 'Enables the command: "!quack" for everyone to spam. This is difficult to disable...',
                 isEnabled: true,
                 backgroundColor: '#e5d406'
