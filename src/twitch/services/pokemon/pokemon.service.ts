@@ -173,9 +173,9 @@ export class PokemonService implements OnModuleDestroy {
         );
 
         // Every 20 seconds */20 * * * * *
-        // 9th minute every 2nd hour '0 9 */2 * * *'
+        // 9th minute every 2nd hour = '0 9 */2 * * *'
         const pokemonChatDropCron = new CronJob(
-            '0 9 */1 * * *',
+            '0 */30 * * * *',
             async () => {
                 const pokemonDrop = await this.generatePokemonDrop();
                 this.logger.warn(`Creating New Drop: ${pokemonDrop.name}`, new Date().toISOString());
@@ -644,8 +644,8 @@ export class PokemonService implements OnModuleDestroy {
             `On turn ${turnCount}, ${winnerName}'s Level ${winnerPokemon.level} ${
                 winnerPokemon.shiny ? 'PogChamp ****SHINY**** PogChamp' : ''
             } ${winnerPokemon.name} ${moveString} ${randomMoveString} ${loserName}'s Level ${loserPokemon.level} ${
-                loserPokemon.name
-            }! ${battleOutcome}`
+                loserPokemon.shiny ? '****SHINY****' : ''
+            } ${loserPokemon.name}! ${battleOutcome}`
         );
 
         // Determine if the winner should level up. Winner has to be <= 20 levels higher than opponents' level
@@ -1322,103 +1322,103 @@ export class PokemonService implements OnModuleDestroy {
         }
     }
 
-    public async redeemPokemonCreateFIXTODOREMOVE(event: TODOREMOVE): Promise<void> {
-        const username = event.username;
-        const oauthId = event.oauthId;
-        const slot = event.slot;
-        const pokemonLevel = event.pokemonLevel;
-        const pokemonName = event.pokemonName;
-
-        if (!oauthId) {
-            this.logger.error('No oauthId found while creating random pokemon', username);
-            await this.botChatService.clientSay(`@${username} failed to change pokemon. You have been refunded`);
-            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
-
-            return;
-        }
-
-        const randomPokemon = this.getGen4PokemonByName(pokemonName);
-        const pokemonMoveset = await this.determinePokemonMoveset(randomPokemon.name);
-
-        if (pokemonMoveset.length === 0) {
-            this.logger.error(`Pokemon found with no moves: ${randomPokemon.name}`);
-            await this.botChatService.clientSay(
-                `@${username}, your pokemon ${randomPokemon.name} has no moves. You have been refunded`
-            );
-            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
-
-            return;
-        }
-        const isShiny = true;
-
-        const currentDateUTC = new Date();
-        const userPokemon: PokemonDefault = {
-            name: randomPokemon.name,
-            color: randomPokemon.color,
-            dexNum: randomPokemon.num,
-            types: randomPokemon.types,
-            slot: slot,
-            nameId: randomPokemon.id,
-            shiny: isShiny,
-            gender: this.determineGender(randomPokemon.name),
-            moves: pokemonMoveset,
-            nature: this.determineNature().name,
-            ability: this.determineAbility(randomPokemon.name),
-            level: pokemonLevel,
-            wins: 0,
-            losses: 0,
-            draws: 0,
-            item: '',
-            updatedDate: currentDateUTC,
-            createdDate: currentDateUTC
-        };
-
-        // Can't create pokemon with user
-        const userCreateDTO = {
-            oauthId,
-            displayName: username
-        };
-        let team;
-        try {
-            team = await this.pokemonDbService.redeemPokemon(userPokemon, userCreateDTO);
-        } catch (err) {
-            if (err instanceof PokemonRedeemException) {
-                this.logger.error(err);
-                await this.botChatService.clientSay(`${err.message}. You have been refunded`);
-                if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
-
-                return;
-            }
-            this.logger.error(
-                `1: Failed to upsert pokemon for user: ${username}: ${randomPokemon.name} at slot: ${slot}`,
-                err
-            );
-            await this.botChatService.clientSay(
-                `@${username} failed to update/create pokemon in slot ${slot}. You have been refunded`
-            );
-            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
-
-            return;
-        }
-        if (!team) {
-            this.logger.error(
-                `2: Failed to upsert pokemon for user: ${username}: ${randomPokemon.name} at slot: ${slot}`
-            );
-            await this.botChatService.clientSay(
-                `@${username} failed to update/create pokemon in slot ${slot}. You have been refunded`
-            );
-            if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
-
-            return;
-        }
-
-        const randomRoar = this.pickRandomRoar();
-        await this.botChatService.clientSay(
-            `/me @${username}'s Level ${pokemonLevel} ${isShiny ? 'PogChamp ****SHINY**** PogChamp' : ''} ${
-                randomPokemon.name
-            } roared ${randomRoar}`
-        );
-    }
+    // public async redeemPokemonCreateFIXTODOREMOVE(event: TODOREMOVE): Promise<void> {
+    //     const username = event.username;
+    //     const oauthId = event.oauthId;
+    //     const slot = event.slot;
+    //     const pokemonLevel = event.pokemonLevel;
+    //     const pokemonName = event.pokemonName;
+    //
+    //     if (!oauthId) {
+    //         this.logger.error('No oauthId found while creating random pokemon', username);
+    //         await this.botChatService.clientSay(`@${username} failed to change pokemon. You have been refunded`);
+    //         if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+    //
+    //         return;
+    //     }
+    //
+    //     const randomPokemon = this.getGen4PokemonByName(pokemonName);
+    //     const pokemonMoveset = await this.determinePokemonMoveset(randomPokemon.name);
+    //
+    //     if (pokemonMoveset.length === 0) {
+    //         this.logger.error(`Pokemon found with no moves: ${randomPokemon.name}`);
+    //         await this.botChatService.clientSay(
+    //             `@${username}, your pokemon ${randomPokemon.name} has no moves. You have been refunded`
+    //         );
+    //         if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+    //
+    //         return;
+    //     }
+    //     const isShiny = true;
+    //
+    //     const currentDateUTC = new Date();
+    //     const userPokemon: PokemonDefault = {
+    //         name: randomPokemon.name,
+    //         color: randomPokemon.color,
+    //         dexNum: randomPokemon.num,
+    //         types: randomPokemon.types,
+    //         slot: slot,
+    //         nameId: randomPokemon.id,
+    //         shiny: isShiny,
+    //         gender: this.determineGender(randomPokemon.name),
+    //         moves: pokemonMoveset,
+    //         nature: this.determineNature().name,
+    //         ability: this.determineAbility(randomPokemon.name),
+    //         level: pokemonLevel,
+    //         wins: 0,
+    //         losses: 0,
+    //         draws: 0,
+    //         item: '',
+    //         updatedDate: currentDateUTC,
+    //         createdDate: currentDateUTC
+    //     };
+    //
+    //     // Can't create pokemon with user
+    //     const userCreateDTO = {
+    //         oauthId,
+    //         displayName: username
+    //     };
+    //     let team;
+    //     try {
+    //         team = await this.pokemonDbService.redeemPokemon(userPokemon, userCreateDTO);
+    //     } catch (err) {
+    //         if (err instanceof PokemonRedeemException) {
+    //             this.logger.error(err);
+    //             await this.botChatService.clientSay(`${err.message}. You have been refunded`);
+    //             if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+    //
+    //             return;
+    //         }
+    //         this.logger.error(
+    //             `1: Failed to upsert pokemon for user: ${username}: ${randomPokemon.name} at slot: ${slot}`,
+    //             err
+    //         );
+    //         await this.botChatService.clientSay(
+    //             `@${username} failed to update/create pokemon in slot ${slot}. You have been refunded`
+    //         );
+    //         if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+    //
+    //         return;
+    //     }
+    //     if (!team) {
+    //         this.logger.error(
+    //             `2: Failed to upsert pokemon for user: ${username}: ${randomPokemon.name} at slot: ${slot}`
+    //         );
+    //         await this.botChatService.clientSay(
+    //             `@${username} failed to update/create pokemon in slot ${slot}. You have been refunded`
+    //         );
+    //         if (event instanceof EventSubChannelRedemptionAddEvent) await this.cancelRedemption(event);
+    //
+    //         return;
+    //     }
+    //
+    //     const randomRoar = this.pickRandomRoar();
+    //     await this.botChatService.clientSay(
+    //         `/me @${username}'s Level ${pokemonLevel} ${isShiny ? 'PogChamp ****SHINY**** PogChamp' : ''} ${
+    //             randomPokemon.name
+    //         } roared ${randomRoar}`
+    //     );
+    // }
 
     // Changes starter pokemon
     public async redeemPokemonCreate(event: EventSubChannelRedemptionAddEvent | PokemonCreateChatEvent): Promise<void> {
