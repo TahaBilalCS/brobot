@@ -68,7 +68,7 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
         try {
             pokemonRoar = await this.client?.channelPoints.createCustomReward(this.streamerOauthId, {
                 title: 'Pokemon Roar',
-                cost: 500,
+                cost: 100,
                 prompt: 'Your starter pokemon (slot 1) will appear on stream and let out a mighty roar, hopefully startling Rama',
                 isEnabled: true,
                 backgroundColor: '#007b94'
@@ -93,7 +93,7 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
 
             debsAlert = await this.client?.channelPoints.createCustomReward(this.streamerOauthId, {
                 title: 'DEBS Alert',
-                cost: 500,
+                cost: 200,
                 prompt: 'A message of your choosing will appear on stream like a news alert',
                 isEnabled: true,
                 backgroundColor: '#e87800',
@@ -111,7 +111,7 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
 
             enableQuack = await this.client?.channelPoints.createCustomReward(this.streamerOauthId, {
                 title: 'Enable Quacks',
-                cost: 500,
+                cost: 300,
                 prompt: 'Enables the command: "!quack" for everyone to spam. This is difficult to disable...',
                 isEnabled: true,
                 backgroundColor: '#e5d406'
