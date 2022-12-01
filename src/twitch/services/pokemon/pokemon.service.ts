@@ -663,14 +663,13 @@ export class PokemonService implements OnModuleDestroy {
             let updatedWinnerPokemon;
             if (levelUpWinner) {
                 updatedWinnerPokemon = await this.pokemonDbService.updateWinnerPokemon(winnerPokemon, 1);
+                if (updatedWinnerPokemon) {
+                    await this.botChatService.clientSay(
+                        `@${winnerName}'s ${updatedWinnerPokemon.name} leveled up to ${updatedWinnerPokemon.level}!`
+                    );
+                }
             } else {
                 updatedWinnerPokemon = await this.pokemonDbService.updateWinnerPokemon(winnerPokemon, 0);
-            }
-
-            if (updatedWinnerPokemon) {
-                await this.botChatService.clientSay(
-                    `@${winnerName}'s ${updatedWinnerPokemon.name} leveled up to ${updatedWinnerPokemon.level}!`
-                );
             }
         } catch (err) {
             this.logger.error('Error updating pokemon outcome', err);
