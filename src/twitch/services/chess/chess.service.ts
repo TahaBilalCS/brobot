@@ -132,7 +132,7 @@ export class ChessService implements OnModuleDestroy {
 
         const { data }: LichessChallengeRes = await firstValueFrom(
             this.httpService
-                .post('https://lichess.org/api/challenge/ope2n', this.lichessBodyReq, this.lichessBodyConfigReq)
+                .post('https://lichess.org/api/challenge/open', this.lichessBodyReq, this.lichessBodyConfigReq)
                 .pipe(
                     catchError((err: AxiosError) => {
                         throw err;
