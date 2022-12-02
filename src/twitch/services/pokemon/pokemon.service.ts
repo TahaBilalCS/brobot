@@ -11,7 +11,8 @@ import {
     pokeSlaughterActionList,
     pokeRoarActions,
     gen4PokeDex,
-    pokeFailedCatchList
+    pokeFailedCatchList,
+    gen4DropsPokedex
 } from 'src/twitch/services/pokemon/PokeInfo';
 import { BattleStreams, Dex, Nature, Species, Teams, StatsTable, PokemonSet, RandomPlayerAI } from '@pkmn/sim';
 import { Generations } from '@pkmn/data';
@@ -141,6 +142,7 @@ export class PokemonService implements OnModuleDestroy {
      */
     private readonly pokedex: string[] = gen4PokeDex;
 
+    private readonly dropsPokedex: string[] = gen4DropsPokedex;
     /**
      * Array of quotes pokemon use when they roar
      * @private
@@ -1173,7 +1175,7 @@ export class PokemonService implements OnModuleDestroy {
     }
 
     private async generatePokemonDrop(): Promise<PokemonDrop> {
-        const randomPokemon = this.getRandomGen4Pokemon();
+        const randomPokemon = this.getRandomGen4PokemonDrop();
         const pokemonMoveset = await this.determinePokemonMoveset(randomPokemon.name);
         const isShiny = this.randomIntFromInterval(1, 8) <= 1;
         const currentDateUTC = new Date();
@@ -1229,6 +1231,11 @@ export class PokemonService implements OnModuleDestroy {
         // 0-492
         const randomPokeIndex = this.randomIntFromInterval(0, 492);
         return Dex.forGen(4).species.get(this.pokedex[randomPokeIndex]);
+    }
+
+    private getRandomGen4PokemonDrop(): Species {
+        const randomPokeIndex = this.randomIntFromInterval(0, 78);
+        return Dex.forGen(4).species.get(this.dropsPokedex[randomPokeIndex]);
     }
 
     private getGen4PokemonByName(name: string): Species {

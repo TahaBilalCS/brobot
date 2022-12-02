@@ -102,7 +102,7 @@ export class StreamerApiService implements OnModuleInit, OnModuleDestroy {
 
             timeoutUser = await this.client?.channelPoints.createCustomReward(this.streamerOauthId, {
                 title: 'Timeout User',
-                cost: 5000,
+                cost: 10000,
                 prompt: 'Timeout any user for 3 minutes (including Mods) by typing their username. Capitalization and spacing does not matter',
                 isEnabled: true,
                 backgroundColor: '#0e0801',
