@@ -158,4 +158,17 @@ export class AppController {
             throw new ForbiddenException('You are not the streamer');
         }
     }
+
+    @Post('reloadBrowserSource')
+    @UseGuards(AuthenticatedGuard)
+    reloadBrowserSource(@Req() req: Request) {
+        const user = req.user as any;
+        const userOauthId = user?.oauthId;
+        if (userOauthId && userOauthId === this.streamerAuthId) {
+            this.botChatService.reloadBrowserSource();
+            return { success: true };
+        } else {
+            throw new ForbiddenException('You are not the streamer');
+        }
+    }
 }

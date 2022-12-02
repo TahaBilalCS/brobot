@@ -213,7 +213,7 @@ export class PokemonService implements OnModuleDestroy {
                 await this.botChatService.clientSay(
                     `/me A wild level 1 ${pokemonDrop.shiny ? 'PogChamp ****SHINY**** PogChamp' : ''} ${
                         pokemonDrop.name
-                    } has appeared for 1 minute! Type "!pokemon catch" for a chance to catch it if you have space for another pokemon`
+                    } has appeared for 1 minute! Type "!pokemon catch" for a chance to add it to your team`
                 );
             },
             null,

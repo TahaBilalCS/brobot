@@ -17,5 +17,6 @@ export enum OutgoingEvents {
     // To UI
     POKEMON_ROAR = 'pokemon_roar',
     DEBS_ALERT = 'debs_alert',
-    QUACK = 'quack'
+    QUACK = 'quack',
+    RELOAD_BROWSER_SOURCE = 'reload_browser_source'
 }

@@ -355,6 +355,9 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         );
     }
 
+    public reloadBrowserSource(): void {
+        this.adminUiGateway.reloadBrowserSource();
+    }
     canQuack = true;
     enableQuack(): void {
         this.canQuack = true;

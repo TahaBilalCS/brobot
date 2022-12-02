@@ -27,7 +27,8 @@ export interface DebsAlertEvent {
     path: '/api/admin-ui',
     verifyClient: (info: any, done: any) => {
         const headers = info.req.headers;
-        console.warn('UI Socket Headers Connection', headers);
+        console.warn('UI Socket Headers Connection', headers['host']);
+        console.warn('UI Socket Headers Connection', headers['sec-websocket-key']);
         console.warn('UI Socket Headers Connection', headers.origin);
         console.warn('UI Socket Headers Connection', headers['user-agent']);
         return done(true);
@@ -142,6 +143,11 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
         });
     }
 
+    public reloadBrowserSource(): void {
+        this.server.clients.forEach((client: any) => {
+            client.send(JSON.stringify({ event: OutgoingEvents.RELOAD_BROWSER_SOURCE, data: null }));
+        });
+    }
     map: any = {};
     public async sendDebsAlert(event: EventSubChannelRedemptionAddEvent | DebsAlertEvent) {
         let msg = '',
