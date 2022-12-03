@@ -13,6 +13,8 @@ import { IncomingEvents, OutgoingEvents } from 'src/twitch/gateways/streamer/IEv
 import { BotChatService } from 'src/twitch/services/bot-chat/bot-chat.service';
 import { ConfigService } from '@nestjs/config';
 import { StreamerApiService } from 'src/twitch/services/streamer-api/streamer-api.service';
+import { profanity } from '@2toad/profanity';
+
 export interface PokemonRoarChatEvent {
     username: string;
     oauthId: string;
@@ -153,7 +155,7 @@ export class AdminUiGateway implements OnGatewayConnection, OnGatewayDisconnect,
         let msg = '',
             name = '';
         if (event instanceof EventSubChannelRedemptionAddEvent) {
-            msg = event.input;
+            msg = profanity.censor(event.input);
             name = event.userDisplayName.trim().toLowerCase();
         } else {
             name = event.name.trim().toLowerCase();

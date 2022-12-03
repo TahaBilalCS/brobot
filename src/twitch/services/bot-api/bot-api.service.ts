@@ -141,7 +141,6 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                     } else if (event.rewardTitle === 'Pokemon Create') {
                         await this.pokemonService.redeemPokemonCreate(event);
                     } else if (event.rewardTitle === 'DEBS Alert') {
-                        console.log(event.status);
                         await this.adminUiGateway.sendDebsAlert(event);
                     } else if (event.rewardTitle === 'Timeout User') {
                         await this.botChatService.redeemTimeoutUser(event);
