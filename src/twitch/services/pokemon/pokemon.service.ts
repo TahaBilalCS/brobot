@@ -200,7 +200,7 @@ export class PokemonService implements OnModuleDestroy {
                             userAttemptsMap: new Map()
                         };
                     }
-                }, 1000 * 60);
+                }, 1000 * 60 * 2);
                 this.pokemonChatDrop = {
                     active: true,
                     interval: dropInterval,
@@ -213,7 +213,7 @@ export class PokemonService implements OnModuleDestroy {
                 await this.botChatService.clientSay(
                     `/me A wild level 1 ${pokemonDrop.shiny ? 'PogChamp ****SHINY**** PogChamp' : ''} ${
                         pokemonDrop.name
-                    } has appeared for 1 minute! Type "!pokemon catch" for a chance to add it to your team`
+                    } has appeared for 2 minutes! Type "!pokemon catch" for a chance to add it to your team`
                 );
             },
             null,
@@ -281,9 +281,7 @@ export class PokemonService implements OnModuleDestroy {
                         break;
                     case 'catch':
                         if (!this.pokemonChatDrop.active)
-                            this.botChatService.clientSay(
-                                `No pokemon available. Wait for the 69th minute of every other hour`
-                            );
+                            this.botChatService.clientSay(`No pokemon to catch. A pokemon will drop every 30 minutes.`);
                         await this.catchPokemon(this.pokemonChatDrop.pokemonDrop, userOauthId, commandStream.username);
                         break;
                     // case 'seduce':
@@ -1245,6 +1243,7 @@ export class PokemonService implements OnModuleDestroy {
     private async swapPokemon(username: string, oauthId: string, slot1: number, slot2: number): Promise<void> {
         try {
             await this.pokemonDbService.swapPokemon(oauthId, slot1, slot2);
+            await this.botChatService.clientSay(`@${username}, swap successful`);
         } catch (err) {
             if (err instanceof PokemonSwapException) {
                 this.logger.error(`Error Pokemon Swapping Pokemon For ${username}`, err);

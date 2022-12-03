@@ -614,7 +614,6 @@ export const pokeSlaughterApproachList = [
 export const pokeSlaughterActionList = [
     'and karate chopped their nose off',
     'and permanently suplexed them near the office building',
-    `and slowly choked them out, realizing it's not as easy as portrayed in the movies`,
     'and 360 no-scoped them',
     'and kissed them goodbye',
     `and in one swift motion, omae wa mou'd them. At least it was halal`,
@@ -627,7 +626,7 @@ export const pokeSlaughterActionList = [
 ];
 
 export const pokeFailedCatchList = [
-    `will not bow to it's new leader`,
+    `will not bow to its new leader`,
     `swatted the pokeball into the lake`,
     `swallowed your ball`,
     `doesn't like the way you smell`,

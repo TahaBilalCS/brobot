@@ -34,7 +34,7 @@ export class TwitchStreamerAuthService {
             return (await this.prisma.twitchUser.create(query)) as TwitchUserWithRegisteredStreamer;
         }
         // If user exists, check if they already have the StreamerAuth role
-        // This can happen if a RegisteredStreamer is deleted while it's parent User lives on
+        // This can happen if a RegisteredStreamer is deleted while its parent User lives on
         const currentUserRoles = [...user.roles];
         if (!currentUserRoles.includes('StreamerAuth')) {
             currentUserRoles.push('StreamerAuth');
