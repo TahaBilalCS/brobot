@@ -419,7 +419,9 @@ export class TwitchPokemonService {
                 // check the lowest available slot for pokemon on team that can be added
                 const lowestAvailableSlot = this.getLowestAvailableSlot(user.pokemonTeam.pokemon);
                 if (!lowestAvailableSlot || lowestAvailableSlot < 1 || lowestAvailableSlot > 6) {
-                    throw new PokemonCatchException("can't catch pokemon because no slots available");
+                    throw new PokemonCatchException(
+                        "can't catch pokemon because no slots available. You need to delete one first."
+                    );
                 }
                 // Update pokemon team by adding new pokemon with user
                 const query: PokemonTeamUpdateArgs = {

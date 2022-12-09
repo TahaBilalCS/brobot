@@ -56,6 +56,7 @@ export class AuthController {
         // res.clearCookie('connect.sid');
         req.logout(() => {
             // todo find out why we need to do this, if you logout from certain pages in UI, it doesn't work without this
+            // probably shouldnt if its stacking sessions
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             delete req.session;
