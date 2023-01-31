@@ -17,7 +17,7 @@ module.exports = {
             host: '3.143.76.120',
             key: '~/.ssh/brobot-api.pem',
             // todo: Change this ref to main when pushing up migration
-            ref: 'origin/nestjs-migration',
+            ref: 'origin/main',
             repo: 'git@github.com:TahaBilalCS/brobot.git',
             path: '/home/ubuntu/brobot',
             // remove npx by installing as dependency instead of devDependency
