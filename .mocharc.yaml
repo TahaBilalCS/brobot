@@ -1,0 +1,13 @@
+{
+    "extension": ["ts"],
+    "spec": "__tests__/**/*.test.ts",
+    "require": ["ts-node/register"], # Babel: "@babel/register"
+    "recursive": true,
+    "parallel": true, # true if running tests normally (--w enabled/disabled), false if only testing single case
+    "timeout": 2500,
+    "full-trace": true,
+    "exit": true,
+    "watch": false, # ESM is currently not supported by mocha with -w when testing a single case (eg. describe.only)
+    "watch-files": ["__tests__/**/*.ts", "src/**/*.ts"],
+    "node-option": ["loader=ts-node/esm"] # "experimental-specifier-resolution=node",
+}

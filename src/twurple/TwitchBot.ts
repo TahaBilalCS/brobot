@@ -1,11 +1,11 @@
-import { logger } from '../utils/LoggerUtil';
-import { appenv } from '../config/appenv';
-import { expressSocket } from '../ws/ExpressSocket';
-import { twurpleInstance } from './TwurpleInstance';
-import { Chess } from './commands/Chess';
-import { Pokemon } from './commands/Pokemon';
-import { Vote } from './commands/Vote';
-import { OutgoingEvents } from './types/EventsInterface';
+import { logger } from '../utils/LoggerUtil.js';
+import { appenv } from '../config/appenv.js';
+import { expressSocket } from '../ws/ExpressSocket.js';
+import { twurpleInstance } from './TwurpleInstance.js';
+import { Chess } from './commands/Chess.js';
+import { Pokemon } from './commands/Pokemon.js';
+import { Vote } from './commands/Vote.js';
+import { OutgoingEvents } from './types/EventsInterface.js';
 import { ChatUser, PrivateMessage } from '@twurple/chat';
 
 /**
@@ -95,6 +95,7 @@ export class TwitchBot {
             void this._handleCommand(username, userMsg, userInfo).then(() => {
                 // Handle messages
                 void this._handleLulu(username, userMsg);
+                return null;
             });
         });
     }
@@ -178,7 +179,7 @@ export class TwitchBot {
                     `Remember to use the commands: "!chatban" or "!voiceban", when Trama gets too emotional. Also rock, paper, scissor: !rps. Also pokemon: https://imgur.com/a/2u62OUh` // TODO: OVERRIDDEN BY TRAMA
                 );
             }
-            logger.warn(`Clients On Socket: ${expressSocket.getListeningClientsOnSocket()}`);
+            logger.warn(`Clients On WSS: ${expressSocket.getListeningClientsOnSocket()}`);
         }, 1000 * 60 * 40); // Every 40 minutes
     }
 
@@ -236,6 +237,7 @@ export class TwitchBot {
                 break;
             case 'voiceban':
                 await this._voiceBan.handleMessage(username);
+                logger.warn(`Clients On WSS: ${expressSocket.getListeningClientsOnSocket()}`);
                 break;
             case 'rps':
                 await this._createRPSUrl(username);

@@ -1,7 +1,7 @@
-import { appenv } from '../../config/appenv';
+import { appenv } from '../../config/appenv.js';
 import axios from 'axios';
-import { twurpleInstance } from '../TwurpleInstance';
-import { logError } from '../../utils/LoggerUtil';
+import { twurpleInstance } from '../TwurpleInstance.js';
+import { logError } from '../../utils/LoggerUtil.js';
 
 /**
  * A user on the Lichess website

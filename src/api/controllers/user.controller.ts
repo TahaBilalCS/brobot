@@ -1,6 +1,6 @@
 /** Use controllers in router */
-import { logger } from '../../utils/LoggerUtil';
-import * as userService from '../services/user.service';
+import { logger } from '../../utils/LoggerUtil.js';
+import * as userService from '../services/user.service.js';
 import { Request, Response, NextFunction } from 'express';
 
 /**

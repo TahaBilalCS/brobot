@@ -1,14 +1,14 @@
-import { appenv } from '../../config/appenv';
+import { appenv } from '../../config/appenv.js';
 import { BattleStreams, Dex, PokemonSet, RandomPlayerAI, StatsTable, Teams } from '@pkmn/sim';
 import { TeamGenerators } from '@pkmn/randoms';
 import mongoose, { QueryOptions } from 'mongoose';
-import { PokemonInterface } from '../../api/models/Pokemon';
-import { pokedexArr, pokeRoarActions } from './pokemon/pokeInfo';
-import { OutgoingEvents } from '../types/EventsInterface';
-import { twurpleInstance } from '../TwurpleInstance';
-import { expressSocket } from '../../ws/ExpressSocket';
+import { PokemonInterface } from '../../api/models/Pokemon.js';
+import { pokedexArr, pokeRoarActions } from './pokemon/pokeInfo.js';
+import { OutgoingEvents } from '../types/EventsInterface.js';
+import { twurpleInstance } from '../TwurpleInstance.js';
+import { expressSocket } from '../../ws/ExpressSocket.js';
 import { Species } from '@pkmn/sim/build/sim/dex-species';
-import { logger } from '../../utils/LoggerUtil';
+import { logger } from '../../utils/LoggerUtil.js';
 
 /**
  * Status of pokemon battle
@@ -440,8 +440,8 @@ export class Pokemon {
                     // A little weird but using await here will prevent the app from continuing.
                     // Seems the way this library works is it initializes some things asynchronously and then
                     // lets the stream handle future inputs
-                    void p1.start().then();
-                    void p2.start().then();
+                    void p1.start().then(null);
+                    void p2.start().then(null);
 
                     // Handle what happens during simulation
                     void (async (): Promise<void> => {
@@ -516,7 +516,7 @@ export class Pokemon {
                         // Empty battle regardless of outcome
                         if (this._battle.battleTimer) clearInterval(this._battle.battleTimer);
                         this._battle = {};
-                    })().then();
+                    })().then(null);
 
                     // Write streams but will jump to logic above
                     void streams.omniscient.write(`>start ${JSON.stringify(spec)}`);

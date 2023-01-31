@@ -1,8 +1,8 @@
-import { logger } from '../utils/LoggerUtil';
-import { TwurpleInterface } from '../api/models/Twurple';
+import { logger } from '../utils/LoggerUtil.js';
+import { TwurpleInterface } from '../api/models/Twurple.js';
 import mongoose, { QueryOptions } from 'mongoose';
-import { TwitchBot } from './TwitchBot';
-import { appenv } from '../config/appenv';
+import { TwitchBot } from './TwitchBot.js';
+import { appenv } from '../config/appenv.js';
 import { ClientCredentialsAuthProvider, RefreshingAuthProvider } from '@twurple/auth';
 import { ChatClient } from '@twurple/chat';
 import { ApiClient } from '@twurple/api';
@@ -225,6 +225,7 @@ class TwurpleInstance {
                         .findOneAndUpdate({ user }, newTokenData, options)
                         .then(() => {
                             logger.warn('Success Update Twurple Options');
+                            return null;
                         })
                         .catch(err => {
                             logger.error('Error Update Twurple Options DB');

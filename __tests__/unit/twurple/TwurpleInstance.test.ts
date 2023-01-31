@@ -1,17 +1,17 @@
 // Import models
-import '../../../src/api/models/Twurple';
-import '../../../src/api/models/Pokemon';
+import '../../../src/api/models/Twurple.js';
+import '../../../src/api/models/Pokemon.js';
 
 import { expect } from 'chai';
 import sinon, { SinonStub, stub } from 'sinon';
 import mongoose from 'mongoose';
 import { ChatClient } from '@twurple/chat';
-import { TwurpleInterface } from '../../../src/api/models/Twurple';
+import { TwurpleInterface } from '../../../src/api/models/Twurple.js';
 
-import { twurpleInstance } from '../../../src/twurple/TwurpleInstance';
+import { twurpleInstance } from '../../../src/twurple/TwurpleInstance.js';
 
 // Init Twurple instance
-import { logger } from '../../../src/utils/LoggerUtil';
+import { logger } from '../../../src/utils/LoggerUtil.js';
 
 /**
  * Expectations for twurple pre-init
@@ -33,22 +33,22 @@ const expectClientsToBeDefined = (): void => {
     expect(twurpleInstance.botApiClient).to.be.ok;
 };
 
-describe('TwurpleInstance', () => {
+describe('TwurpleInstance', function () {
     let dbFindOneStub: SinonStub;
     let logWarnStub: SinonStub;
     let logErrStub: SinonStub;
 
-    beforeEach(() => {
+    beforeEach(function () {
         dbFindOneStub = stub(mongoose.Model, 'findOne');
         logWarnStub = stub(logger, 'warn');
         logErrStub = stub(logger, 'error');
     });
 
-    afterEach(() => {
+    afterEach(function () {
         sinon.restore();
     });
 
-    it('should initialize and resolve undefined clients', async () => {
+    it('should initialize and resolve undefined clients', async function () {
         // Stub and resolve mongoose methods
         dbFindOneStub.resolves(undefined);
         stub(mongoose.Model.prototype, 'save');
@@ -68,7 +68,7 @@ describe('TwurpleInstance', () => {
         );
     });
 
-    it('should initialize and resolve connected clients', async () => {
+    it('should initialize and resolve connected clients', async function () {
         // Mock options from DB
         const botOptions: TwurpleInterface = {
             user: 'bot-test',
