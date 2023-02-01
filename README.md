@@ -17,12 +17,12 @@ This project helped define my personal best practices when developing a long ter
 I was able to expose myself to many technologies that I'm interested in such as:
 
 -   Websockets
--   Hosting on an AWS EC2 instance
--   Automated deployment using the pm2 package manager
+-   Hosting on AWS EC2 and AWS RDS
+-   Prisma ORM
+-   Automated deployment using the PM2 package manager
 -   Git hooks, linting, and formatting configurations
 -   Pub/Sub event messaging
 -   Unit testing with `Mocha/Chai/Sinon`
--   Daemon process management with `pm2`
 -   Integrating `Typescript` with `Babel` with the latest ECMAScript standard
 -   Development vs Production Environments
 -   SSL and Reverse proxy and re-routing with `NGINX`
