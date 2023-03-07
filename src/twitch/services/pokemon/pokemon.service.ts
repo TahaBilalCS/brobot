@@ -15,7 +15,6 @@ import {
     gen4DropsPokedex
 } from 'src/twitch/services/pokemon/PokeInfo';
 import { BattleStreams, Dex, Nature, Species, Teams, StatsTable, PokemonSet, RandomPlayerAI } from '@pkmn/sim';
-import { Generations } from '@pkmn/data';
 import {
     PokemonCatchException,
     PokemonLevelException,
@@ -24,18 +23,13 @@ import {
     PokemonTeamWithPokemon,
     TwitchPokemonService
 } from 'src/database/services/twitch-pokemon/twitch-pokemon.service';
-import { Prisma, Pokemon, PokemonTeam } from '@prisma/client';
+import { Pokemon } from '@prisma/client';
 import { TeamGenerators } from '@pkmn/randoms';
-import { BattleStream } from '@pkmn/sim/build/sim/battle-stream';
-import { CronJob, CronTime } from 'cron';
+import { CronJob } from 'cron';
 import { EventSubChannelRedemptionAddEvent } from '@twurple/eventsub';
 import { AdminUiGateway, PokemonRoarChatEvent } from 'src/twitch/gateways/ui/admin-ui.gateway';
 import { StreamerApiService } from 'src/twitch/services/streamer-api/streamer-api.service';
 
-interface TODOREMOVE extends PokemonCreateChatEvent {
-    pokemonLevel: number;
-    pokemonName: string;
-}
 interface PokemonCreateChatEvent {
     username: string;
     oauthId: string;
@@ -331,23 +325,62 @@ export class PokemonService implements OnModuleDestroy {
                             );
                         }
                         break;
-                    // case 'create': {
-                    //     const pokemonSlotString = commandStream.command.args[1];
-                    //     const pokemonSlotNum = parseInt(pokemonSlotString);
-                    //     if (isNaN(pokemonSlotNum) || pokemonSlotNum < 1 || pokemonSlotNum > 6) {
-                    //         this.botChatService.clientSay(
-                    //             `@${commandStream.username}, please enter a slot number between 1 and 6`
-                    //         );
-                    //         return;
-                    //     }
-                    //     const event: PokemonCreateChatEvent = {
-                    //         username: commandStream.username,
-                    //         oauthId: userOauthId,
-                    //         slot: pokemonSlotNum
-                    //     };
-                    //     await this.redeemPokemonCreate(event);
-                    //     break;
-                    // }
+                    case 'create': {
+                        if (
+                            commandStream.username !== 'lebrotherbill' &&
+                            commandStream.username.toLowerCase() !== 'tramadc'
+                        ) {
+                            return;
+                        }
+
+                        const usernameToAddPokemon = commandStream.command.args[1].toLowerCase();
+                        let userDTO;
+                        try {
+                            userDTO = await this.streamerApiService.client?.users.getUserByName(
+                                commandStream.command.args[1]
+                            );
+                        } catch (err) {
+                            this.logger.error('Error getting userDTO - Pokemon Create', err);
+                            this.botChatService.clientSay(
+                                `Could not find Twitch account for user: ${usernameToAddPokemon}`
+                            );
+                            return;
+                        }
+
+                        if (!userDTO || !userDTO.id) {
+                            this.logger.error('No user or OauthID', userDTO);
+                            this.botChatService.clientSay(`No User or OauthID found for: ${usernameToAddPokemon}`);
+                            return;
+                        }
+
+                        const pokemonName = commandStream.command.args[2];
+                        const pokemonLevel = parseInt(commandStream.command.args[3]);
+                        const isShiny = commandStream.command.args[4] === '1'; // 0 is No, 1 is Yes
+
+                        let pokemonDrop;
+                        try {
+                            pokemonDrop = await this.generateSpecificPokemon(pokemonName, pokemonLevel, isShiny);
+                        } catch (err) {
+                            this.logger.error('Error generating pokemon - Pokemon Create', err);
+                            this.botChatService.clientSay(`${err}`);
+                            return;
+                        }
+
+                        try {
+                            await this.pokemonDbService.catchPokemon(pokemonDrop, userDTO.id, usernameToAddPokemon);
+                            const teamUrl = `${process.env.UI_URL}/pokemon/team?username=${usernameToAddPokemon}`;
+                            await this.botChatService.clientSay(`Done! See changes: ${teamUrl}`);
+                        } catch (err) {
+                            if (err instanceof PokemonCatchException) {
+                                this.logger.error('Error Pokemon Create -', err);
+                                await this.botChatService.clientSay(`@${commandStream.username}: ${err.message}`);
+                                return;
+                            }
+                            this.logger.error(`Error Creating Pokemon For ${usernameToAddPokemon}`, err);
+                            return;
+                        }
+                        break;
+                    }
                     // case 'test':
                     //     {
                     //         if (commandStream.username === 'lebrotherbill') {
@@ -1189,6 +1222,38 @@ export class PokemonService implements OnModuleDestroy {
             nature: this.determineNature().name,
             ability: this.determineAbility(randomPokemon.name),
             level: 1,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            item: '',
+            updatedDate: currentDateUTC,
+            createdDate: currentDateUTC
+        };
+    }
+
+    private async generateSpecificPokemon(
+        pokemonName: string,
+        pokemonLevel: number,
+        isShiny: boolean
+    ): Promise<PokemonDrop> {
+        const specificPokemon = this.getGen4PokemonByName(pokemonName);
+        if (!specificPokemon.exists) {
+            throw new Error(`Pokemon ${pokemonName} does not exist`);
+        }
+        const pokemonMoveset = await this.determinePokemonMoveset(specificPokemon.name);
+        const currentDateUTC = new Date();
+        return {
+            name: specificPokemon.name,
+            nameId: specificPokemon.id,
+            color: specificPokemon.color,
+            dexNum: specificPokemon.num,
+            types: specificPokemon.types,
+            shiny: isShiny,
+            gender: this.determineGender(specificPokemon.name),
+            moves: pokemonMoveset,
+            nature: this.determineNature().name,
+            ability: this.determineAbility(specificPokemon.name),
+            level: pokemonLevel,
             wins: 0,
             losses: 0,
             draws: 0,

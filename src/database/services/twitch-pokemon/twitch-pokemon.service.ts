@@ -1,17 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/database/services/prisma.service';
 import { Prisma, Pokemon, PokemonTeam, PokemonBattleOutcome, PokemonTeamBattleOutcome } from '@prisma/client';
-import PokemonTeamUpsertArgs = Prisma.PokemonTeamUpsertArgs;
 import PokemonTeamCreateArgs = Prisma.PokemonTeamCreateArgs;
-import PokemonCreateArgs = Prisma.PokemonCreateArgs;
 import PokemonTeamUpdateArgs = Prisma.PokemonTeamUpdateArgs;
 import TwitchUserCreateArgs = Prisma.TwitchUserCreateArgs;
 import { PokemonDefault, PokemonDrop } from 'src/twitch/services/pokemon/pokemon.service';
-import PokemonUpdateManyArgs = Prisma.PokemonUpdateManyArgs;
-import BatchPayload = Prisma.BatchPayload;
 import PokemonUpdateArgs = Prisma.PokemonUpdateArgs;
-import PokemonGroupByArgs = Prisma.PokemonGroupByArgs;
-import TwitchUserFindManyArgs = Prisma.TwitchUserFindManyArgs;
 import PokemonFindManyArgs = Prisma.PokemonFindManyArgs;
 
 export class PokemonRedeemException extends Error {
@@ -298,7 +292,7 @@ export class TwitchPokemonService {
 
                     if (slotCount > 1) {
                         this.logger.error(
-                            'This should not happen. Slot already taken multiple times',
+                            'FATAL: Slot already taken multiple times',
                             oauthId,
                             pokemonListCopy.filter(pokemon => pokemon.slot === 1).length
                         );
