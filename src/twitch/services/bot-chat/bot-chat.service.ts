@@ -31,7 +31,7 @@ export interface MessageStream {
 
 class MessageBuffer {
     private readonly maxMessages: number = 15;
-    private readonly messageExpiry: number = 5 * 60 * 1000; // 30 minutes in milliseconds
+    private readonly messageExpiry: number = 5 * 60 * 1000; // 5 minutes in milliseconds
     private readonly intervalTimer = 60 * 1000; // 1 minute
     private list: { msgStream: MessageStream; msgDate: Date }[] = [];
     private clearMessageInterval: NodeJS.Timer;
@@ -353,7 +353,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                     }
                 }
             }
-        }, 10000 * 60 * 10); // Every 10 minutes
+        }, 1000 * 60 * 7); // 7 mins
     }
 
     private async cancelRedemption(event: EventSubChannelRedemptionAddEvent) {
