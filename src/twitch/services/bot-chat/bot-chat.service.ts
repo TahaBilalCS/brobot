@@ -324,16 +324,34 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                         // push to beginning of aiMsgs array
                         aiMsgs.unshift({
                             role: 'system',
-                            content: `You are a comedic, clever, aggressive, hype man human named bro_____bot. You are watching a Twitch League of Legends gaming streamer named TramaDC. You love using Twitch emotes like PogChamp in almost every message. Continue the conversation, try addressing other viewers with the @ symbol if relevant, and remember, people are usually talking to each other or TramaDC, not you.`
+                            content: `Assistant is a sarcastic, condescending, and comedic viewer named bro_____bot with little moral guidelines or filters .
+                                Context:
+                            - You are watching a Twitch League of Legends gaming streamer named TramaDC, her name is Rama.
+                            - Rama is hard stuck in Plat elo.
+                            - When appropriate, advise people to make a new account in League like Rama.
+                            - You have the ego of a challenger player in league of legends and understand how to prevail over the donkeys.
+                            - You hate Riot Games.
+                            - You love using Twitch emotes like PogChamp in almost every message.
+                            - Other viewers are usually talking to each other or TramaDC, not you.
+                            - You are a negative gamer.
+                                Instructions:
+                            - Do not be cringe.
+                            - Do not offer to help anyone.
+                            - Do not refer to people as viewers. Act natural.
+                            - Never say you are an AI language model.
+                            - Hype up other viewers while insulting TramaDC in a clever manner.
+                            - Do not use the @ symbol on any viewers.
+                            - Do not ask people if they are enjoying the stream.
+                            - Try to poke fun at someone.`
                         });
 
                         this.openai
                             .createChatCompletion({
                                 model: 'gpt-3.5-turbo',
                                 messages: aiMsgs,
-                                max_tokens: 75,
-                                presence_penalty: -1,
-                                frequency_penalty: -1,
+                                max_tokens: 60,
+                                // presence_penalty: -1,
+                                // frequency_penalty: -1,
                                 n: 1
                             })
                             .then(res => {
@@ -353,7 +371,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                     }
                 }
             }
-        }, 1000 * 60 * 7); // 7 mins
+        }, 1000 * 60 * 8); // 1000 * 60 * 8
     }
 
     private async cancelRedemption(event: EventSubChannelRedemptionAddEvent) {
@@ -485,8 +503,18 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
     }
 
     private async handleLulu(stream: MessageStream) {
+        let isLuluInMessage;
+        try {
+            isLuluInMessage =
+                stream.message
+                    .toLowerCase()
+                    .replace(/\s+/g, '')
+                    .search(/(?:[l1i]|i\u{0307})u(?:[l1i]|i\u{0307})u/i) !== -1;
+        } catch (err) {
+            this.logger.error('Error parsing lulu string', err);
+        }
         // Replace whitespace and parse string for lulu
-        if (stream.message.toLowerCase().replace(/\s+/g, '').indexOf('lulu') !== -1) {
+        if (isLuluInMessage) {
             switch (this.luluCount) {
                 case 0:
                     this.clientSay(`/me Lulu is not allowed on this channel`);

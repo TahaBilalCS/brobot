@@ -156,7 +156,7 @@ export class BotApiService implements OnModuleInit, OnModuleDestroy {
                 (event: EventSubChannelRaidEvent) => {
                     // Shout out the user who raided the stream
                     this.botChatService.clientSay(
-                        `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName}. So cool!`
+                        `Check out the MAGNIFICENT ${event.raidingBroadcasterName} at twitch.tv/${event.raidingBroadcasterName} . So cool!`
                     );
                     console.info(`${event.raidingBroadcasterName} raided ${event.raidedBroadcasterName}!`);
                 }
