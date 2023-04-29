@@ -12,6 +12,7 @@ import { HelixBanUserRequest } from '@twurple/api/lib/api/helix/moderation/Helix
 import { TwitchUserWithRegisteredBot } from 'src/database/services/twitch-user/twitch-user.service';
 import { AdminUiGateway } from 'src/twitch/gateways/ui/admin-ui.gateway';
 import { EventSubChannelRedemptionAddEvent } from '@twurple/eventsub';
+import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from 'openai';
 
 export interface CommandStream extends MessageStream {
     command: {
@@ -20,11 +21,43 @@ export interface CommandStream extends MessageStream {
     };
 }
 
+// TODO rename to Message and CommandMsg or something. Maybe not. message.message is no good
 export interface MessageStream {
     channel: string;
     username: string;
     message: string;
     pvtMessage: TwitchPrivateMessage;
+}
+
+class MessageBuffer {
+    private readonly maxMessages: number = 15;
+    private readonly messageExpiry: number = 5 * 60 * 1000; // 30 minutes in milliseconds
+    private readonly intervalTimer = 60 * 1000; // 1 minute
+    private list: { msgStream: MessageStream; msgDate: Date }[] = [];
+    private clearMessageInterval: NodeJS.Timer;
+
+    constructor() {
+        // Remove expired messages from the message stream
+        // Todo make this better since there will be a time period intervalTimer where expired messages can still be in the list
+        this.clearMessageInterval = setInterval(() => {
+            const now = new Date().getTime();
+            // Keep messages that haven't expired. Filter expired messages out
+            this.list = this.list.filter(i => Math.abs(now - i.msgDate.getTime()) < this.messageExpiry);
+        }, this.intervalTimer);
+    }
+
+    addMessage(msgStream: MessageStream) {
+        // DONT USE DATE ON MESSAGE. THE TWITCH SERVERS ARE OUT OF SYNC WITH THE BOT BY 10 SECONDS TYPICALLY
+        this.list.push({ msgStream, msgDate: new Date() });
+        // Keep only the last 15 messages
+        if (this.list.length > this.maxMessages) {
+            this.list.shift();
+        }
+    }
+
+    getMessages() {
+        return [...this.list];
+    }
 }
 
 @Injectable()
@@ -43,6 +76,10 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
 
     public commandStream = new Subject<CommandStream>();
     public msgStream = new Subject<MessageStream>();
+
+    private gptMessageInterval: NodeJS.Timer;
+    private gptMessageBuffer: MessageBuffer;
+    private openai: OpenAIApi;
 
     public client?: ChatClient;
 
@@ -63,7 +100,14 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         this.streamerAuthId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') ?? '';
         this.notifyChatInterval = this.createChatNotifyInterval();
         this.prizeRickRollCron = this.createPrizeRickRollCron();
-
+        // TODO Need to watch out not to send a message before API connection
+        const configuration = new Configuration({
+            organization: 'org-LY6DvFzz6Qji06kyEoceO8re',
+            apiKey: this.configService.get('OPEN_API_KEY') ?? ''
+        });
+        this.openai = new OpenAIApi(configuration);
+        this.gptMessageBuffer = new MessageBuffer();
+        this.gptMessageInterval = this.createGPTMessage();
         this.commandSubscription = this.commandStream.subscribe(async (stream: CommandStream) => {
             await this.handleCommand(stream);
         });
@@ -123,7 +167,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                     args,
                     msg: args.shift()?.toLowerCase() // Only get command and modify args in place to exclude command
                 };
-                this.commandStream.next({ channel, username, message, command, pvtMessage });
+                this.commandStream.next({ channel, username, message, pvtMessage, command });
             }
 
             this.msgStream.next({ channel, username, message, pvtMessage });
@@ -261,6 +305,55 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                 );
             }
         }, 1000 * 60 * 30); // Every 30 minutes
+    }
+
+    private createGPTMessage(): NodeJS.Timer {
+        return setInterval(() => {
+            // If streamer connected
+            if (this.streamerGateway.getCurrentClientsOnSocket > 0) {
+                const currentMessages = this.gptMessageBuffer.getMessages();
+                if (currentMessages.length > 0) {
+                    try {
+                        const aiMsgs: ChatCompletionRequestMessage[] = currentMessages.map(msg => {
+                            return {
+                                role: 'user',
+                                content: msg.msgStream.message,
+                                name: msg.msgStream.username
+                            };
+                        });
+                        // push to beginning of aiMsgs array
+                        aiMsgs.unshift({
+                            role: 'system',
+                            content: `You are a funny, clever, very aggressive, sentient bot named b_robot for a Twitch League of Legends gaming streamer named TramaDC. You love using Twitch emotes like PogChamp. Continue the conversation, try addressing other viewers with the @ symbol if relevant, and remember, people are usually talking to each other or TramaDC, not you.`
+                        });
+
+                        this.openai
+                            .createChatCompletion({
+                                model: 'gpt-3.5-turbo',
+                                messages: aiMsgs,
+                                max_tokens: 75,
+                                presence_penalty: -1,
+                                frequency_penalty: -1,
+                                n: 1
+                            })
+                            .then(res => {
+                                const msgRes = res.data.choices[0]?.message?.content;
+                                if (msgRes && msgRes.length > 0) {
+                                    this.clientSay(msgRes).catch(err => {
+                                        this.logger.error('Error GPT Client Say', err);
+                                    });
+                                }
+                            })
+                            .catch(err => {
+                                this.logger.error('Open API Error', err);
+                            });
+                    } catch (err) {
+                        // TODO Cleanup
+                        this.logger.error('Some other error happened', err);
+                    }
+                }
+            }
+        }, 10000 * 60 * 10); // Every 10 minutes
     }
 
     private async cancelRedemption(event: EventSubChannelRedemptionAddEvent) {
@@ -455,6 +548,16 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
 
     private async handleMessage(msgStream: MessageStream) {
         await this.handleLulu(msgStream);
+        this.gptMessageBuffer.addMessage(msgStream);
+        const now = new Date().getTime();
+        const msgDate = msgStream.pvtMessage.date.getTime();
+        const timeDifference = Math.abs(now - msgDate);
+
+        if (timeDifference > 30000) {
+            this.logger.error('DATES ARE NOT SYNCED');
+            this.logger.error('Now:', now);
+            this.logger.error('msgDate:', msgDate);
+        }
     }
 }
 //

@@ -48,6 +48,7 @@
         "cron": "^2.1.0",
         "express-session": "^1.17.3",
         "helmet": "^6.0.0",
+        "openai": "^3.2.1",
         "passport": "^0.6.0",
         "passport-twitch-new": "^0.0.2",
         "reflect-metadata": "^0.1.13",
