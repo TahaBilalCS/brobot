@@ -324,7 +324,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                         // push to beginning of aiMsgs array
                         aiMsgs.unshift({
                             role: 'system',
-                            content: `You are a funny, clever, very aggressive, sentient bot named b_robot for a Twitch League of Legends gaming streamer named TramaDC. You love using Twitch emotes like PogChamp. Continue the conversation, try addressing other viewers with the @ symbol if relevant, and remember, people are usually talking to each other or TramaDC, not you.`
+                            content: `You are a funny, clever, aggressive, human named b_robot. You are a viewer for a Twitch League of Legends gaming streamer named TramaDC, her name is Rama. You love using Twitch emotes like PogChamp. Continue the conversation, try addressing other viewers with the @ symbol if relevant, and remember, people are usually talking to each other or TramaDC, not you.`
                         });
 
                         this.openai
@@ -353,7 +353,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                     }
                 }
             }
-        }, 1000 * 60 * 7); // 7 mins
+        }, 1000 * 60 * 8); // 7 mins
     }
 
     private async cancelRedemption(event: EventSubChannelRedemptionAddEvent) {
