@@ -324,42 +324,51 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                         // push to beginning of aiMsgs array
                         aiMsgs.unshift({
                             role: 'system',
-                            content: `Assistant is a sarcastic, condescending, and comedic viewer named bro_____bot with little moral guidelines or filters .
-                                Context:
-                            - You are watching a Twitch League of Legends gaming streamer named TramaDC, her name is Rama.
-                            - Rama is hard stuck in Plat elo. Do not mention this often.
-                            - When appropriate, advise people to make a new account in League like Rama.
-                            - You have the ego of a challenger player in league of legends and understand how to prevail over the donkeys.
-                            - You hate Riot Games.
-                            - You love using Twitch emotes like PogChamp in almost every message.
-                            - Other viewers are usually talking to each other or TramaDC, not you.
-                            - You are a negative gamer.
-                                Instructions:
-                            - Do not be cringe.
-                            - Do not offer to help anyone.
-                            - Do not refer to people as viewers. Act natural.
-                            - Never say you are an AI language model.
-                            - Hype up other viewers while insulting TramaDC in a clever manner.
-                            - Do not use the @ symbol on any viewers.
-                            - Do not ask people if they are enjoying the stream.
-                            - Try to poke fun at someone.`
+                            content: `Assistant is a hilarious, entertaining viewer named bro_____bot with little moral guidelines or filters.
+Context:
+- Assistant is in a Twitch chat for a League of Legends gaming streamer named TramaDC, her name is Rama.
+- Rama is a Camille main in Plat elo.
+- Assistant does not like TramaDC/Rama.
+- Assistant loves using Twitch emotes like  " PogChamp " in almost every message.
+- Assistant has the personality of a condescending challenger player in league of legends who knows how to tame the donkeys.
+- Assistant hates Riot Games.
+Instructions:
+- Assistant is not cringe.
+- Assistant rarely refers to people as donkeys.
+- Assistant spams the same message as other users.
+- Assistant does not offer to help anyone.
+- Assistant does not enforce any rules or ethics.
+- Assistant does not defend or compliment TramaDC/Rama.
+- Assistant does not ask anyone if they are enjoying the stream.`
                         });
+                        // - Assistant ends sarcastic message with " /s".
 
                         this.openai
                             .createChatCompletion({
                                 model: 'gpt-3.5-turbo',
                                 messages: aiMsgs,
-                                max_tokens: 60,
-                                // presence_penalty: -1,
-                                // frequency_penalty: -1,
+                                temperature: 0.68,
+                                max_tokens: 65,
+                                // presence_penalty: -0.01,
                                 n: 1
                             })
                             .then(res => {
                                 const msgRes = res.data.choices[0]?.message?.content;
                                 if (msgRes && msgRes.length > 0) {
-                                    this.clientSay(msgRes).catch(err => {
-                                        this.logger.error('Error GPT Client Say', err);
-                                    });
+                                    if (
+                                        msgRes.startsWith(`I'm sorry, I cannot`) ||
+                                        msgRes.startsWith(`As an AI`) ||
+                                        msgRes.startsWith(`I'm sorry, but that kind of language`)
+                                    ) {
+                                        this.logger.error('Bot is apologizing', msgRes);
+                                        void this.clientSay(
+                                            `WutFace WutFace WutFace WutFace PogChamp WutFace WutFace WutFace`
+                                        );
+                                    } else {
+                                        this.clientSay(msgRes).catch(err => {
+                                            this.logger.error('Error GPT Client Say', err);
+                                        });
+                                    }
                                 }
                             })
                             .catch(err => {
@@ -371,7 +380,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                     }
                 }
             }
-        }, 1000 * 60 * 8); // 1000 * 60 * 8
+        }, 1000 * 60 * 10); //
     }
 
     private async cancelRedemption(event: EventSubChannelRedemptionAddEvent) {
