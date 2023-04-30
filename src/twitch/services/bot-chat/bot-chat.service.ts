@@ -101,10 +101,10 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         this.notifyChatInterval = this.createChatNotifyInterval();
         this.prizeRickRollCron = this.createPrizeRickRollCron();
         // TODO Need to watch out not to send a message before API connection
-        const configuration = new Configuration({
-            organization: 'org-LY6DvFzz6Qji06kyEoceO8re',
-            apiKey: this.configService.get('OPEN_API_KEY') ?? ''
-        });
+        // const configuration = new Configuration({
+        //     organization: 'org-LY6DvFzz6Qji06kyEoceO8re',
+        //     apiKey: this.configService.get('OPEN_API_KEY') ?? ''
+        // });
         // this.openai = new OpenAIApi(configuration);
         // this.gptMessageBuffer = new MessageBuffer();
         // this.gptMessageInterval = this.createGPTMessage();
