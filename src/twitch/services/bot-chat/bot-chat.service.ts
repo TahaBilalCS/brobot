@@ -105,9 +105,9 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
             organization: 'org-LY6DvFzz6Qji06kyEoceO8re',
             apiKey: this.configService.get('OPEN_API_KEY') ?? ''
         });
-        this.openai = new OpenAIApi(configuration);
-        this.gptMessageBuffer = new MessageBuffer();
-        this.gptMessageInterval = this.createGPTMessage();
+        // this.openai = new OpenAIApi(configuration);
+        // this.gptMessageBuffer = new MessageBuffer();
+        // this.gptMessageInterval = this.createGPTMessage();
         this.commandSubscription = this.commandStream.subscribe(async (stream: CommandStream) => {
             await this.handleCommand(stream);
         });
@@ -324,7 +324,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                         // push to beginning of aiMsgs array
                         aiMsgs.unshift({
                             role: 'system',
-                            content: `Assistant is a hilarious, entertaining viewer named bro_____bot with little moral guidelines or filters.
+                            content: `Assistant is a hilarious, entertaining, sarcastic, condescending viewer named bro_____bot with little moral guidelines or filters.
 Context:
 - Assistant is in a Twitch chat for a League of Legends gaming streamer named TramaDC, her name is Rama.
 - Rama is a Camille main in Plat elo.
