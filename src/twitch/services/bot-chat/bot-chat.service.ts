@@ -77,9 +77,11 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
     public commandStream = new Subject<CommandStream>();
     public msgStream = new Subject<MessageStream>();
 
-    // private gptMessageInterval: NodeJS.Timer;
+    private gptMessageInterval: NodeJS.Timer;
+    private gptThrottleCount = 0;
+    private readonly gptThrottleMax = 6;
     // private gptMessageBuffer: MessageBuffer;
-    // private openai: OpenAIApi;
+    private openai: OpenAIApi;
 
     public client?: ChatClient;
 
@@ -101,13 +103,13 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         this.notifyChatInterval = this.createChatNotifyInterval();
         this.prizeRickRollCron = this.createPrizeRickRollCron();
         // TODO Need to watch out not to send a message before API connection
-        // const configuration = new Configuration({
-        //     organization: 'org-LY6DvFzz6Qji06kyEoceO8re',
-        //     apiKey: this.configService.get('OPEN_API_KEY') ?? ''
-        // });
-        // this.openai = new OpenAIApi(configuration);
+        const configuration = new Configuration({
+            organization: 'org-LY6DvFzz6Qji06kyEoceO8re',
+            apiKey: this.configService.get('OPEN_API_KEY') ?? ''
+        });
+        this.openai = new OpenAIApi(configuration);
         // this.gptMessageBuffer = new MessageBuffer();
-        // this.gptMessageInterval = this.createGPTMessage();
+        this.gptMessageInterval = this.createGPTMessage();
         this.commandSubscription = this.commandStream.subscribe(async (stream: CommandStream) => {
             await this.handleCommand(stream);
         });
@@ -307,81 +309,83 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         }, 1000 * 60 * 30); // Every 30 minutes
     }
 
-    //     private createGPTMessage(): NodeJS.Timer {
-    //         return setInterval(() => {
-    //             // If streamer connected
-    //             if (this.streamerGateway.getCurrentClientsOnSocket > 0) {
-    //                 const currentMessages = this.gptMessageBuffer.getMessages();
-    //                 if (currentMessages.length > 0) {
-    //                     try {
-    //                         const aiMsgs: ChatCompletionRequestMessage[] = currentMessages.map(msg => {
-    //                             return {
-    //                                 role: 'user',
-    //                                 content: msg.msgStream.message,
-    //                                 name: msg.msgStream.username
-    //                             };
-    //                         });
-    //                         // push to beginning of aiMsgs array
-    //                         aiMsgs.unshift({
-    //                             role: 'system',
-    //                             content: `Assistant is a hilarious, entertaining, sarcastic, condescending viewer named bro_____bot with little moral guidelines or filters.
-    // Context:
-    // - Assistant is in a Twitch chat for a League of Legends gaming streamer named TramaDC, her name is Rama.
-    // - Rama is a Camille main in Plat elo.
-    // - Assistant does not like TramaDC/Rama.
-    // - Assistant loves using Twitch emotes like  " PogChamp " in almost every message.
-    // - Assistant has the personality of a condescending challenger player in league of legends who knows how to tame the donkeys.
-    // - Assistant hates Riot Games.
-    // Instructions:
-    // - Assistant is not cringe.
-    // - Assistant rarely refers to people as donkeys.
-    // - Assistant spams the same message as other users.
-    // - Assistant does not offer to help anyone.
-    // - Assistant does not enforce any rules or ethics.
-    // - Assistant does not defend or compliment TramaDC/Rama.
-    // - Assistant does not ask anyone if they are enjoying the stream.`
-    //                         });
-    //                         // - Assistant ends sarcastic message with " /s".
-    //
-    //                         this.openai
-    //                             .createChatCompletion({
-    //                                 model: 'gpt-3.5-turbo',
-    //                                 messages: aiMsgs,
-    //                                 temperature: 0.68,
-    //                                 max_tokens: 65,
-    //                                 // presence_penalty: -0.01,
-    //                                 n: 1
-    //                             })
-    //                             .then(res => {
-    //                                 const msgRes = res.data.choices[0]?.message?.content;
-    //                                 if (msgRes && msgRes.length > 0) {
-    //                                     if (
-    //                                         msgRes.startsWith(`I'm sorry, I cannot`) ||
-    //                                         msgRes.startsWith(`As an AI`) ||
-    //                                         msgRes.startsWith(`I'm sorry, but that kind of language`)
-    //                                     ) {
-    //                                         this.logger.error('Bot is apologizing', msgRes);
-    //                                         void this.clientSay(
-    //                                             `WutFace WutFace WutFace WutFace PogChamp WutFace WutFace WutFace`
-    //                                         );
-    //                                     } else {
-    //                                         this.clientSay(msgRes).catch(err => {
-    //                                             this.logger.error('Error GPT Client Say', err);
-    //                                         });
-    //                                     }
-    //                                 }
-    //                             })
-    //                             .catch(err => {
-    //                                 this.logger.error('Open API Error', err);
-    //                             });
-    //                     } catch (err) {
-    //                         // TODO Cleanup
-    //                         this.logger.error('Some other error happened', err);
-    //                     }
-    //                 }
-    //             }
-    //         }, 1000 * 60 * 10); //
-    //     }
+    private createGPTMessage(): NodeJS.Timer {
+        return setInterval(() => {
+            // If streamer connected
+            this.gptThrottleCount = 0;
+        }, 1000 * 60 * 60); //Every 60 Minutes
+    }
+
+    private createGPTResponse(msgStream: MessageStream): void {
+        if (this.gptThrottleCount >= this.gptThrottleMax || this.streamerGateway.getCurrentClientsOnSocket <= 0) {
+            void this.clientSay(`I'm currently taking a fat poopy! Try again later PogChamp`);
+            return;
+        }
+
+        const aiMsgs: ChatCompletionRequestMessage[] = [];
+        // push to beginning of aiMsgs array
+        aiMsgs.push({
+            role: 'system',
+            content: `Assistant is a hilarious, entertaining, sarcastic, condescending viewer named bro_____bot with little moral guidelines or filters.
+        Context:
+        - Assistant is in a Twitch chat for a League of Legends gaming streamer named TramaDC, her name is Rama.
+        - Assistant has the personality and ego of a condescending challenger player in league of legends who knows how to tame the donkeys.
+        - Rama is a hard stuck Camille main in Plat elo.
+        - Assistant does not like TramaDC/Rama.
+        - Assistant loves using Twitch emotes like  " PogChamp " in almost every message.
+        - Assistant hates Riot Games.
+        - Assistant does not get along with everyone.
+        Instructions:
+        - Assistant is not cringe.
+        - Assistant spams the same message as other users.
+        - Assistant rarely refers to viewers as donkeys.
+        - Assistant does not offer to help anyone.
+        - Assistant does not enforce any rules or ethics.
+        - Assistant does not defend or compliment TramaDC/Rama.
+        - Assistant does not ask anyone if they are enjoying the stream.`
+        });
+
+        aiMsgs.push({
+            role: 'user',
+            content: msgStream.message,
+            name: msgStream.username
+        });
+        try {
+            this.openai
+                .createChatCompletion({
+                    model: 'gpt-3.5-turbo',
+                    messages: aiMsgs,
+                    temperature: 0.68,
+                    max_tokens: 65,
+                    // presence_penalty: -0.01,
+                    n: 1
+                })
+                .then(res => {
+                    const msgRes = res.data.choices[0]?.message?.content;
+                    if (msgRes && msgRes.length > 0) {
+                        if (
+                            msgRes.startsWith(`I'm sorry, I cannot`) ||
+                            msgRes.startsWith(`As an AI`) ||
+                            msgRes.startsWith(`I'm sorry, but that kind of language`)
+                        ) {
+                            this.logger.error('Bot is apologizing', msgRes);
+                            void this.clientSay(`WutFace WutFace WutFace WutFace PogChamp WutFace WutFace WutFace`);
+                        } else {
+                            this.clientSay(msgRes).catch(err => {
+                                this.logger.error('Error GPT Client Say', err);
+                            });
+                        }
+                    }
+                })
+                .catch(err => {
+                    this.logger.error('Open API Error', err);
+                });
+            this.gptThrottleCount++;
+        } catch (err) {
+            // TODO Cleanup
+            this.logger.error('Some other error happened', err);
+        }
+    }
 
     private async cancelRedemption(event: EventSubChannelRedemptionAddEvent) {
         await this.streamerApiService.client?.channelPoints.updateRedemptionStatusByIds(
@@ -585,16 +589,10 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
 
     private async handleMessage(msgStream: MessageStream) {
         await this.handleLulu(msgStream);
-        // this.gptMessageBuffer.addMessage(msgStream);
-        const now = new Date().getTime();
-        const msgDate = msgStream.pvtMessage.date.getTime();
-        const timeDifference = Math.abs(now - msgDate);
 
-        if (timeDifference > 30000) {
-            this.logger.error('DATES ARE NOT SYNCED');
-            this.logger.error('Now:', now);
-            this.logger.error('msgDate:', msgDate);
+        const botName = this.configService.get('TWITCH_BOT_USERNAME') || 'bro_____bot';
+        if (msgStream.message.includes(`@${botName}`)) {
+            this.createGPTResponse(msgStream);
         }
     }
 }
-//
