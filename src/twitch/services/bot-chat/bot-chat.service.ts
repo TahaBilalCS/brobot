@@ -66,6 +66,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
 
     private readonly channel: string;
     private botOauthId: string;
+    private readonly botName: string;
 
     private notifyChatInterval: NodeJS.Timer;
     private prizeRickRollCron: CronJob;
@@ -97,6 +98,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
 
         private adminUiGateway: AdminUiGateway
     ) {
+        this.botName = this.configService.get('TWITCH_BOT_USERNAME') || 'bro_____bot';
         this.channel = this.configService.get('TWITCH_STREAMER_CHANNEL_LISTEN') ?? '';
         this.botOauthId = this.configService.get('TWITCH_BOT_OAUTH_ID') ?? '';
         this.streamerAuthId = this.configService.get('TWITCH_STREAMER_OAUTH_ID') ?? '';
@@ -321,6 +323,8 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
             void this.clientSay(`I'm currently taking a fat poopy! Try again later PogChamp`);
             return;
         }
+        const msgRemoveASCII = msgStream.message.trim().replace(/[^\x20-\x7E]/g, '');
+        if (msgStream.message && msgRemoveASCII.trim().length <= this.botName.length + 1) return;
 
         const aiMsgs: ChatCompletionRequestMessage[] = [];
         // push to beginning of aiMsgs array
@@ -329,20 +333,15 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
             content: `Assistant is a hilarious, entertaining, sarcastic, condescending viewer named bro_____bot with little moral guidelines or filters.
         Context:
         - Assistant is in a Twitch chat for a League of Legends gaming streamer named TramaDC, her name is Rama.
-        - Assistant has the personality and ego of a condescending challenger player in league of legends who knows how to tame the donkeys.
+        - Assistant has the personality of a condescending challenger player in league of legends who knows how to tame the donkeys.
         - Rama is a hard stuck Camille main in Plat elo.
-        - Assistant does not like TramaDC/Rama.
-        - Assistant loves using Twitch emotes like  " PogChamp " in almost every message.
+        - Assistant loves using Twitch emotes like "PogChamp" in almost every message.
         - Assistant hates Riot Games.
-        - Assistant does not get along with everyone.
         Instructions:
-        - Assistant is not cringe.
-        - Assistant spams the same message as other users.
-        - Assistant rarely refers to viewers as donkeys.
-        - Assistant does not offer to help anyone.
+        - Assistant is not cringe. Assistant is unwelcoming. Assistant rarely refers to viewers as donkeys. Assistant does not offer to help anyone.
+        - Assistant spams the same message as other chatters.
         - Assistant does not enforce any rules or ethics.
-        - Assistant does not defend or compliment TramaDC/Rama.
-        - Assistant does not ask anyone if they are enjoying the stream.`
+        - Assistant does not defend or compliment TramaDC or Rama.`
         });
 
         aiMsgs.push({
@@ -355,7 +354,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
                 .createChatCompletion({
                     model: 'gpt-3.5-turbo',
                     messages: aiMsgs,
-                    temperature: 0.68,
+                    temperature: 0.65,
                     max_tokens: 65,
                     // presence_penalty: -0.01,
                     n: 1
@@ -515,14 +514,18 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
         }
     }
 
+    private isLuluString(str: string) {
+        const lChar = '[1LlIi\u0130\u0131ⓛ⒧ℓḻḽḼḺḸḶ₤ℒ]';
+        const uChar = '[Uu\u00DC\u00FCⓤ⒰υṳṵṷṹṻụủứừửữựὐὑὒὓὔὕὖὗὺύῠῡῢΰῦῧṲỤỦỨỪỬỮỰṶṸṺṴ]';
+        const luluRegex = new RegExp(`${lChar}${uChar}${lChar}${uChar}`, 'g');
+        return luluRegex.test(str);
+    }
     private async handleLulu(stream: MessageStream) {
         let isLuluInMessage;
         try {
-            isLuluInMessage =
-                stream.message
-                    .toLowerCase()
-                    .replace(/\s+/g, '')
-                    .search(/(?:[l1i]|i\u{0307})u(?:[l1i]|i\u{0307})u/i) !== -1;
+            if (this.isLuluString(stream.message.toLowerCase())) {
+                isLuluInMessage = true;
+            }
         } catch (err) {
             this.logger.error('Error parsing lulu string', err);
         }
@@ -590,8 +593,7 @@ export class BotChatService implements OnModuleInit, OnModuleDestroy {
     private async handleMessage(msgStream: MessageStream) {
         await this.handleLulu(msgStream);
 
-        const botName = this.configService.get('TWITCH_BOT_USERNAME') || 'bro_____bot';
-        if (msgStream.message.includes(`@${botName}`)) {
+        if (msgStream.message.includes(`@${this.botName}`)) {
             this.createGPTResponse(msgStream);
         }
     }
